@@ -1,15 +1,21 @@
 import type { ComponentProps } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import { ApplicationShell } from '../../../components/application-shell/ApplicationShell'
 import {
   SkpeCockpit,
   type CockpitSection,
+  type SkpeOverviewShellPayload,
 } from '../SkpeCockpit'
 import {
   SkpeWorkspaceProvider,
   type SkpeWorkspaceContextValue,
 } from '../context/SkpeWorkspaceContext'
-import { parsePlatformRoute } from './skpeRoutes'
+import {
+  parsePlatformRoute,
+  platformRoutes,
+  type SkpeRouteSection,
+} from './skpeRoutes'
 
 type SkpeCockpitProps = ComponentProps<typeof SkpeCockpit>
 
@@ -22,6 +28,26 @@ const LEGACY_COCKPIT_SECTIONS = new Set<CockpitSection>([
   'artifacts',
   'governance',
 ])
+
+const ROUTED_COCKPIT_SECTIONS: Partial<
+  Record<SkpeRouteSection, CockpitSection>
+> = {
+  overview: 'overview',
+  journey: 'journey',
+  initiatives: 'initiatives',
+  governance: 'governance',
+  artifacts: 'artifacts',
+}
+
+const COCKPIT_ROUTE_SECTIONS: Partial<
+  Record<CockpitSection, SkpeRouteSection>
+> = {
+  overview: 'overview',
+  journey: 'journey',
+  initiatives: 'initiatives',
+  governance: 'governance',
+  artifacts: 'artifacts',
+}
 
 function parseLegacyCockpitSection(
   search: string,
@@ -69,8 +95,31 @@ export function SkpeWorkspace(props: SkpeWorkspaceProps) {
   const handleNavigateSection = (section: CockpitSection) => {
     props.onNavigateSection?.(section)
 
+    if (explicitRoute) {
+      const routeSection = COCKPIT_ROUTE_SECTIONS[section]
+      if (!routeSection) {
+        return
+      }
+
+      const pathname = platformRoutes.skpe({
+        organizationId: explicitRoute.organizationId,
+        projectId: explicitRoute.projectId,
+        formulationId: explicitRoute.formulationId,
+        section: routeSection,
+      })
+
+      if (pathname === location.pathname) {
+        return
+      }
+
+      navigate({
+        pathname,
+        search: location.search,
+      })
+      return
+    }
+
     if (
-      explicitRoute ||
       props.mode === 'organization-admin' ||
       !LEGACY_COCKPIT_SECTIONS.has(section)
     ) {
@@ -86,12 +135,38 @@ export function SkpeWorkspace(props: SkpeWorkspaceProps) {
     })
   }
 
+  const renderOverviewShell = (
+    payload: SkpeOverviewShellPayload,
+  ) => (
+    <ApplicationShell
+      brand={payload.brand}
+      contextItems={payload.contextItems}
+      userArea={payload.userArea}
+      navigationItems={payload.navigationItems}
+      navigationLabel={payload.navigationLabel}
+      navigationId={payload.navigationId}
+      collapsed={payload.collapsed}
+      mobileOpen={payload.mobileOpen}
+      onToggleCollapsed={payload.onToggleCollapsed}
+      onCloseMobile={payload.onCloseMobile}
+    >
+      {payload.children}
+    </ApplicationShell>
+  )
+
   return (
     <SkpeWorkspaceProvider value={contextValue}>
       <SkpeCockpit
         {...props}
-        initialSection={legacySection ?? props.initialSection}
+        initialSection={
+          (explicitRoute
+            ? ROUTED_COCKPIT_SECTIONS[explicitRoute.section]
+            : null) ??
+          legacySection ??
+          props.initialSection
+        }
         onNavigateSection={handleNavigateSection}
+        renderOverviewShell={renderOverviewShell}
       />
     </SkpeWorkspaceProvider>
   )

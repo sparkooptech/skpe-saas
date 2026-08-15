@@ -3,6 +3,7 @@ import {
   type ReactNode,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -10,10 +11,15 @@ import { supabase } from '../../lib/supabase'
 
 import { statusLabelPtBr, translateBackendMessage } from '../../shared/i18n/ptBR'
 
+import {
+  type ApplicationShellContextItem,
+  type ApplicationShellNavigationItem,
+} from '../../components/application-shell/ApplicationShell'
 import './SkpeCockpit.css'
 import type { JourneyRow } from './contracts/journey'
 import { MethodologyArtifactsSection } from './features/artifacts/MethodologyArtifactsSection'
 import { JourneySection as JourneyFeatureSection } from './features/journey/JourneySection'
+import { useSkpeWorkspace } from './context/SkpeWorkspaceContext'
 import { MyWorkspacePage } from './workspace/MyWorkspacePage'
 
 export type CockpitSection =
@@ -50,6 +56,23 @@ type SkpeCockpitProps = {
   userAvatarUrl: string | null
   onOpenPlatformAdmin?: () => void
   onOpenUserProfile?: () => void
+  renderOverviewShell?: (
+    payload: SkpeOverviewShellPayload,
+  ) => ReactNode
+}
+
+export type SkpeOverviewShellPayload = {
+  brand: ReactNode
+  contextItems: ApplicationShellContextItem[]
+  userArea: ReactNode
+  navigationItems: ApplicationShellNavigationItem[]
+  navigationLabel: string
+  navigationId: string
+  collapsed: boolean
+  mobileOpen: boolean
+  onToggleCollapsed: () => void
+  onCloseMobile: () => void
+  children: ReactNode
 }
 
 type SkpeCapabilities = {
@@ -5205,7 +5228,9 @@ export function SkpeCockpit({
   userAvatarUrl,
   onOpenPlatformAdmin,
   onOpenUserProfile,
+  renderOverviewShell,
 }: SkpeCockpitProps) {
+  const workspaceContext = useSkpeWorkspace()
   const [activeSection, setActiveSection] =
     useState<CockpitSection>(
       initialSection ??
@@ -5228,6 +5253,8 @@ export function SkpeCockpit({
   const [projectContext, setProjectContext] = useState<StrategicProjectContext | null>(null)
   const [startingProject, setStartingProject] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [shellMobileOpen, setShellMobileOpen] = useState(false)
+  const shellMenuButtonRef = useRef<HTMLButtonElement | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('sparks-theme') === 'dark' ? 'dark' : 'light'))
   const [capabilities, setCapabilities] = useState<SkpeCapabilities | null>(null)
   const [capabilitiesLoading, setCapabilitiesLoading] = useState(mode === 'module')
@@ -5321,6 +5348,9 @@ export function SkpeCockpit({
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
     window.scrollTo({ top: 0, behavior: 'smooth' })
+    document
+      .querySelector<HTMLElement>('.application-shell-content')
+      ?.scrollTo({ top: 0, behavior: 'smooth' })
     document.querySelector<HTMLElement>('.skpe-main')?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -5340,6 +5370,10 @@ export function SkpeCockpit({
   useEffect(() => {
     localStorage.setItem('sparks-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    setShellMobileOpen(false)
+  }, [activeSection])
 
   const legacyCanManageJourney =
     isOrganizationAdmin ||
@@ -5398,6 +5432,214 @@ export function SkpeCockpit({
     'organization-hierarchy': 'Hierarquia e acessos',
     domains: 'Tabelas de domínio',
   }
+  const organizationDisplayName =
+    organizationProfile?.trade_name ?? organizationName
+
+  const shellContextItems: ApplicationShellContextItem[] = [
+    {
+      label: 'Organização',
+      value: organizationCode,
+    },
+    {
+      label: 'Projeto',
+      value: projectContext?.project_code ?? 'Não iniciado',
+    },
+    {
+      label: 'Formulação',
+      value:
+        workspaceContext.route.formulationId ??
+        'Contexto ainda não selecionado',
+    },
+    {
+      label: 'Seção',
+      value: activeSectionLabel[activeSection],
+    },
+    {
+      label: 'Perfil',
+      value: userRoleName,
+    },
+  ]
+
+  const moduleNavigationItems: ApplicationShellNavigationItem[] = [
+    {
+      id: 'overview',
+      label: 'Visão Geral',
+      icon: <DashboardIcon />,
+      active: activeSection === 'overview',
+      onActivate: () => navigateToSection('overview'),
+    },
+    {
+      id: 'journey',
+      label: 'Jornada Estratégica',
+      icon: <JourneyIcon />,
+      active: activeSection === 'journey',
+      onActivate: () => navigateToSection('journey'),
+    },
+    {
+      id: 'initiatives',
+      label: 'Iniciativas',
+      icon: <InitiativesIcon />,
+      active: activeSection === 'initiatives',
+      onActivate: () => navigateToSection('initiatives'),
+    },
+    {
+      id: 'artifacts',
+      label: 'Artefatos e evidências',
+      icon: <DashboardIcon />,
+      active: activeSection === 'artifacts',
+      onActivate: () => navigateToSection('artifacts'),
+    },
+    {
+      id: 'governance',
+      label: 'Governança',
+      icon: <GovernanceIcon />,
+      active: activeSection === 'governance',
+      onActivate: () => navigateToSection('governance'),
+    },
+  ].filter((item) => {
+    if (item.id === 'journey') return canViewJourney
+    if (item.id === 'initiatives') return canViewInitiatives
+    if (item.id === 'artifacts') return canViewArtifacts
+    if (item.id === 'governance') return canViewGovernance
+    return canViewOverview
+  })
+
+  if (
+    mode === 'module' &&
+    activeSection === 'overview' &&
+    renderOverviewShell
+  ) {
+    return renderOverviewShell({
+      brand: (
+        <div className="skpe-cockpit-branding">
+          <button
+            type="button"
+            className="application-shell-menu-button"
+            ref={shellMenuButtonRef}
+            onClick={() => setShellMobileOpen(true)}
+            aria-label="Abrir menu de navegação"
+            aria-expanded={shellMobileOpen}
+            aria-controls="skpe-application-shell-navigation"
+          >
+            ☰
+          </button>
+
+          <div className="skpe-cockpit-logo">
+            {organizationLogoUrl ? (
+              <img
+                src={organizationLogoUrl}
+                alt={`Logo de ${organizationDisplayName}`}
+              />
+            ) : (
+              <span>
+                {getOrganizationInitials(organizationDisplayName)}
+              </span>
+            )}
+          </div>
+
+          <div>
+            <span>Plataforma SPARKs</span>
+            <strong>{organizationDisplayName}</strong>
+            <small>
+              {projectContext?.project_name ?? 'Meu Espaço de Trabalho'}
+            </small>
+          </div>
+        </div>
+      ),
+      contextItems: shellContextItems,
+      userArea: (
+        <div className="skpe-cockpit-actions">
+          <button
+            type="button"
+            className="skpe-cockpit-icon-button"
+            onClick={() =>
+              setTheme(theme === 'light' ? 'dark' : 'light')
+            }
+            aria-label={
+              theme === 'light'
+                ? 'Ativar tema escuro'
+                : 'Ativar tema claro'
+            }
+            title={
+              theme === 'light'
+                ? 'Ativar tema escuro'
+                : 'Ativar tema claro'
+            }
+          >
+            <span aria-hidden="true">
+              {theme === 'light' ? '☾' : '☀'}
+            </span>
+          </button>
+
+          {isPlatformSuperAdmin && onOpenPlatformAdmin && (
+            <button
+              type="button"
+              className="skpe-cockpit-icon-button"
+              onClick={onOpenPlatformAdmin}
+              aria-label="Administração da Plataforma"
+              title="Administração da Plataforma"
+            >
+              <AdministrationIcon />
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="skpe-cockpit-user skpe-cockpit-user-button"
+            onClick={onOpenUserProfile}
+            disabled={!onOpenUserProfile}
+            aria-label="Abrir meu perfil"
+            title="Abrir meu perfil"
+          >
+            <div className="skpe-cockpit-avatar" aria-hidden="true">
+              {userAvatarUrl ? (
+                <img src={userAvatarUrl} alt="" />
+              ) : (
+                (userDisplayName || userEmail || 'U')
+                  .slice(0, 2)
+                  .toUpperCase()
+              )}
+            </div>
+            <div>
+              <strong>{userDisplayName || userEmail}</strong>
+              <small>{userRoleName}</small>
+            </div>
+          </button>
+        </div>
+      ),
+      navigationItems: moduleNavigationItems,
+      navigationId: 'skpe-application-shell-navigation',
+      navigationLabel: 'Navegação de Planejamento Estratégico',
+      collapsed: sidebarCollapsed,
+      mobileOpen: shellMobileOpen,
+      onToggleCollapsed: () =>
+        setSidebarCollapsed((value) => !value),
+      onCloseMobile: () => {
+        setShellMobileOpen(false)
+        shellMenuButtonRef.current?.focus()
+      },
+      children: (
+        <div className="application-shell-page">
+          <OverviewSection
+            organizationId={organizationId}
+            organizationName={organizationDisplayName}
+            organizationCode={organizationCode}
+            projectContext={projectContext}
+            canManageJourney={canManageJourney}
+            canViewOverview={canViewOverview}
+            canViewJourney={canViewJourney}
+            canViewInitiatives={canViewInitiatives}
+            canViewArtifacts={canViewArtifacts}
+            canViewGovernance={canViewGovernance}
+            startingProject={startingProject}
+            onStartProject={() => void startStrategicProject()}
+            onNavigate={navigateToSection}
+          />
+        </div>
+      ),
+    })
+  }
+
   return (
     <div className={`skpe-shell skpe-theme-${theme} ${sidebarCollapsed ? 'skpe-sidebar-collapsed' : ''}`}>
       <aside className="skpe-sidebar">
@@ -5626,12 +5868,12 @@ export function SkpeCockpit({
               {organizationLogoUrl ? (
                 <img
                   src={organizationLogoUrl}
-                  alt={`Logo de ${organizationProfile?.trade_name ?? organizationName}`}
+                  alt={`Logo de ${organizationDisplayName}`}
                 />
               ) : (
                 <span>
                   {getOrganizationInitials(
-                    organizationProfile?.trade_name ?? organizationName,
+                    organizationDisplayName,
                   )}
                 </span>
               )}
@@ -5639,7 +5881,7 @@ export function SkpeCockpit({
             <div>
               <span>Organização</span>
               <strong>
-                {organizationProfile?.trade_name ?? organizationName}
+                {organizationDisplayName}
               </strong>
               <small>
                 {getCooperativeBranchLabel(
@@ -5730,7 +5972,7 @@ export function SkpeCockpit({
           'overview' && (
           <OverviewSection
             organizationId={organizationId}
-            organizationName={organizationProfile?.trade_name ?? organizationName}
+            organizationName={organizationDisplayName}
             organizationCode={organizationCode}
             projectContext={projectContext}
             canManageJourney={canManageJourney}

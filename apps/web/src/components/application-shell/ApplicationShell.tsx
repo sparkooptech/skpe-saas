@@ -22,6 +22,7 @@ type ApplicationShellProps = {
   userArea: ReactNode
   navigationItems: ApplicationShellNavigationItem[]
   navigationLabel?: string
+  navigationId?: string
   children: ReactNode
   footer?: ReactNode
   collapsed?: boolean
@@ -36,6 +37,7 @@ export function ApplicationShell({
   userArea,
   navigationItems,
   navigationLabel = 'Navegação principal',
+  navigationId = 'application-shell-navigation',
   children,
   footer,
   collapsed = false,
@@ -75,11 +77,24 @@ export function ApplicationShell({
       </header>
 
       <aside
+        id={navigationId}
         className="application-shell-sidebar"
         aria-label={navigationLabel}
       >
         <div className="application-shell-sidebar-header">
           <strong>Menu</strong>
+
+          {mobileOpen && onCloseMobile && (
+            <button
+              type="button"
+              className="application-shell-close-button"
+              onClick={onCloseMobile}
+              aria-label="Fechar menu de navegação"
+              title="Fechar menu de navegação"
+            >
+              ×
+            </button>
+          )}
 
           {onToggleCollapsed && (
             <button

@@ -1,6 +1,6 @@
 ---
 document_id: SPARKS-AGENT-EXECUTION-GUARDRAILS
-version: 1.0.0
+version: 1.0.1
 status: active
 scope: skpe-saas
 owner: SPARKOOP
@@ -62,6 +62,49 @@ Este documento é de leitura obrigatória antes da geração de qualquer código
     - evite alterações desnecessárias;
     - não dependa de edição manual posterior de arquivos pelo usuário.
 
+## Padrão vigente de Shell e Layout
+
+1. `ApplicationShell` é o shell transversal oficial da Plataforma SPARKs.
+
+2. Nenhum novo módulo, página ou componente deve criar shell global concorrente.
+
+3. No SK-PE, a composição do `ApplicationShell` deve ocorrer na fronteira de aplicação/workspace, atualmente em `SkpeWorkspace`.
+
+4. `SkpeCockpit` e demais componentes de domínio não devem assumir novamente a responsabilidade de:
+   - montar o shell global;
+   - possuir o viewport da aplicação;
+   - possuir o scroll principal;
+   - definir navegação global da Plataforma.
+
+5. O `ApplicationShell` deve permanecer agnóstico ao domínio e não deve conter semântica específica de:
+   - Formulação Estratégica;
+   - Jornada Estratégica;
+   - Objetivos Estratégicos — OKRs;
+   - Resultados-Chave;
+   - Iniciativas;
+   - Artefatos metodológicos;
+   - demais conceitos específicos do SK-PE.
+
+6. A navegação deve respeitar esta separação:
+
+   Plataforma SPARKs
+   → navegação global / organização / usuário / módulo atual
+
+   Módulo SK-PE
+   → navegação interna / rotas / contextos / funcionalidades específicas
+
+7. O conteúdo principal deve utilizar o owner de scroll fornecido pelo shell. Páginas internas não devem recriar viewport global com `100vh`, `100dvh` ou equivalente quando isso competir com o shell.
+
+8. Conteúdo largo deve resolver overflow localmente, sem criar novo scroll horizontal estrutural da aplicação.
+
+9. A adoção do `ApplicationShell` nas superfícies existentes será incremental. Não realizar migração ampla sem demanda explícita.
+
+10. Novos módulos da Plataforma, como SK-PN, SK-PCM e SK-JUR, devem poder utilizar o mesmo `ApplicationShell` sem necessidade de incorporar regras específicas do SK-PE.
+
+11. Antes de criar qualquer novo padrão de shell, navegação global, viewport ou scroll estrutural, verificar obrigatoriamente se a necessidade já é atendida pelo `ApplicationShell`.
+
+12. Não reintroduzir composição estrutural do shell no `SkpeCockpit`.
+
 ## Princípio operacional
 
-> Entender o estado atual → preservar o que está correto → alterar somente o necessário → validar.
+> Ler o estado atual → identificar o padrão canônico vigente → preservar o que já está correto → corrigir apenas o drift → não criar padrão concorrente.

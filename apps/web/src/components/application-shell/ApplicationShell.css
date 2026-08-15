@@ -49,6 +49,29 @@
   min-width: 0;
 }
 
+.application-shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.application-shell-menu-button {
+  display: none;
+  place-items: center;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid rgba(23, 107, 83, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  color: #176b53;
+  font: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .application-shell-context {
   display: flex;
   align-items: center;
@@ -115,6 +138,23 @@
   border-radius: 8px;
   background: #fff;
   color: #176b53;
+  cursor: pointer;
+}
+
+.application-shell-close-button {
+  display: none;
+  place-items: center;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(31, 73, 59, 0.14);
+  border-radius: 8px;
+  background: #fff;
+  color: #176b53;
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -194,7 +234,16 @@
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  scrollbar-gutter: stable both-edges;
   background: #f4f6f8;
+}
+
+.application-shell-page {
+  box-sizing: border-box;
+  width: min(1420px, 100%);
+  min-width: 0;
+  margin: 0 auto;
+  padding: 2.5rem;
 }
 
 .application-shell-footer {
@@ -216,6 +265,14 @@
 }
 
 @media (max-width: 960px) {
+  .application-shell-menu-button {
+    display: grid;
+  }
+
+  .application-shell-close-button {
+    display: grid;
+  }
+
   .application-shell {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
@@ -265,6 +322,10 @@
     justify-content: center;
     text-align: center;
   }
+
+  .application-shell-page {
+    padding: 1.5rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -285,5 +346,9 @@
 
   .application-shell-footer {
     padding: 0.45rem 0.75rem;
+  }
+
+  .application-shell-page {
+    padding: 1rem 0.85rem 1.25rem;
   }
 }
