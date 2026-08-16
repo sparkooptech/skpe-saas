@@ -15,6 +15,7 @@ related:
   - req-skpe-fe-001
   - shell-app-transversal-contract-fe09a03
   - painel-principal-contract-fe09a06
+  - especificacao-funcional-portabilidade-estrategica
 criticality: high
 ---
 

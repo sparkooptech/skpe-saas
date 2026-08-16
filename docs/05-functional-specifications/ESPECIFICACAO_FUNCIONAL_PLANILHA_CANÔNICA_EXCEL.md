@@ -1,3 +1,20 @@
+---
+id: especificacao-funcional-planilha-canonica
+title: Especificação Funcional - Planilha Canônica de Gestão Estratégica
+domain: strategic-planning
+type: specification
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - especificacao-funcional-portabilidade-estrategica
+  - especificacao-funcional-pacote-zip
+criticality: low
+---
+
 # Especificação Funcional — Planilha Canônica de Gestão Estratégica
 
 A Planilha Canônica é um canal portátil da Plataforma SPARKs. Quando o SaaS for a fonte oficial, a planilha representa uma exportação controlada. Quando a organização ainda não opera no SaaS, o modelo vazio poderá apoiar a gestão estratégica e futura importação.

@@ -1,3 +1,23 @@
+---
+id: criterios-aceite-testes-fe09a
+title: Critérios de Aceite e Testes - FE-09.A
+domain: governance
+type: guide
+status: active
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-010
+  - mapa-contratos-rpcs-fe09a
+  - guia-validacao-fe09a01
+criticality: medium
+---
+
 # Critérios de Aceite e Testes — FE-09.A
 
 ## 1. Testes de contexto

@@ -1,3 +1,22 @@
+---
+id: especificacao-funcional-pacote-zip
+title: Especificação Funcional - Pacote Estratégico Portátil
+domain: strategic-planning
+type: specification
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - especificacao-funcional-portabilidade-estrategica
+  - especificacao-funcional-geracao-json-manifesto
+  - especificacao-funcional-planilha-canonica
+  - especificacao-funcional-portal-html-portatil
+criticality: low
+---
+
 # ESPECIFICAÇÃO FUNCIONAL — BLOCO 1.7
 
 ## Pacote Estratégico Portátil SPARKs

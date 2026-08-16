@@ -1,3 +1,24 @@
+---
+id: especificacao-funcional-portabilidade-estrategica
+title: Fundação de Importação, Exportação e Portabilidade
+domain: strategic-planning
+type: specification
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - skpe-strategic-planning-hub
+  - req-skpe-fe-010
+  - especificacao-funcional-geracao-json-manifesto
+  - especificacao-funcional-planilha-canonica
+  - especificacao-funcional-portal-html-portatil
+  - especificacao-funcional-pacote-zip
+criticality: medium
+---
+
 # Fundação de Importação, Exportação e Portabilidade
 
 ## Princípio

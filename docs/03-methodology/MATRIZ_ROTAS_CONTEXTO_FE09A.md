@@ -1,3 +1,24 @@
+---
+id: matriz-rotas-contexto-fe09a
+title: Matriz de Rotas e Contexto - FE-09.A
+domain: navigation
+type: matrix
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: working
+canonical: false
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-010
+  - ia-navegacao-fe09a
+  - painel-principal-contract-fe09a06
+  - meu-espaco-trabalho-contract-fe09a05
+criticality: medium
+---
+
 # Matriz de Rotas e Contexto — FE-09.A
 
 ## 1. Rotas de entrada

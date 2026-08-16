@@ -14,6 +14,7 @@ related:
   - skpe-saas-readme
   - sparks-platform-architecture-hub
   - sparks-agent-execution-guardrails
+  - especificacao-funcional-portabilidade-estrategica
 tags:
   - planejamento-estrategico
   - metodologia
@@ -83,7 +84,8 @@ Não pertence a este espaço:
 5. [[req-skpe-fe-003]] para identidade estratégica operacional.
 6. [[req-skpe-fe-010]] para experiência aplicacional e operacionalização da Formulação.
 7. [[painel-principal-contract-fe09a06]] quando a pergunta envolver navegação operacional, painel principal e preferências aplicacionais.
-8. [[sparks-platform-architecture-hub]] quando a dúvida sair da órbita metodológica e entrar em arquitetura transversal da Plataforma.
+8. [[especificacao-funcional-portabilidade-estrategica]] quando a dúvida envolver importação, exportação e canais portáteis do Planejamento Estratégico.
+9. [[sparks-platform-architecture-hub]] quando a dúvida sair da órbita metodológica e entrar em arquitetura transversal da Plataforma.
 
 ## Child Links
 
@@ -99,6 +101,7 @@ Não pertence a este espaço:
 - [[sparks-platform-architecture-hub]]
 - [[sparks-agent-execution-guardrails]]
 - [[shell-app-transversal-contract-fe09a03]]
+- [[especificacao-funcional-portabilidade-estrategica]]
 
 ## Progressive Disclosure
 
@@ -106,3 +109,4 @@ Não pertence a este espaço:
 - Use `REQ-SKPE-FE-001` para a cadeia metodológica central da Formulação Estratégica.
 - Use os requisitos FE especializados para regras de governança, identidade e operacionalização.
 - Use o contrato do Painel Principal quando a navegação operacional depender de preferência, contexto e elegibilidade de dashboards.
+- Use a especificação de portabilidade quando a tarefa envolver exportação, importação assistida, planilha, HTML, JSON ou ZIP como canais portáteis do Planejamento Estratégico.

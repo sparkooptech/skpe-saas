@@ -1,3 +1,20 @@
+---
+id: especificacao-funcional-portal-html-portatil
+title: Especificação Funcional - Portal HTML Portátil
+domain: strategic-planning
+type: specification
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - especificacao-funcional-portabilidade-estrategica
+  - especificacao-funcional-pacote-zip
+criticality: low
+---
+
 # Especificação Funcional — Portal HTML Portátil
 
 ## Objetivo

@@ -1,3 +1,20 @@
+---
+id: guia-validacao-fe09a01
+title: Guia de Validação - FE-09.A.01
+domain: governance
+type: guide
+status: active
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: working
+canonical: false
+related:
+  - criterios-aceite-testes-fe09a
+  - req-skpe-fe-010
+criticality: low
+---
+
 # Guia de Validação — FE-09.A.01
 
 ## 1. Pré-condições

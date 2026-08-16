@@ -1,3 +1,24 @@
+---
+id: ia-navegacao-fe09a
+title: Arquitetura de Informação e Navegação - FE-09.A
+domain: navigation
+type: map
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: working
+canonical: false
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-010
+  - painel-principal-contract-fe09a06
+  - meu-espaco-trabalho-contract-fe09a05
+  - matriz-rotas-contexto-fe09a
+criticality: medium
+---
+
 # Arquitetura de Informação e Navegação — FE-09.A
 
 ## 1. Estrutura principal

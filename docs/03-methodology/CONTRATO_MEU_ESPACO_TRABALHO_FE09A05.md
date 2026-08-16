@@ -1,3 +1,24 @@
+---
+id: meu-espaco-trabalho-contract-fe09a05
+title: Contrato do Meu Espaço de Trabalho
+domain: navigation
+type: contract
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-010
+  - painel-principal-contract-fe09a06
+  - ia-navegacao-fe09a
+  - matriz-rotas-contexto-fe09a
+criticality: medium
+---
+
 # Contrato do Meu Espaço de Trabalho — FE-09.A.05
 
 ## 1. Identificação

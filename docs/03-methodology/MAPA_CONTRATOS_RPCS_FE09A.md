@@ -1,3 +1,23 @@
+---
+id: mapa-contratos-rpcs-fe09a
+title: Mapa de Contratos e RPCs - FE-09.A
+domain: architecture
+type: map
+status: active
+owner: architecture
+language: pt-BR
+encoding: UTF-8
+canonicality: working
+canonical: false
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-010
+  - mapa-componentes-frontend-fe09a
+  - criterios-aceite-testes-fe09a
+criticality: medium
+---
+
 # Mapa de Contratos e RPCs — FE-09.A
 
 ## 1. Princípio

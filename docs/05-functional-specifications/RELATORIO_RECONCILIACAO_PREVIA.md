@@ -1,3 +1,20 @@
+---
+id: relatorio-reconciliacao-previa-carga-canonica
+title: Bloco 1.10A - Prévia e Reconciliação da Carga Canônica da COOTAQUARA
+domain: governance
+type: report
+status: historical
+owner: operations
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - especificacao-funcional-payload-importacao
+  - especificacao-funcional-portabilidade-estrategica
+criticality: low
+---
+
 # Bloco 1.10A — Prévia e Reconciliação da Carga Canônica da COOTAQUARA
 
 ## Situação

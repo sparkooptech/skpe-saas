@@ -1,3 +1,20 @@
+---
+id: especificacao-funcional-geracao-json-manifesto
+title: Especificação Funcional - Geração JSON e Manifesto
+domain: strategic-planning
+type: specification
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - especificacao-funcional-portabilidade-estrategica
+  - especificacao-funcional-pacote-zip
+criticality: low
+---
+
 # Especificação Funcional — Geração JSON e Manifesto
 
 ## Objetivo

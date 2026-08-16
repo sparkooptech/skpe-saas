@@ -249,26 +249,35 @@ Incluir:
 Gate:
 corpus crítico rastreável.
 
-### FASE 5 - Validação Agentic DX
+Estado atual:
+DONE
 
-Objetivo:
-testar consumo por IA.
-
-Perguntas de validação:
-
-- agente encontra entrypoint?
-- identifica fonte vigente?
-- distingue plataforma/módulo?
-- distingue fato/histórico/decisão?
-- segue relações?
-- evita documento superseded?
-- detecta conflito?
-- sabe quando precisa de decisão humana?
+Atividade de fechamento:
+F4 - Consolidação Documental e Validação Agentic DX
 
 Gate:
-testes documentais satisfatórios.
+GATE FASE 4 - APPROVED
 
-### FASE 6 - Governança contínua e encerramento
+Resultado consolidado:
+
+- restante documental relevante consolidado sem migração mecânica em massa;
+- documentos `working` e `supporting` remanescentes classificados com semântica explícita;
+- `docs/05-functional-specifications/**` revisado e classificado por utilidade documental real;
+- órfãos relevantes reduzidos sem conexões artificiais;
+- Agentic DX validado em 10 cenários reais com `10/10 PASS`;
+- teste de precedência documental validado com `PASS`;
+- hub específico de portabilidade mantido em `DEFER`;
+- duplicate candidates dos blocos `1.10B-5.x` mantidos em `DEFER`;
+- guias FE-09A em `working` preservados até evidência real de obsolescência ou estabilização;
+- nenhum conflito canônico material bloqueante remanescente;
+- `_audit/**` mantido fora da rota normativa;
+- nenhum registry central criado;
+- nenhuma supersession fictícia criada.
+
+Próximo estágio:
+FASE 5 - Governança Definitiva e Encerramento
+
+### FASE 5 - Governança Definitiva e Encerramento
 
 Objetivo:
 transformar melhoria em rotina sustentável.
@@ -298,10 +307,10 @@ deixar claro quando poderemos dizer que a implantação foi concluída.
 | GD-004 | F1 | Definir semântica oficial de status | `approved`, `active`, texto livre e estados embutidos coexistem | Alta | DONE | GD-001 | Requisitos, auditorias, guardrails e contratos | Sim | Vocabulário mínimo aprovado | Modelo aprovado |
 | GD-005 | F2 | Definir relações documentais mínimas | Precedência e substituição ainda não estão operacionalizadas | Alta | DONE | GD-003, GD-004 | F2.0 discovery + corpus piloto | Sim | Relações mínimas aprovadas | Relações aprovadas |
 | GD-006 | F2 | Separar normativo x histórico x auditoria | `_audit` e relatórios podem ser consumidos como regra vigente | Alta | BACKLOG | GD-004 | Relatórios e crosschecks com linguagem normativa | Sim | Política de classificação aprovada | Relações aprovadas |
-| GD-007 | F3 | Rodar piloto em corpus crítico | Necessário provar o modelo antes de migração ampla | Alta | IN PROGRESS | GD-002, GD-003, GD-005 | Guardrails, ADR, requisito, contrato, relatório | Não | Piloto executado | Piloto sem invenção |
-| GD-008 | F4 | Migrar corpus prioritário por ondas | Migração em massa precoce aumenta risco de drift | Média | BACKLOG | GD-007 | Diagnóstico F0 | Não | Ondas controladas definidas | Corpus rastreável |
-| GD-009 | F5 | Validar Agentic DX | Precisa comprovar consumo seguro por agentes | Alta | BACKLOG | GD-007 | Perguntas de validação da Fase 5 | Não | Suite documental de validação | Testes satisfatórios |
-| GD-010 | F6 | Institucionalizar rotina | Sem rotina, drift reaparece | Média | BACKLOG | GD-008, GD-009 | Diagnóstico F0 | Sim | Política contínua definida | Encerramento formal |
+| GD-007 | F3 | Rodar piloto em corpus crítico | Necessário provar o modelo antes de migração ampla | Alta | DONE | GD-002, GD-003, GD-005 | Guardrails, ADR, requisito, contrato, relatório | Não | Piloto executado | Piloto sem invenção |
+| GD-008 | F4 | Consolidar corpus prioritário remanescente | Working, supporting e functional specifications ainda precisam de consolidação controlada | Média | DONE | GD-007 | Relatório Fase 3 + docs/05 + satélites FE-09A | Não | Consolidação classificada | Corpus rastreável |
+| GD-009 | F4 | Validar Agentic DX em cenários reais | Precisa comprovar consumo seguro por agentes sem leitura indiscriminada | Alta | DONE | GD-007 | Cenários documentais da Fase 4 | Não | Suite documental de validação | Testes satisfatórios |
+| GD-010 | F5 | Institucionalizar rotina | Sem rotina, drift reaparece | Média | BACKLOG | GD-008, GD-009 | Diagnóstico F0 | Sim | Política contínua definida | Encerramento formal |
 
 ## Riscos
 

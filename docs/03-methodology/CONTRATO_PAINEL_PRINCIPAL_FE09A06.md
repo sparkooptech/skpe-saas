@@ -14,6 +14,8 @@ parent:
 related:
   - req-skpe-fe-010
   - shell-app-transversal-contract-fe09a03
+  - matriz-rotas-contexto-fe09a
+  - ia-navegacao-fe09a
 criticality: medium
 ---
 

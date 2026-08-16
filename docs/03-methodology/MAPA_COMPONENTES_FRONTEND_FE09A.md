@@ -1,3 +1,23 @@
+---
+id: mapa-componentes-frontend-fe09a
+title: Mapa de Componentes Frontend - FE-09.A
+domain: architecture
+type: map
+status: active
+owner: architecture
+language: pt-BR
+encoding: UTF-8
+canonicality: working
+canonical: false
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-010
+  - shell-app-transversal-contract-fe09a03
+  - mapa-contratos-rpcs-fe09a
+criticality: medium
+---
+
 # Mapa de Componentes Frontend — FE-09.A
 
 ## 1. Estrutura proposta

@@ -1,3 +1,20 @@
+---
+id: especificacao-funcional-payload-importacao
+title: Especificação Funcional - Payload Completo de Importação
+domain: strategic-planning
+type: specification
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: working
+canonical: false
+related:
+  - especificacao-funcional-portabilidade-estrategica
+  - relatorio-reconciliacao-previa-carga-canonica
+criticality: low
+---
+
 # Especificação funcional — Payload completo de importação
 
 ## Contrato
