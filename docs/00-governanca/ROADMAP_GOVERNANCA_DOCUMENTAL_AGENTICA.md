@@ -282,7 +282,16 @@ FASE 5 - Governança Definitiva e Encerramento
 Objetivo:
 transformar melhoria em rotina sustentável.
 
-Definir posteriormente:
+Estado atual:
+DONE
+
+Atividade de fechamento:
+F5 - Governança definitiva, política canônica e encerramento da iniciativa - VALIDATION
+
+Gate:
+GATE FASE 5 - APPROVED
+
+Consolidação desta fase:
 
 - criação de novos documentos;
 - atualização;
@@ -295,6 +304,19 @@ Definir posteriormente:
 
 Critérios de encerramento da iniciativa inicial:
 deixar claro quando poderemos dizer que a implantação foi concluída.
+
+Resultado esperado desta fase:
+
+- política canônica de governança documental criada;
+- relatório final consolidado da iniciativa criado;
+- lifecycle documental formalizado;
+- regras para humanos e agentes formalizadas;
+- governança contínua estabelecida como rotina pós-iniciativa.
+
+Encerramento formal da iniciativa:
+
+- INICIATIVA - CLOSED
+- operação transferida para GOVERNANÇA CONTÍNUA
 
 ## Backlog controlado
 
@@ -310,7 +332,7 @@ deixar claro quando poderemos dizer que a implantação foi concluída.
 | GD-007 | F3 | Rodar piloto em corpus crítico | Necessário provar o modelo antes de migração ampla | Alta | DONE | GD-002, GD-003, GD-005 | Guardrails, ADR, requisito, contrato, relatório | Não | Piloto executado | Piloto sem invenção |
 | GD-008 | F4 | Consolidar corpus prioritário remanescente | Working, supporting e functional specifications ainda precisam de consolidação controlada | Média | DONE | GD-007 | Relatório Fase 3 + docs/05 + satélites FE-09A | Não | Consolidação classificada | Corpus rastreável |
 | GD-009 | F4 | Validar Agentic DX em cenários reais | Precisa comprovar consumo seguro por agentes sem leitura indiscriminada | Alta | DONE | GD-007 | Cenários documentais da Fase 4 | Não | Suite documental de validação | Testes satisfatórios |
-| GD-010 | F5 | Institucionalizar rotina | Sem rotina, drift reaparece | Média | BACKLOG | GD-008, GD-009 | Diagnóstico F0 | Sim | Política contínua definida | Encerramento formal |
+| GD-010 | F5 | Institucionalizar rotina | Sem rotina, drift reaparece | Média | DONE | GD-008, GD-009 | Diagnóstico F0 | Sim | Política contínua definida | Encerramento formal |
 
 ## Riscos
 
@@ -323,12 +345,8 @@ deixar claro quando poderemos dizer que a implantação foi concluída.
 
 ## Decisões pendentes
 
-- qual será o entrypoint oficial para agentes;
-- qual é o modelo mínimo de relações necessário;
-- como distinguir normativo, apoio ativo, histórico e auditoria;
-- qual é a política explícita de supersession/substituição documental;
-- se `parent` exige hub aprovado antes de aplicação ampla;
-- se `governed_by` agrega semântica suficiente para adoção futura.
+- nenhuma decisão bloqueante remanescente para a iniciativa encerrada;
+- backlog pós-iniciativa transferido para governança contínua.
 
 ## Critérios de sucesso
 
@@ -356,3 +374,8 @@ deixar claro quando poderemos dizer que a implantação foi concluída.
 | 2026-08-15 | F0.1 decisões estruturantes em consolidação | PASS | Relatório Fase 0.1 |
 | 2026-08-15 | GATE FASE 0 | APPROVED | Roadmap + Relatório Fase 0.1 |
 | 2026-08-16 | GATE FASE 1 | APPROVED | Relatório Fase 1.4 |
+| 2026-08-16 | GATE FASE 2 | APPROVED | Relatório Fase 2.2 |
+| 2026-08-16 | GATE FASE 3 | APPROVED | Relatório Fase 3 |
+| 2026-08-16 | GATE FASE 4 | APPROVED | Relatório Fase 4 |
+| 2026-08-16 | GATE FASE 5 | APPROVED | Política canônica + relatório final + roadmap atualizado |
+| 2026-08-16 | INICIATIVA | CLOSED | Operação transferida para governança contínua |
