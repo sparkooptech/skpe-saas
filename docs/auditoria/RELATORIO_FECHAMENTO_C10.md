@@ -1,20 +1,17 @@
 ---
-id: SKPE-AUD-C10-FECHAMENTO
+id: relatorio-fechamento-c10
+title: Fechamento Técnico C10 — Reconciliação Transversal e Encerramento Integrado
+domain: governance
+type: report
+status: historical
+owner: operations
+language: pt-BR
+encoding: UTF-8
 version: 1.1.0
-status: approved
-domain: SK-PE
-owner: SPARKs PE
-roadmap_step: CO-IMPORT-04-C10
-canonical_context: SK-PE-CONT-01
-created_at: 2026-08-14
-updated_at: 2026-08-14
-origin: auditoria_controlada_supabase_github
-repository_closure_commit: caf7c07f22247630e25f0e0f78897bb2a30db96d
-depends_on:
-  - docs/auditoria/RELATORIO_FECHAMENTO_C9E.md
-  - docs/auditoria/RELATORIO_FECHAMENTO_C9F.md
-  - supabase/migrations/20260814170231_co_import_04_c9_f_reconcile_and_harden_key_result_materialization.sql
-  - supabase/migrations/20260814174803_co_import_04_c10_integrated_closure_hardening.sql
+canonicality: supporting
+canonical: false
+created: 2026-08-14
+updated: 2026-08-14
 ---
 
 # Fechamento Técnico C10 — Reconciliação Transversal e Encerramento Integrado

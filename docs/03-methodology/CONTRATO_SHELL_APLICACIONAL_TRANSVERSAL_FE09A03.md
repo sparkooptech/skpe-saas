@@ -1,4 +1,19 @@
-﻿# Contrato Canônico — Shell Aplicacional Transversal da Plataforma SPARKs
+---
+id: shell-app-transversal-contract-fe09a03
+title: Contrato Canônico — Shell Aplicacional Transversal da Plataforma SPARKs
+domain: application-shell
+type: contract
+status: active
+owner: architecture
+language: pt-BR
+encoding: UTF-8
+canonicality: canonical
+canonical: true
+related:
+  - sparks-agent-execution-guardrails
+---
+
+# Contrato Canônico — Shell Aplicacional Transversal da Plataforma SPARKs
 
 ## 1. Decisão
 

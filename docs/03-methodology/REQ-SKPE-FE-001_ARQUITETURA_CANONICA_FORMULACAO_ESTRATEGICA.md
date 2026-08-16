@@ -1,3 +1,18 @@
+---
+id: req-skpe-fe-001
+title: Arquitetura Canônica da Formulação Estratégica
+domain: strategic-planning
+type: requirement
+status: active
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - adr-plat-biz-001
+---
+
 # REQ-SKPE-FE-001 — Arquitetura Canônica da Formulação Estratégica
 
 **Projeto:** Plataforma SPARKs — Módulo SK-PE

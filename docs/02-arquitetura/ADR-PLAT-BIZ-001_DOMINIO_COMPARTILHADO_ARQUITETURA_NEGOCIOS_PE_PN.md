@@ -1,17 +1,17 @@
 ---
-id: adr-plat-biz-001-dominio-compartilhado-arquitetura-negocios-pe-pn
+id: adr-plat-biz-001
 title: Domínio Compartilhado de Arquitetura de Negócios entre SK-PE e SK-PN
-domain: platform-architecture
-type: architecture-decision-record
-status: approved
+domain: business-architecture
+type: adr
+status: active
+owner: architecture
+language: pt-BR
+encoding: UTF-8
 canonicality: canonical
 canonical: true
 criticality: high
-parent: plataforma-sparks
 related:
-  - req-skpe-fe-001-arquitetura-canonica-formulacao-estrategica
-  - sk-pe
-  - sk-pn
+  - req-skpe-fe-001
 tags:
   - arquitetura-de-negocios
   - planejamento-estrategico
@@ -19,10 +19,6 @@ tags:
   - vpc
   - bmc
   - cadeia-de-valor
-idioma: pt-BR
-codificacao: UTF-8
-language: pt-BR
-encoding: UTF-8
 semantic_layer: architecture-decision
 created: 2026-07-30
 updated: 2026-07-30

@@ -1,4 +1,17 @@
-﻿# SK-PE SaaS
+---
+id: skpe-saas-readme
+title: SK-PE SaaS
+domain: navigation
+type: entrypoint
+status: active
+owner: platform
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+---
+
+# SK-PE SaaS
 
 Sistema de Gestão da Jornada Estratégica.
 

@@ -1,10 +1,16 @@
 ---
-document_id: SPARKS-AGENT-EXECUTION-GUARDRAILS
-version: 1.0.1
+id: sparks-agent-execution-guardrails
+title: Guardrails de Execução — Plataforma SPARKs
+domain: governance
+type: policy
 status: active
-scope: skpe-saas
-owner: SPARKOOP
-last_updated: 2026-08-15
+owner: governance
+language: pt-BR
+encoding: UTF-8
+canonicality: canonical
+canonical: true
+version: 1.0.2
+updated: 2026-08-15
 ---
 
 # Guardrails de Execução — Plataforma SPARKs

@@ -97,7 +97,7 @@ Pendencias transferidas para fases posteriores:
 - preparar migracao controlada posterior.
 
 Proximo estagio:
-FASE 1 - Modelo minimo de metadados
+FASE 1 - Crosswalk com padrao documental raiz
 
 ### FASE 1 - Modelo minimo de metadados
 
@@ -109,6 +109,15 @@ schema minimo e regras de uso.
 
 Gate:
 modelo aprovado antes de migracao.
+
+Estado atual:
+DONE
+
+Atividade em andamento:
+F1.4 - Normalização e fechamento do modelo de metadados - VALIDATION
+
+Gate:
+GATE FASE 1 - APPROVED
 
 ### FASE 2 - Relacoes e rastreabilidade
 
