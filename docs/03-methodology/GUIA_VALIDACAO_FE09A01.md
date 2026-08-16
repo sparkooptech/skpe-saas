@@ -3,13 +3,15 @@ id: guia-validacao-fe09a01
 title: Guia de Validação - FE-09.A.01
 domain: governance
 type: guide
-status: active
+status: historical
 owner: methodology
 language: pt-BR
 encoding: UTF-8
-canonicality: working
+canonicality: supporting
 canonical: false
 related:
+  - sparks-agent-execution-guardrails
+  - skpe-strategic-planning-hub
   - criterios-aceite-testes-fe09a
   - req-skpe-fe-010
 criticality: low
@@ -17,10 +19,14 @@ criticality: low
 
 # Guia de Validação — FE-09.A.01
 
+## Enquadramento
+
+Este guia é preservado como contexto histórico de validação.
+
+Ele não constitui regra vigente de branch, HEAD, staging, commit, push, merge ou publicação. Para operações Git e preservação do working tree, seguir exclusivamente `sparks-agent-execution-guardrails`.
+
 ## 1. Pré-condições
 
-- branch $ExpectedBranch;
-- HEAD $ExpectedBaseCommit;
 - Supabase Web disponível;
 - usuário autenticável;
 - pelo menos uma organização com SK-PE habilitado.

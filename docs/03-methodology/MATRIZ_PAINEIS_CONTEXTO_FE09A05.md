@@ -1,15 +1,34 @@
+---
+id: matriz-paineis-contextos-capacidades-fe09a05
+title: Matriz de Painéis, Contextos e Capacidades - FE-09.A.05
+domain: navigation
+type: matrix
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+parent: skpe-strategic-planning-hub
+related:
+  - meu-espaco-trabalho-contract-fe09a05
+  - req-skpe-fe-010
+  - sparks-agent-execution-guardrails
+criticality: medium
+---
+
 # Matriz de Painéis, Contextos e Capacidades — FE-09.A.05
 
 ## 1. Identificação
 
 - Projeto: Plataforma SPARKs
-- Módulo: SK-PE — Planejamento Estratégico
+- Módulo: SK-PE — Especialista em Planejamento Estratégico
 - Etapa: FE-09.A.05
 - Entrega inicial: FE-09.A.05.1
-- Branch canônica: `feature/formulacao-estrategica-operacional`
-- Commit-base: `3e31b5d00e7b7bfe435fd3745f1cc7afe90cd0f9`
 - Escopo: definição controlada dos painéis do Meu Espaço de Trabalho
 - Banco de dados: sem alteração nesta entrega
+
+Para branch, staging, commit, push, preservação do working tree e demais operações Git, seguir exclusivamente `sparks-agent-execution-guardrails`. Esta matriz não redefine regras globais de execução Git.
 
 ## 2. Objetivo
 
@@ -247,7 +266,7 @@ Nesta entrega, é proibido:
 - exibir dados de outra organização como fallback;
 - duplicar a administração da organização dentro do SK-PE;
 - criar migration sem lacuna comprovada;
-- realizar merge.
+- executar operações Git fora do guardrail vigente.
 
 ## 15. Critérios de aceite da matriz
 

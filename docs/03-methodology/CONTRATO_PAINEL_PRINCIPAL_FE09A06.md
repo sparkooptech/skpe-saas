@@ -9,8 +9,7 @@ language: pt-BR
 encoding: UTF-8
 canonicality: supporting
 canonical: false
-parent:
-  - skpe-strategic-planning-hub
+parent: skpe-strategic-planning-hub
 related:
   - req-skpe-fe-010
   - shell-app-transversal-contract-fe09a03
@@ -28,8 +27,8 @@ criticality: medium
 - Etapa: FE-09.A.06
 - Entrega inicial: FE-09.A.06-A
 - Objeto: Painel Principal e fundação transversal de preferências do usuário
-- Branch: feature/formulacao-estrategica-operacional
-- Base: develop
+
+Para branch, staging, commit, push, preservação do working tree e demais operações Git, seguir exclusivamente `sparks-agent-execution-guardrails`. Este contrato não redefine regras globais de execução Git.
 
 ## 2. Objetivo
 
@@ -344,8 +343,6 @@ A FE-09.A.06 não contempla:
 16. Lint sem novos erros.
 17. Build de produção aprovado.
 18. Validação funcional aprovada.
-19. Árvore Git limpa após o commit.
-20. Nenhum merge realizado.
 
 ## 21. Estratégia incremental
 
@@ -355,17 +352,10 @@ FE-09.A.06-C — RPCs, RLS e auditoria
 FE-09.A.06-D — integração ao catálogo de painéis
 FE-09.A.06-E — seleção e apresentação do Painel Principal
 FE-09.A.06-F — fallback, acessibilidade e validação funcional
-FE-09.A.06-G — lint, build, documentação, commit e publicação
+FE-09.A.06-G — lint, build, documentação e validação final
 
 ## 22. Regra de execução
 
 Nenhuma migration ou alteração funcional será iniciada antes da validação deste contrato e da Matriz de Preferências do Usuário.
 
-Nenhum commit será realizado antes de:
-
-- lint;
-- build;
-- validação funcional;
-- validação de acessibilidade;
-- validação de UTF-8;
-- revisão da documentação.
+Validações de lint, build, acessibilidade, UTF-8 e documentação continuam relevantes para a entrega, mas a decisão sobre staging, commit e push segue exclusivamente `sparks-agent-execution-guardrails`.

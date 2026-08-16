@@ -9,8 +9,7 @@ language: pt-BR
 encoding: UTF-8
 canonicality: supporting
 canonical: false
-parent:
-  - skpe-strategic-planning-hub
+parent: skpe-strategic-planning-hub
 related:
   - req-skpe-fe-010
   - painel-principal-contract-fe09a06
@@ -24,13 +23,13 @@ criticality: medium
 ## 1. Identificação
 
 - Projeto: Plataforma SPARKs
-- Módulo: SK-PE — Planejamento Estratégico
+- Módulo: SK-PE — Especialista em Planejamento Estratégico
 - Etapa: FE-09.A.05
 - Entrega inicial: FE-09.A.05.1
-- Branch canônica: `feature/formulacao-estrategica-operacional`
-- Commit-base: `3e31b5d00e7b7bfe435fd3745f1cc7afe90cd0f9`
 - Situação inicial: contrato arquitetural para validação
 - Escopo: frontend incremental, sem migration nesta entrega
+
+Para branch, staging, commit, push, preservação do working tree e demais operações Git, seguir exclusivamente `sparks-agent-execution-guardrails`. Este contrato não redefine regras globais de execução Git.
 
 ## 2. Objetivo
 
@@ -280,7 +279,7 @@ A FE-09.A.05.1 não contempla:
 - merge;
 - persistência nova sem lacuna comprovada.
 
-## 17. Estratégia incremental
+## 17. Estratégia incremental do domínio
 
 A execução seguirá:
 
@@ -290,7 +289,7 @@ FE-09.A.05.1-B — tipos e registro declarativo
 FE-09.A.05.1-C — página Meu Espaço de Trabalho
 FE-09.A.05.1-D — integração controlada ao overview
 FE-09.A.05.1-E — responsividade e acessibilidade
-FE-09.A.05.1-F — validação, commit e publicação
+FE-09.A.05.1-F — validação da entrega
 ```
 
 ## 18. Critério de encerramento
@@ -299,13 +298,8 @@ A etapa somente poderá ser encerrada após:
 
 - contrato validado;
 - lista branca aprovada;
-- implementação restrita à branch;
 - lint com zero erros;
 - build aprovado;
 - validação funcional;
 - validação responsiva;
-- inspeção do diff;
-- working tree controlado;
-- commit pequeno e reversível;
-- push confirmado;
-- nenhum merge realizado.
+- inspeção controlada da entrega.

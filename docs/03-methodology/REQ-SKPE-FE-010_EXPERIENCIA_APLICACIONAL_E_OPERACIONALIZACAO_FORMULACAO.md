@@ -9,8 +9,7 @@ language: pt-BR
 encoding: UTF-8
 canonicality: canonical
 canonical: true
-parent:
-  - skpe-strategic-planning-hub
+parent: skpe-strategic-planning-hub
 related:
   - req-skpe-fe-001
   - shell-app-transversal-contract-fe09a03
@@ -25,9 +24,9 @@ criticality: high
 **Etapa:** FE-09
 **Primeira onda:** FE-09.A — Fundação Aplicacional
 **Aplicabilidade:** multi-organização, multiprojeto, multiformulação e multiciclo
-**Branch canônica:** `feature/formulacao-estrategica-operacional`
-**Commit-base:** `0fd801bfe076c07fd6f06ac2aea94a8aa094115f`
 **Situação:** arquitetura aprovada; implementação incremental pendente
+
+Para branch, staging, commit, push, preservação do working tree e demais operações Git, seguir exclusivamente `sparks-agent-execution-guardrails`. Este requisito não redefine regras globais de execução Git.
 
 ---
 
@@ -366,7 +365,7 @@ A fundação será aceita quando:
 7. o `SkpeCockpit` puder ser decomposto sem ruptura;
 8. existirem testes de contexto, rota e autorização;
 9. o build e o lint forem aprovados;
-10. nenhum merge tiver sido realizado sem autorização.
+10. a entrega respeitar o guardrail vigente para operações de execução e publicação.
 
 ---
 
@@ -379,4 +378,4 @@ A fundação será aceita quando:
 - conversacional;
 - importação de PDFs;
 - alteração de banco por presunção;
-- merge.
+- operações Git fora do guardrail vigente.

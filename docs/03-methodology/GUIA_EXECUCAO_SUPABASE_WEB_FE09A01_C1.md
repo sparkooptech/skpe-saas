@@ -1,4 +1,27 @@
+---
+id: guia-execucao-supabase-web-fe09a01-c1
+title: Guia de Execução no Supabase Web - FE-09.A.01-C1
+domain: methodology
+type: guide
+status: historical
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - sparks-agent-execution-guardrails
+  - req-skpe-fe-010
+criticality: medium
+---
+
 # Guia de Execução no Supabase Web — FE-09.A.01-C1
+
+## Enquadramento
+
+Este guia é preservado como contexto técnico e histórico de uma execução específica.
+
+Ele não autoriza assumir projeto, banco, ambiente, script auxiliar ou estado atual sem validação prévia do contexto vigente. Também não redefine regras de execução Git, que permanecem governadas exclusivamente por `sparks-agent-execution-guardrails`.
 
 ## Ordem obrigatória
 

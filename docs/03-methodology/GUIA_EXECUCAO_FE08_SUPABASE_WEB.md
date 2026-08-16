@@ -1,4 +1,27 @@
+---
+id: guia-execucao-fe08-supabase-web
+title: Guia de Execução Controlada - FE-08 no Supabase Web
+domain: methodology
+type: guide
+status: historical
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - sparks-agent-execution-guardrails
+  - sparks-platform-architecture-hub
+criticality: medium
+---
+
 # Guia de Execução Controlada — FE-08 no Supabase Web
+
+## Enquadramento
+
+Este guia é preservado como contexto técnico e histórico da FE-08.
+
+Ele não substitui a arquitetura vigente, não substitui `sparks-agent-execution-guardrails`, não autoriza alteração fora do escopo e não autoriza assumir branch, banco, ambiente ou estado atual sem validação prévia do contexto vigente.
 
 ## 1. Objetivo
 
@@ -71,7 +94,7 @@ A mensagem pode variar, mas não deve existir erro SQL.
 2. copie a mensagem completa;
 3. registre linha, função e código do erro;
 4. não edite a migration diretamente no Supabase;
-5. interrompa a preparação do commit;
+5. interrompa a execução contextual e registre a ocorrência;
 6. retorne para correção controlada do arquivo-fonte.
 
 A transação protege contra aplicação parcial quando o erro ocorrer antes do `commit`.
@@ -285,16 +308,6 @@ Guarde:
 
 ---
 
-## 9. Autorização para Git
+## 9. Encerramento documental
 
-Somente após:
-
-```text
-migration = sucesso
-verificador = todos OK
-testes autenticados = aprovados
-```
-
-execute o script de preparação do commit.
-
-Não realize merge em `develop` ou `main`.
+Qualquer decisão sobre staging, commit, push ou publicação deve seguir exclusivamente `sparks-agent-execution-guardrails`.
