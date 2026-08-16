@@ -1,19 +1,19 @@
 ---
-id: SKPE-AUD-C9C-RECONCILIACAO-FECHAMENTO
+id: relatorio-fechamento-reconciliacao-c9c
+title: Fechamento da Reconciliação C9-C — Supabase x GitHub
+domain: governance
+type: report
+status: historical
+owner: operations
+language: pt-BR
+encoding: UTF-8
 version: 1.0.0
-status: approved
-domain: SK-PE
-owner: SPARKs PE
-roadmap_step: CO-IMPORT-04-C9
-canonical_context: SK-PE-CONT-01
-created_at: 2026-08-14
-updated_at: 2026-08-14
-origin: auditoria_controlada_supabase_github
-depends_on:
-  - docs/auditoria/RELATORIO_FORENSE_MIGRATIONS_C9C_AUSENTES.md
-  - supabase/migrations/20260813220018_c9c_key_result_parent_handler.sql
-  - supabase/migrations/20260813220033_c9c_register_key_result_parent_handler.sql
-  - supabase/migrations/20260814033658_harden_c9c_handler_permissions.sql
+canonicality: supporting
+canonical: false
+created: 2026-08-14
+updated: 2026-08-14
+related:
+  - relatorio-fechamento-c10
 ---
 
 # Fechamento da Reconciliação C9-C — Supabase × GitHub

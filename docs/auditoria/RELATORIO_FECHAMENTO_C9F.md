@@ -1,20 +1,20 @@
 ---
-id: SKPE-AUD-C9F-FECHAMENTO
+id: relatorio-fechamento-c9f
+title: Fechamento Técnico C9-F — Reconciliação Pós-Materialização e Hardening de Key Results
+domain: governance
+type: report
+status: historical
+owner: operations
+language: pt-BR
+encoding: UTF-8
 version: 1.1.0
-status: approved
-domain: SK-PE
-owner: SPARKs PE
-roadmap_step: CO-IMPORT-04-C9-F
-canonical_context: SK-PE-CONT-01
-created_at: 2026-08-14
-updated_at: 2026-08-14
-origin: auditoria_controlada_supabase_github
-repository_closure_commit: fda2937972f991fc15f59e0d972c435d01d9155d
-depends_on:
-  - docs/auditoria/RELATORIO_FECHAMENTO_C9E.md
-  - supabase/migrations/20260814142445_co_import_04_c9_e_key_result_materializer.sql
-  - supabase/migrations/20260814142521_co_import_04_c9_e_key_result_dispatcher.sql
-  - supabase/migrations/20260814170231_co_import_04_c9_f_reconcile_and_harden_key_result_materialization.sql
+canonicality: supporting
+canonical: false
+created: 2026-08-14
+updated: 2026-08-14
+related:
+  - relatorio-fechamento-c10
+  - relatorio-fechamento-c9e
 ---
 
 # Fechamento Técnico C9-F — Reconciliação Pós-Materialização e Hardening de Key Results

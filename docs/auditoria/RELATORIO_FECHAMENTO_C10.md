@@ -12,6 +12,10 @@ canonicality: supporting
 canonical: false
 created: 2026-08-14
 updated: 2026-08-14
+related:
+  - relatorio-fechamento-reconciliacao-c9c
+  - relatorio-fechamento-c9e
+  - relatorio-fechamento-c9f
 ---
 
 # Fechamento Técnico C10 — Reconciliação Transversal e Encerramento Integrado

@@ -1,3 +1,22 @@
+---
+id: req-skpe-fe-003
+title: Identidade Estratégica Operacional
+domain: strategic-planning
+type: requirement
+status: active
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: canonical
+canonical: true
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-001
+  - req-skpe-fe-002
+criticality: high
+---
+
 # REQ-SKPE-FE-003 — Identidade Estratégica Operacional
 
 **Módulo:** SK-PE

@@ -1,18 +1,19 @@
 ---
-id: SKPE-AUD-C9E-FECHAMENTO
+id: relatorio-fechamento-c9e
+title: Fechamento Técnico C9-E — Governed Materialization de Key Results
+domain: governance
+type: report
+status: historical
+owner: operations
+language: pt-BR
+encoding: UTF-8
 version: 1.1.0
-status: approved
-domain: SK-PE
-owner: SPARKs PE
-roadmap_step: CO-IMPORT-04-C9-E
-canonical_context: SK-PE-CONT-01
-created_at: 2026-08-14
-updated_at: 2026-08-14
-origin: validacao_controlada_supabase
-repository_closure_commit: 48fc9ea7d506d00f7518d3c0d69dab70771d8f6c
-depends_on:
-  - supabase/migrations/20260814142445_co_import_04_c9_e_key_result_materializer.sql
-  - supabase/migrations/20260814142521_co_import_04_c9_e_key_result_dispatcher.sql
+canonicality: supporting
+canonical: false
+created: 2026-08-14
+updated: 2026-08-14
+related:
+  - relatorio-fechamento-c10
 ---
 
 # Fechamento Técnico C9-E — Governed Materialization de Key Results

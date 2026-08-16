@@ -1,3 +1,19 @@
+---
+id: roadmap-governanca-documental-agentic-dx
+title: Roadmap - Governança Documental Canônica e Agentic DX
+domain: governance
+type: roadmap
+status: active
+owner: governance
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+related:
+  - skpe-saas-readme
+  - sparks-agent-execution-guardrails
+---
+
 # Roadmap - Governança Documental Canônica e Agentic DX
 
 FRONTMATTER MODEL: APPROVED IN PHASE 1
@@ -191,10 +207,35 @@ Priorizar candidatos como:
 Gate:
 agente consegue reconstruir contexto do piloto sem invenção relevante.
 
-### FASE 4 - Migração controlada
+Estado atual:
+DONE
+
+Atividade de fechamento:
+F3 - Aplicação Controlada ao Corpus Crítico
+
+Gate:
+GATE FASE 3 - APPROVED
+
+Resultado consolidado:
+
+- corpus crítico governado sem migração cega/em massa;
+- `README.md` mantido como discovery entrypoint;
+- hub de arquitetura transversal preservado como hub oficial;
+- hub de Planejamento Estratégico e metodologia do SK-PE criado como fonte canônica única para Planejamento Estratégico e para o papel do SK-PE;
+- `REQ-PLAT-ORG-001` mantido com `owner: product`;
+- `CONTRATO_PAINEL_PRINCIPAL_FE09A06.md` mantido como `supporting`, sem promoção artificial para `canonical`;
+- documentos FE-09A ainda `working` preservados para tratamento posterior;
+- `docs/05-functional-specifications/**` explicitamente deferido para a próxima fase;
+- `_audit/**` mantido fora da rota normativa;
+- nenhuma supersession fictícia criada.
+
+Próximo estágio:
+FASE 4 - Consolidação Documental e Validação Agentic DX
+
+### FASE 4 - Consolidação Documental e Validação Agentic DX
 
 Objetivo:
-estender somente o modelo comprovado.
+consolidar o corpus já governado, tratar os espaços ainda `working` ou deferidos e validar o consumo agentic do conjunto resultante.
 
 Incluir:
 
@@ -255,9 +296,9 @@ deixar claro quando poderemos dizer que a implantação foi concluída.
 | GD-002 | F1 | Definir entrypoint oficial para agentes | Agente hoje não tem trilha inequívoca de leitura inicial | Alta | BACKLOG | GD-001 | README + guardrails + corpus em `docs` | Sim | Entry point definido | Modelo mínimo aprovado |
 | GD-003 | F1 | Definir schema mínimo de frontmatter | Apenas parte pequena do corpus usa YAML e os esquemas divergem | Alta | DONE | GD-001 | Relatórios F1.0 a F1.4 | Sim | Schema mínimo aprovado | Modelo aprovado |
 | GD-004 | F1 | Definir semântica oficial de status | `approved`, `active`, texto livre e estados embutidos coexistem | Alta | DONE | GD-001 | Requisitos, auditorias, guardrails e contratos | Sim | Vocabulário mínimo aprovado | Modelo aprovado |
-| GD-005 | F2 | Definir relações documentais mínimas | Precedência e substituição ainda não estão operacionalizadas | Alta | IN PROGRESS | GD-003, GD-004 | F2.0 discovery + corpus piloto | Sim | Relações mínimas aprovadas | Relações aprovadas |
+| GD-005 | F2 | Definir relações documentais mínimas | Precedência e substituição ainda não estão operacionalizadas | Alta | DONE | GD-003, GD-004 | F2.0 discovery + corpus piloto | Sim | Relações mínimas aprovadas | Relações aprovadas |
 | GD-006 | F2 | Separar normativo x histórico x auditoria | `_audit` e relatórios podem ser consumidos como regra vigente | Alta | BACKLOG | GD-004 | Relatórios e crosschecks com linguagem normativa | Sim | Política de classificação aprovada | Relações aprovadas |
-| GD-007 | F3 | Rodar piloto em corpus crítico | Necessário provar o modelo antes de migração ampla | Alta | BACKLOG | GD-002, GD-003, GD-005 | Guardrails, ADR, requisito, contrato, relatório | Não | Piloto executado | Piloto sem invenção |
+| GD-007 | F3 | Rodar piloto em corpus crítico | Necessário provar o modelo antes de migração ampla | Alta | IN PROGRESS | GD-002, GD-003, GD-005 | Guardrails, ADR, requisito, contrato, relatório | Não | Piloto executado | Piloto sem invenção |
 | GD-008 | F4 | Migrar corpus prioritário por ondas | Migração em massa precoce aumenta risco de drift | Média | BACKLOG | GD-007 | Diagnóstico F0 | Não | Ondas controladas definidas | Corpus rastreável |
 | GD-009 | F5 | Validar Agentic DX | Precisa comprovar consumo seguro por agentes | Alta | BACKLOG | GD-007 | Perguntas de validação da Fase 5 | Não | Suite documental de validação | Testes satisfatórios |
 | GD-010 | F6 | Institucionalizar rotina | Sem rotina, drift reaparece | Média | BACKLOG | GD-008, GD-009 | Diagnóstico F0 | Sim | Política contínua definida | Encerramento formal |

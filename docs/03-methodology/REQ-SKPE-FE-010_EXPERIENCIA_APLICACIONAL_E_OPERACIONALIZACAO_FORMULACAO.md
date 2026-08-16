@@ -1,3 +1,23 @@
+---
+id: req-skpe-fe-010
+title: Experiência Aplicacional e Operacionalização da Formulação Estratégica
+domain: strategic-planning
+type: requirement
+status: active
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: canonical
+canonical: true
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-001
+  - shell-app-transversal-contract-fe09a03
+  - painel-principal-contract-fe09a06
+criticality: high
+---
+
 # REQ-SKPE-FE-010 — Experiência Aplicacional e Operacionalização da Formulação Estratégica
 
 **Projeto:** Plataforma SPARKs — Módulo SK-PE

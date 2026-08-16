@@ -13,6 +13,7 @@ criticality: high
 related:
   - skpe-saas-readme
   - sparks-agent-execution-guardrails
+  - skpe-strategic-planning-hub
 tags:
   - arquitetura
   - plataforma
@@ -44,22 +45,26 @@ Não pertence a este espaço:
 1. [[skpe-saas-readme]] para entrada geral no repositório.
 2. [[sparks-platform-architecture-hub]] para localizar o espaço arquitetural transversal.
 3. [[adr-plat-biz-001]] para a decisão compartilhada PE/PN.
-4. [[shell-app-transversal-contract-fe09a03]] para a fundação de shell transversal.
-5. [[sparks-agent-execution-guardrails]] quando a tarefa envolver limites governantes de execução e arquitetura.
+4. [[req-plat-org-001]] para roteamento inteligente e Home da Organização na Plataforma.
+5. [[shell-app-transversal-contract-fe09a03]] para a fundação de shell transversal.
+6. [[sparks-agent-execution-guardrails]] quando a tarefa envolver limites governantes de execução e arquitetura.
 
 ## Child Links
 
 - [[adr-plat-biz-001]]
+- [[req-plat-org-001]]
 - [[shell-app-transversal-contract-fe09a03]]
 
 ## Related Links
 
 - [[skpe-saas-readme]]
 - [[sparks-agent-execution-guardrails]]
+- [[skpe-strategic-planning-hub]]
 
 ## Progressive Disclosure
 
 - Use este hub para descobrir a órbita arquitetural transversal.
 - Use o ADR quando a dúvida envolver arquitetura de negócio compartilhada entre módulos.
+- Use o requisito de Home da Organização quando a dúvida envolver entrada do usuário, seleção de contexto e roteamento inteligente.
 - Use o contrato quando a dúvida envolver shell, layout estrutural e fundações reutilizáveis.
 - Use o guardrail quando a dúvida envolver regra governante de execução ou limites arquiteturais operacionais.

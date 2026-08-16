@@ -1,3 +1,23 @@
+---
+id: req-skpe-fe-002
+title: Governança e Versionamento da Formulação Estratégica
+domain: strategic-planning
+type: requirement
+status: active
+owner: methodology
+language: pt-BR
+encoding: UTF-8
+canonicality: canonical
+canonical: true
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-001
+  - req-skpe-fe-003
+  - req-skpe-fe-010
+criticality: high
+---
+
 # REQ-SKPE-FE-002 — Governança e Versionamento da Formulação Estratégica
 
 **Módulo:** SK-PE

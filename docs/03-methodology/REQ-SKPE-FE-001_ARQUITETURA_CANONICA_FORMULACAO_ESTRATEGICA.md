@@ -7,10 +7,14 @@ status: active
 owner: methodology
 language: pt-BR
 encoding: UTF-8
-canonicality: supporting
-canonical: false
+canonicality: canonical
+canonical: true
+parent:
+  - skpe-strategic-planning-hub
 related:
   - adr-plat-biz-001
+  - req-skpe-fe-002
+  - req-skpe-fe-010
 ---
 
 # REQ-SKPE-FE-001 — Arquitetura Canônica da Formulação Estratégica

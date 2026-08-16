@@ -1,3 +1,22 @@
+---
+id: painel-principal-contract-fe09a06
+title: Contrato do Painel Principal
+domain: navigation
+type: contract
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: supporting
+canonical: false
+parent:
+  - skpe-strategic-planning-hub
+related:
+  - req-skpe-fe-010
+  - shell-app-transversal-contract-fe09a03
+criticality: medium
+---
+
 # Contrato do Painel Principal — FE-09.A.06
 
 ## 1. Identificação

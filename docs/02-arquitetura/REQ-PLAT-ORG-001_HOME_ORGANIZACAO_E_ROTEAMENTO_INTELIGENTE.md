@@ -1,3 +1,23 @@
+---
+id: req-plat-org-001
+title: Home da Organização e Roteamento Inteligente
+domain: navigation
+type: requirement
+status: active
+owner: product
+language: pt-BR
+encoding: UTF-8
+canonicality: canonical
+canonical: true
+parent:
+  - sparks-platform-architecture-hub
+related:
+  - skpe-saas-readme
+  - skpe-strategic-planning-hub
+criticality: high
+created: 2026-07-29
+---
+
 # REQ-PLAT-ORG-001 — Home da Organização e Roteamento Inteligente
 
 ## 1. Identificação
