@@ -9,6 +9,8 @@ language: pt-BR
 encoding: UTF-8
 canonicality: supporting
 canonical: false
+related:
+  - sparks-platform-architecture-hub
 ---
 
 # SK-PE SaaS

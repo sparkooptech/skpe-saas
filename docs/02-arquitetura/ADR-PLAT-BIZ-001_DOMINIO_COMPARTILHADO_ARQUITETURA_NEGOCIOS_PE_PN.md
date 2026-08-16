@@ -10,6 +10,8 @@ encoding: UTF-8
 canonicality: canonical
 canonical: true
 criticality: high
+parent:
+  - sparks-platform-architecture-hub
 related:
   - req-skpe-fe-001
 tags:

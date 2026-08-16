@@ -9,6 +9,10 @@ language: pt-BR
 encoding: UTF-8
 canonicality: canonical
 canonical: true
+parent:
+  - sparks-platform-architecture-hub
+governed_by:
+  - sparks-agent-execution-guardrails
 related:
   - sparks-agent-execution-guardrails
 ---

@@ -1,61 +1,61 @@
-﻿# Roadmap - Governanca Documental Canonica e Agentic DX
+# Roadmap - Governança Documental Canônica e Agentic DX
 
-FRONTMATTER MODEL: PENDING PHASE 1
+FRONTMATTER MODEL: APPROVED IN PHASE 1
 
 ## Objetivo
 
-Estabelecer uma trilha controlada para reduzir ambiguidade documental, melhorar rastreabilidade e tornar o consumo do repositorio por agentes de IA mais seguro, sem alterar codigo-fonte ou comportamento da aplicacao.
+Estabelecer uma trilha controlada para reduzir ambiguidade documental, melhorar rastreabilidade e tornar o consumo do repositório por agentes de IA mais seguro, sem alterar código-fonte ou comportamento da aplicação.
 
 ## Problema que estamos resolvendo
 
-Hoje o repositorio contem documentacao relevante e densa, mas distribuida entre multiplas pastas, generos documentais e estilos de metadata. Existe evidencia de documentos fortes e atuais, porem ainda nao existe um mecanismo repositorio-wide suficientemente claro para um agente descobrir, com baixa ambiguidade:
+Hoje o repositório contém documentação relevante e densa, mas distribuída entre múltiplas pastas, gêneros documentais e estilos de metadata. Existe evidência de documentos fortes e atuais, porém ainda não existe um mecanismo repositório-wide suficientemente claro para um agente descobrir, com baixa ambiguidade:
 
-- por onde comecar;
-- quais documentos sao autoritativos;
-- o que e transversal de Plataforma SPARKs e o que e especifico de SK-PE;
-- quais ativos sao historicos, de auditoria, de execucao ou normativos;
-- como resolver precedencia em caso de conflito;
-- como rastrear uma decisao ate sua origem.
+- por onde começar;
+- quais documentos são autoritativos;
+- o que é transversal de Plataforma SPARKs e o que é específico de SK-PE;
+- quais ativos são históricos, de auditoria, de execução ou normativos;
+- como resolver precedência em caso de conflito;
+- como rastrear uma decisão até sua origem.
 
-## Restricoes
+## Restrições
 
-Esta iniciativa nao altera codigo-fonte ou comportamento da aplicacao.
+Esta iniciativa não altera código-fonte ou comportamento da aplicação.
 
-Nao executar mudancas funcionais, migracoes, testes destrutivos, refatoracoes amplas ou reclassificacao silenciosa de documentos historicos.
+Não executar mudanças funcionais, migrações, testes destrutivos, refatorações amplas ou reclassificação silenciosa de documentos históricos.
 
 ## Estado inicial
 
-FACT: o repositorio possui corpus documental relevante na raiz, em `docs/**`, em `_audit/**` e em READMEs pontuais sob `apps/` e `supabase/functions/`.
+FACT: o repositório possui corpus documental relevante na raiz, em `docs/**`, em `_audit/**` e em READMEs pontuais sob `apps/` e `supabase/functions/`.
 
 FACT: existem documentos com frontmatter YAML no topo, mas apenas em pequena parcela do corpus relevante.
 
-FACT: existem pelo menos tres familias documentais distintas convivendo no repositorio:
+FACT: existem pelo menos três famílias documentais distintas convivendo no repositório:
 
-- governanca/arquitetura/plataforma;
-- metodologia, contratos, matrizes, requisitos e relatorios de implementacao do SK-PE;
-- auditoria/fechamento e blocos funcionais de portabilidade/importacao.
+- governança/arquitetura/plataforma;
+- metodologia, contratos, matrizes, requisitos e relatórios de implementação do SK-PE;
+- auditoria/fechamento e blocos funcionais de portabilidade/importação.
 
-INFERENCE: a base atual e suficiente para iniciar uma governanca documental incremental, desde que a Fase 1 trate precedencia, minimizacao de metadata e separacao entre documentos normativos e historicos.
+INFERENCE: a base atual é suficiente para iniciar uma governança documental incremental, desde que a Fase 1 trate precedência, minimização de metadata e separação entre documentos normativos e históricos.
 
-## Principios
+## Princípios
 
 - canonicidade;
 - rastreabilidade;
-- semantica;
+- semântica;
 - contexto;
-- nao invencao;
+- não invenção;
 - progressive disclosure;
 - Anti-Monster.
 
 ## Fases
 
-### FASE 0 - Inventario e diagnostico
+### FASE 0 - Inventário e diagnóstico
 
 Objetivo:
 inventariar e compreender antes de alterar.
 
-Saida:
-diagnostico + inventario + riscos + mapa preliminar.
+Saída:
+diagnóstico + inventário + riscos + mapa preliminar.
 
 Gate:
 baseline documental conhecido.
@@ -64,7 +64,7 @@ Estado atual:
 DONE
 
 Atividade adicional:
-F0.1 - Decisoes estruturantes
+F0.1 - Decisões estruturantes
 
 Gate:
 GATE FASE 0 - APPROVED
@@ -72,94 +72,126 @@ GATE FASE 0 - APPROVED
 Data do gate:
 2026-08-15
 
-Decisoes aprovadas:
+Decisões aprovadas:
 
 - entrypoint oficial para agentes;
-- schema minimo de frontmatter;
-- vocabulario minimo de status;
-- politica minima de precedencia e supersession;
+- schema mínimo de frontmatter;
+- vocabulário mínimo de status;
+- política mínima de precedência e supersession;
 - papel operacional de `_audit/**`.
 
 Entregas principais:
 
-- inventario e diagnostico documental da Fase 0;
-- roadmap canonico da iniciativa;
-- relatorio Fase 0;
-- relatorio Fase 0.1 com decisoes estruturantes;
-- aprovacao formal das decisoes D01 a D06.
+- inventário e diagnóstico documental da Fase 0;
+- roadmap canônico da iniciativa;
+- relatório Fase 0;
+- relatório Fase 0.1 com decisões estruturantes;
+- aprovação formal das decisões D01 a D06.
 
-Pendencias transferidas para fases posteriores:
+Pendências transferidas para fases posteriores:
 
 - materializar o entrypoint especializado em `docs/00-governanca`;
 - executar piloto de frontmatter;
-- formalizar relacoes documentais minimas;
+- formalizar relações documentais mínimas;
 - validar o piloto Agentic DX;
-- preparar migracao controlada posterior.
+- preparar migração controlada posterior.
 
-Proximo estagio:
-FASE 1 - Crosswalk com padrao documental raiz
+Próximo estágio:
+FASE 1 - Crosswalk com padrão documental raiz
 
-### FASE 1 - Modelo minimo de metadados
+### FASE 1 - Modelo mínimo de metadados
 
 Objetivo:
 definir o menor frontmatter suficiente.
 
-Saida candidata:
-schema minimo e regras de uso.
+Saída candidata:
+schema mínimo e regras de uso.
 
 Gate:
-modelo aprovado antes de migracao.
+modelo aprovado antes de migração.
 
 Estado atual:
 DONE
 
-Atividade em andamento:
+Atividade de fechamento:
 F1.4 - Normalização e fechamento do modelo de metadados - VALIDATION
 
 Gate:
 GATE FASE 1 - APPROVED
 
-### FASE 2 - Relacoes e rastreabilidade
+Resultado consolidado:
+
+- CORE aprovado;
+- catálogo inicial de `owner` aprovado;
+- vocabulário de `status` e `canonicality` aprovado;
+- piloto controlado concluído;
+- `language: pt-BR` e `encoding: UTF-8` obrigatórios para o corpus normalizado.
+
+### FASE 2 - Relações e rastreabilidade
 
 Objetivo:
-definir como documentos se conectam.
+definir como os documentos se conectam.
 
-Investigar relacoes como:
+Investigar relações como:
 
-- depends_on;
-- related_to;
-- supersedes;
-- superseded_by;
-- implements;
-- validates;
-- derives_from;
-- governed_by.
+- `parent`;
+- `related`;
+- `depends_on`;
+- `governed_by`;
+- `supersedes`;
+- `superseded_by`.
 
 IMPORTANTE:
-estes nomes ainda sao candidatos, nao politica aprovada.
+estes nomes permanecem candidatos até a decisão formal da Fase 2.1.
 
 Gate:
-relacoes minimas aprovadas.
+relações mínimas aprovadas.
+
+Estado atual:
+DONE
+
+Atividade de fechamento:
+F2.2 - Piloto controlado de relações e primeiro hub - VALIDATION
+
+Gate:
+GATE FASE 2 - APPROVED
+
+Resultado consolidado:
+
+- `parent` aprovado como relação hierárquica/topológica principal;
+- `related` aprovado como relação lateral semântica;
+- `governed_by` validado como relação de autoridade normativa distinta de `parent`;
+- `supersedes` aprovado como relação explícita de substituição, sem uso fictício no piloto;
+- `superseded_by` mantido como relação derivada;
+- `children` mantido como relação derivada;
+- `depends_on` mantido em `DEFER`;
+- relações canônicas apontando para IDs estáveis;
+- wikilinks no corpo tratados como projeção de navegação, não como segunda fonte canônica;
+- `docs/02-arquitetura/README.md` aprovado como primeiro hub oficial, com `id: sparks-platform-architecture-hub`;
+- `domain: architecture` aprovado para hubs arquiteturais;
+- registry central explicitamente não adotado;
+- ausência de caso real de supersession não bloqueando o fechamento da fase;
+- próxima fase preparada: `FASE 3 - Aplicação Controlada ao Corpus Crítico`.
 
 ### FASE 3 - Piloto documental
 
 Objetivo:
-aplicar o modelo somente em um pequeno conjunto critico.
+aplicar o modelo somente em um pequeno conjunto crítico.
 
 Priorizar candidatos como:
 
 - entrypoint;
-- governanca;
+- governança;
 - arquitetura;
 - requisito;
 - ADR;
 - contrato;
-- relatorio de validacao.
+- relatório de validação.
 
 Gate:
-agente consegue reconstruir contexto do piloto sem invencao relevante.
+agente consegue reconstruir contexto do piloto sem invenção relevante.
 
-### FASE 4 - Migracao controlada
+### FASE 4 - Migração controlada
 
 Objetivo:
 estender somente o modelo comprovado.
@@ -167,109 +199,110 @@ estender somente o modelo comprovado.
 Incluir:
 
 - ondas;
-- criterios;
-- documentos prioritarios;
-- tratamento de historicos;
+- critérios;
+- documentos prioritários;
+- tratamento de históricos;
 - tratamento de duplicidades;
-- tratamento de documentos substituidos.
+- tratamento de documentos substituídos.
 
 Gate:
-corpus critico rastreavel.
+corpus crítico rastreável.
 
-### FASE 5 - Validacao Agentic DX
+### FASE 5 - Validação Agentic DX
 
 Objetivo:
 testar consumo por IA.
 
-Perguntas de validacao:
+Perguntas de validação:
 
 - agente encontra entrypoint?
 - identifica fonte vigente?
-- distingue plataforma/modulo?
-- distingue fato/historico/decisao?
-- segue relacoes?
+- distingue plataforma/módulo?
+- distingue fato/histórico/decisão?
+- segue relações?
 - evita documento superseded?
 - detecta conflito?
-- sabe quando precisa de decisao humana?
+- sabe quando precisa de decisão humana?
 
 Gate:
-testes documentais satisfatorios.
+testes documentais satisfatórios.
 
-### FASE 6 - Governanca continua e encerramento
+### FASE 6 - Governança contínua e encerramento
 
 Objetivo:
-transformar melhoria em rotina sustentavel.
+transformar melhoria em rotina sustentável.
 
 Definir posteriormente:
 
-- criacao de novos documentos;
-- atualizacao;
-- revisao;
+- criação de novos documentos;
+- atualização;
+- revisão;
 - supersession;
-- depreciacao;
+- depreciação;
 - arquivamento;
-- qualidade minima;
-- prevencao de drift.
+- qualidade mínima;
+- prevenção de drift.
 
-Criterios de encerramento da iniciativa inicial:
-deixar claro quando poderemos dizer que a implantacao foi concluida.
+Critérios de encerramento da iniciativa inicial:
+deixar claro quando poderemos dizer que a implantação foi concluída.
 
 ## Backlog controlado
 
-| ID | fase | item | problema | prioridade | status | dependencia | evidencia | decisao necessaria | resultado | gate |
+| ID | fase | item | problema | prioridade | status | dependência | evidência | decisão necessária | resultado | gate |
 |---|---|---|---|---|---|---|---|---|---|---|
-| GD-001 | F0 | Consolidar baseline documental | Corpus relevante disperso entre raiz, `docs` e `_audit` | Alta | DONE | Nenhuma | Relatorio Fase 0 | Nao | Baseline mapeado | Baseline conhecido |
-| GD-001A | F0.1 | Fechar decisoes estruturantes | Fase 1 depende de cinco decisoes humanas explicitas | Alta | DONE | GD-001 | Relatorio Fase 0.1 | Sim | Base decisoria consolidada | Gate Fase 0 approved |
-| GD-002 | F1 | Definir entrypoint oficial para agentes | Agente hoje nao tem trilha inequívoca de leitura inicial | Alta | BACKLOG | GD-001 | README + guardrails + corpus em `docs` | Sim | Entry point definido | Modelo minimo aprovado |
-| GD-003 | F1 | Definir schema minimo de frontmatter | Apenas parte pequena do corpus usa YAML e os esquemas divergem | Alta | BACKLOG | GD-001 | 6/72 docs em `docs` com frontmatter no topo | Sim | Schema minimo proposto | Modelo aprovado |
-| GD-004 | F1 | Definir semantica oficial de status | `approved`, `active`, texto livre e estados embutidos coexistem | Alta | BACKLOG | GD-001 | Requisitos, auditorias, guardrails e contratos | Sim | Vocabulário minimo aprovado | Modelo aprovado |
-| GD-005 | F2 | Definir relacoes documentais minimas | Precedencia e substituicao nao estao operacionalizadas | Alta | BACKLOG | GD-003, GD-004 | `depends_on` pontual; ausencia de `supersedes` formal | Sim | Relacoes minimas aprovadas | Relacoes aprovadas |
-| GD-006 | F2 | Separar normativo x historico x auditoria | `_audit` e relatorios podem ser consumidos como regra vigente | Alta | BACKLOG | GD-004 | Relatorios e crosschecks com linguagem normativa | Sim | Politica de classificacao aprovada | Relacoes aprovadas |
-| GD-007 | F3 | Rodar piloto em corpus critico | Necessario provar o modelo antes de migracao ampla | Alta | BACKLOG | GD-002, GD-003, GD-005 | Guardrails, ADR, requisito, contrato, relatorio | Nao | Piloto executado | Piloto sem invencao |
-| GD-008 | F4 | Migrar corpus prioritario por ondas | Migracao em massa precoce aumenta risco de drift | Media | BACKLOG | GD-007 | Diagnostico F0 | Nao | Ondas controladas definidas | Corpus rastreavel |
-| GD-009 | F5 | Validar Agentic DX | Precisa comprovar consumo seguro por agentes | Alta | BACKLOG | GD-007 | Perguntas de validacao da Fase 5 | Nao | Suite documental de validacao | Testes satisfatorios |
-| GD-010 | F6 | Institucionalizar rotina | Sem rotina, drift reaparece | Media | BACKLOG | GD-008, GD-009 | Diagnostico F0 | Sim | Politica continua definida | Encerramento formal |
+| GD-001 | F0 | Consolidar baseline documental | Corpus relevante disperso entre raiz, `docs` e `_audit` | Alta | DONE | Nenhuma | Relatório Fase 0 | Não | Baseline mapeado | Baseline conhecido |
+| GD-001A | F0.1 | Fechar decisões estruturantes | Fase 1 depende de cinco decisões humanas explícitas | Alta | DONE | GD-001 | Relatório Fase 0.1 | Sim | Base decisória consolidada | Gate Fase 0 approved |
+| GD-002 | F1 | Definir entrypoint oficial para agentes | Agente hoje não tem trilha inequívoca de leitura inicial | Alta | BACKLOG | GD-001 | README + guardrails + corpus em `docs` | Sim | Entry point definido | Modelo mínimo aprovado |
+| GD-003 | F1 | Definir schema mínimo de frontmatter | Apenas parte pequena do corpus usa YAML e os esquemas divergem | Alta | DONE | GD-001 | Relatórios F1.0 a F1.4 | Sim | Schema mínimo aprovado | Modelo aprovado |
+| GD-004 | F1 | Definir semântica oficial de status | `approved`, `active`, texto livre e estados embutidos coexistem | Alta | DONE | GD-001 | Requisitos, auditorias, guardrails e contratos | Sim | Vocabulário mínimo aprovado | Modelo aprovado |
+| GD-005 | F2 | Definir relações documentais mínimas | Precedência e substituição ainda não estão operacionalizadas | Alta | IN PROGRESS | GD-003, GD-004 | F2.0 discovery + corpus piloto | Sim | Relações mínimas aprovadas | Relações aprovadas |
+| GD-006 | F2 | Separar normativo x histórico x auditoria | `_audit` e relatórios podem ser consumidos como regra vigente | Alta | BACKLOG | GD-004 | Relatórios e crosschecks com linguagem normativa | Sim | Política de classificação aprovada | Relações aprovadas |
+| GD-007 | F3 | Rodar piloto em corpus crítico | Necessário provar o modelo antes de migração ampla | Alta | BACKLOG | GD-002, GD-003, GD-005 | Guardrails, ADR, requisito, contrato, relatório | Não | Piloto executado | Piloto sem invenção |
+| GD-008 | F4 | Migrar corpus prioritário por ondas | Migração em massa precoce aumenta risco de drift | Média | BACKLOG | GD-007 | Diagnóstico F0 | Não | Ondas controladas definidas | Corpus rastreável |
+| GD-009 | F5 | Validar Agentic DX | Precisa comprovar consumo seguro por agentes | Alta | BACKLOG | GD-007 | Perguntas de validação da Fase 5 | Não | Suite documental de validação | Testes satisfatórios |
+| GD-010 | F6 | Institucionalizar rotina | Sem rotina, drift reaparece | Média | BACKLOG | GD-008, GD-009 | Diagnóstico F0 | Sim | Política contínua definida | Encerramento formal |
 
 ## Riscos
 
-- agentes consumirem relatorios historicos como regra vigente;
-- frontmatter ser expandido antes de existir schema minimo aprovado;
-- classificacao silenciosa de documentos como canonicos sem decisao humana;
-- coexistencia prolongada de multiplos "quase-entrypoints";
-- persistencia de paths absolutos dependentes da maquina do autor;
-- reuso de vocabulario semantico sem definicao comum de precedencia.
+- agentes consumirem relatórios históricos como regra vigente;
+- frontmatter ser expandido antes de existir schema mínimo aprovado;
+- classificação silenciosa de documentos como canônicos sem decisão humana;
+- coexistência prolongada de múltiplos "quase-entrypoints";
+- persistência de paths absolutos dependentes da máquina do autor;
+- reuso de vocabulário semântico sem definição comum de precedência.
 
-## Decisoes pendentes
+## Decisões pendentes
 
-- qual sera o entrypoint oficial para agentes;
-- qual e o menor schema de frontmatter necessario;
-- como distinguir normativo, apoio ativo, historico e auditoria;
-- qual vocabulario oficial de status e canonicidade;
-- qual e a politica de supersession/substituicao documental;
-- como tratar `_audit` na navegacao documental principal.
+- qual será o entrypoint oficial para agentes;
+- qual é o modelo mínimo de relações necessário;
+- como distinguir normativo, apoio ativo, histórico e auditoria;
+- qual é a política explícita de supersession/substituição documental;
+- se `parent` exige hub aprovado antes de aplicação ampla;
+- se `governed_by` agrega semântica suficiente para adoção futura.
 
-## Criterios de sucesso
+## Critérios de sucesso
 
-- um agente na raiz do repositorio consegue identificar por onde comecar;
-- plataforma e modulo ficam claramente distinguidos;
-- documentos prioritarios passam a expor contexto e precedencia minima;
-- historicos deixam de competir com normativos no caminho principal;
-- relacoes documentais criticas ficam navegaveis sem leitura arbitraria de dezenas de arquivos.
+- um agente na raiz do repositório consegue identificar por onde começar;
+- plataforma e módulo ficam claramente distinguidos;
+- documentos prioritários passam a expor contexto e precedência mínima;
+- históricos deixam de competir com normativos no caminho principal;
+- relações documentais críticas ficam navegáveis sem leitura arbitrária de dezenas de arquivos.
 
-## Criterios de encerramento
+## Critérios de encerramento
 
-- schema minimo aprovado e aplicado ao piloto;
-- relacoes minimas aprovadas e testadas;
+- schema mínimo aprovado e aplicado ao piloto;
+- relações mínimas aprovadas e testadas;
 - entrypoint oficial definido;
-- corpus critico do piloto rastreavel;
-- validacao Agentic DX aprovada;
-- regras continuas de criacao, revisao e arquivamento definidas.
+- corpus crítico do piloto rastreável;
+- validação Agentic DX aprovada;
+- regras contínuas de criação, revisão e arquivamento definidas.
 
-## Historico de gates
+## Histórico de gates
 
-| data | gate | estado | evidencia |
+| data | gate | estado | evidência |
 |---|---|---|---|
-| 2026-08-15 | Baseline documental conhecido | PASS | Relatorio Fase 0 |
-| 2026-08-15 | Inicio controlado da iniciativa | PASS | Roadmap criado em `docs/00-governanca` |
-| 2026-08-15 | F0.1 decisoes estruturantes em consolidacao | PASS | Relatorio Fase 0.1 |
-| 2026-08-15 | GATE FASE 0 | APPROVED | Roadmap + Relatorio Fase 0.1 |
+| 2026-08-15 | Baseline documental conhecido | PASS | Relatório Fase 0 |
+| 2026-08-15 | Início controlado da iniciativa | PASS | Roadmap criado em `docs/00-governanca` |
+| 2026-08-15 | F0.1 decisões estruturantes em consolidação | PASS | Relatório Fase 0.1 |
+| 2026-08-15 | GATE FASE 0 | APPROVED | Roadmap + Relatório Fase 0.1 |
+| 2026-08-16 | GATE FASE 1 | APPROVED | Relatório Fase 1.4 |
