@@ -58,6 +58,25 @@ jobs:
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
             "${GITHUB_SHA}"
 
+      - name: External Public Baseline Preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          home_body="$(mktemp)"
+
+          cleanup() {
+            rm -f "${home_body}"
+          }
+          trap cleanup EXIT
+
+          curl --fail --silent --show-error --location \
+            "https://${DOMAIN_NAME}/healthz" > /dev/null
+
+          curl --fail --silent --show-error --location \
+            "https://${DOMAIN_NAME}/" > "${home_body}"
+
+          grep -Eq 'Plataforma SPARKs|<div id="root">' "${home_body}"
+
       - name: Configure SSH
         shell: bash
         env:
@@ -170,3 +189,33 @@ jobs:
           set -euo pipefail
           ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
             "cd '${{ steps.meta.outputs.release_dir }}' && chmod +x deploy-remote.sh && GITHUB_SHA='${GITHUB_SHA}' RELEASE_SHORT_SHA='${{ steps.meta.outputs.short_sha }}' ./deploy-remote.sh"
+
+      - name: Public Domain Smoke Test
+        shell: bash
+        run: |
+          set -euo pipefail
+          home_body="$(mktemp)"
+          rollback_needed=0
+
+          cleanup() {
+            rm -f "${home_body}"
+          }
+
+          rollback_remote() {
+            if [ "${rollback_needed}" -eq 1 ]; then
+              ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+                "cd '${{ steps.meta.outputs.release_dir }}' && ./deploy-remote.sh rollback"
+            fi
+          }
+
+          trap 'cleanup; rollback_remote' EXIT
+          rollback_needed=1
+
+          curl --fail --silent --show-error --location \
+            "https://${DOMAIN_NAME}/healthz" > /dev/null
+
+          curl --fail --silent --show-error --location \
+            "https://${DOMAIN_NAME}/" > "${home_body}"
+
+          grep -Eq 'Plataforma SPARKs|<div id="root">' "${home_body}"
+          rollback_needed=0

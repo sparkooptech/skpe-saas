@@ -79,29 +79,6 @@ validate_release_dir() {
   [ -f "${TARBALL_PATH}" ] || fail "Source bundle not found: ${TARBALL_PATH}"
 }
 
-validate_public_domain() {
-  local body_file
-  body_file="$(mktemp)"
-
-  if ! curl --fail --silent --show-error --location "https://${SPARKS_HOST}/healthz" > /dev/null; then
-    rm -f "${body_file}"
-    return 1
-  fi
-
-  if ! curl --fail --silent --show-error --location "https://${SPARKS_HOST}/" > "${body_file}"; then
-    rm -f "${body_file}"
-    return 1
-  fi
-
-  if ! grep -Eq 'Plataforma SPARKs|<div id="root">' "${body_file}"; then
-    rm -f "${body_file}"
-    return 1
-  fi
-
-  rm -f "${body_file}"
-  return 0
-}
-
 write_cleanup_metadata() {
   {
     echo "BACKUP_CONTAINER=${BACKUP_CONTAINER}"
@@ -173,7 +150,7 @@ perform_rollback() {
     docker rename "${BACKUP_CONTAINER}" "${PUBLIC_CONTAINER}"
     docker start "${PUBLIC_CONTAINER}" >/dev/null
 
-    if wait_for_health "${PUBLIC_CONTAINER}" 30 && validate_public_domain; then
+    if wait_for_health "${PUBLIC_CONTAINER}" 30; then
       restore_ok=1
     fi
   fi
@@ -213,8 +190,6 @@ run_preflight() {
   if [ -n "${CURRENT_RELEASE_DIR}" ] && [ -f "${CURRENT_RELEASE_DIR}/source/app/COMMIT_SHA" ]; then
     CURRENT_RELEASE_COMMIT="$(tr -d '\n' < "${CURRENT_RELEASE_DIR}/source/app/COMMIT_SHA")"
   fi
-
-  validate_public_domain || fail "Current public domain preflight failed"
 }
 
 build_preview_release() {
@@ -272,17 +247,6 @@ cutover_release() {
 
   if ! wait_for_health "${PUBLIC_CONTAINER}" 60; then
     log "CUTOVER FAIL: new public container did not become healthy"
-    if perform_rollback; then
-      cleanup_failed_release
-      exit "${ROLLBACK_AFTER_DEPLOY_EXIT_CODE}"
-    fi
-
-    cleanup_failed_release
-    exit "${ROLLBACK_FAILURE_EXIT_CODE}"
-  fi
-
-  if ! validate_public_domain; then
-    log "CUTOVER FAIL: public domain validation failed"
     if perform_rollback; then
       cleanup_failed_release
       exit "${ROLLBACK_AFTER_DEPLOY_EXIT_CODE}"
