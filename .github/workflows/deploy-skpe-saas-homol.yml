@@ -90,21 +90,13 @@ jobs:
             echo "::endgroup::"
           fi
 
-          if command -v python3 >/dev/null 2>&1; then
+          if command -v timeout >/dev/null 2>&1; then
             echo "::group::TCP connectivity"
-            python3 - <<'PY' || true
-            import os
-            import socket
-
-            host = os.environ["HOSTINGER_HOST"]
-            port = int(os.environ["SSH_PORT"])
-
-            try:
-              with socket.create_connection((host, port), timeout=10):
-                print(f"TCP_CONNECT_OK {host}:{port}")
-            except OSError as exc:
-              print(f"TCP_CONNECT_FAIL {host}:{port} {exc}")
-            PY
+            if timeout 10 bash -c ":</dev/tcp/${HOSTINGER_HOST}/${SSH_PORT}" 2>/dev/null; then
+              echo "TCP_CONNECT_OK ${HOSTINGER_HOST}:${SSH_PORT}"
+            else
+              echo "TCP_CONNECT_FAIL ${HOSTINGER_HOST}:${SSH_PORT}"
+            fi
             echo "::endgroup::"
           fi
 
