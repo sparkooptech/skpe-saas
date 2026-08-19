@@ -22,6 +22,7 @@ jobs:
       DOMAIN_NAME: sparks-homol.sparkoop.com.br
       PREVIEW_BIND: 127.0.0.1:18080:8080
       SSH_PORT: 22
+      HOSTINGER_FALLBACK_IP: 179.198.118.251
     steps:
       - name: Check Out Exact Commit
         uses: actions/checkout@v4
@@ -60,19 +61,90 @@ jobs:
       - name: Configure SSH
         shell: bash
         env:
+          RAW_HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          RAW_HOSTINGER_USER: ${{ secrets.HOSTINGER_USER }}
           HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
         run: |
           set -euo pipefail
+
+          HOSTINGER_HOST="$(printf '%s' "${RAW_HOSTINGER_HOST}" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          HOSTINGER_USER="$(printf '%s' "${RAW_HOSTINGER_USER}" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
+          if [ -z "${HOSTINGER_HOST}" ]; then
+            echo "::error::HOSTINGER_HOST is empty after trimming."
+            exit 1
+          fi
+
+          if [ -z "${HOSTINGER_USER}" ]; then
+            echo "::error::HOSTINGER_USER is empty after trimming."
+            exit 1
+          fi
+
+          echo "SSH_PORT=${SSH_PORT}"
+          echo "HOSTINGER_HOST length=${#HOSTINGER_HOST}"
+          echo "HOSTINGER_USER length=${#HOSTINGER_USER}"
+
+          if command -v getent >/dev/null 2>&1; then
+            echo "::group::DNS resolution"
+            getent hosts "${HOSTINGER_HOST}" || true
+            echo "::endgroup::"
+          fi
+
+          if command -v python3 >/dev/null 2>&1; then
+            echo "::group::TCP connectivity"
+            python3 - <<'PY' || true
+            import os
+            import socket
+
+            host = os.environ["HOSTINGER_HOST"]
+            port = int(os.environ["SSH_PORT"])
+
+            try:
+              with socket.create_connection((host, port), timeout=10):
+                print(f"TCP_CONNECT_OK {host}:{port}")
+            except OSError as exc:
+              print(f"TCP_CONNECT_FAIL {host}:{port} {exc}")
+            PY
+            echo "::endgroup::"
+          fi
+
           install -m 700 -d ~/.ssh
           printf '%s\n' "${HOSTINGER_SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "${SSH_PORT}" "${{ secrets.HOSTINGER_HOST }}" >> ~/.ssh/known_hosts
+
+          echo "::group::ssh-keyscan hostname"
+          if ssh-keyscan -T 10 -p "${SSH_PORT}" "${HOSTINGER_HOST}" >> ~/.ssh/known_hosts; then
+            echo "SSH_KEYSCAN_HOSTNAME_OK"
+          else
+            echo "SSH_KEYSCAN_HOSTNAME_FAIL"
+
+            if [ "${HOSTINGER_HOST}" = "${HOSTINGER_FALLBACK_IP}" ]; then
+              echo "::error::ssh-keyscan failed for HOSTINGER_HOST and no alternate fallback is available."
+              exit 1
+            fi
+
+            echo "::group::ssh-keyscan fallback IPv4"
+            if ssh-keyscan -T 10 -p "${SSH_PORT}" "${HOSTINGER_FALLBACK_IP}" >> ~/.ssh/known_hosts; then
+              HOSTINGER_HOST="${HOSTINGER_FALLBACK_IP}"
+              echo "SSH_KEYSCAN_FALLBACK_IP_OK"
+            else
+              echo "::error::ssh-keyscan failed for both hostname and fallback IPv4."
+              exit 1
+            fi
+            echo "::endgroup::"
+          fi
+          echo "::endgroup::"
+
+          {
+            echo "HOSTINGER_HOST=${HOSTINGER_HOST}"
+            echo "HOSTINGER_USER=${HOSTINGER_USER}"
+          } >> "${GITHUB_ENV}"
 
       - name: Prepare Remote Release Directory
         shell: bash
         run: |
           set -euo pipefail
-          ssh -p "${SSH_PORT}" "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" \
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
             "mkdir -p '${{ steps.meta.outputs.release_dir }}'"
 
       - name: Upload Release Bundle
@@ -81,7 +153,7 @@ jobs:
           set -euo pipefail
           scp -P "${SSH_PORT}" -r \
             "${RUNNER_TEMP}/release/." \
-            "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ steps.meta.outputs.release_dir }}/"
+            "${HOSTINGER_USER}@${HOSTINGER_HOST}:${{ steps.meta.outputs.release_dir }}/"
 
       - name: Write Remote Environment File
         shell: bash
@@ -90,7 +162,7 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SKPE_SAAS_HOMOL_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -euo pipefail
-          ssh -p "${SSH_PORT}" "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" <<EOF
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" <<EOF
           cat > '${{ steps.meta.outputs.release_dir }}/.env' <<ENVFILE
           IMAGE_NAME=${{ steps.meta.outputs.image_name }}
           PREVIEW_BIND=${PREVIEW_BIND}
@@ -104,5 +176,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ssh -p "${SSH_PORT}" "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" \
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
             "cd '${{ steps.meta.outputs.release_dir }}' && chmod +x deploy-remote.sh && GITHUB_SHA='${GITHUB_SHA}' RELEASE_SHORT_SHA='${{ steps.meta.outputs.short_sha }}' ./deploy-remote.sh"
