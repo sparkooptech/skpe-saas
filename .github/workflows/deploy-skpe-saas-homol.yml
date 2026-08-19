@@ -1,0 +1,108 @@
+name: Deploy SKPE-SAAS HOMOL
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skpe-saas-homol-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build And Deploy Exact Commit
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_PREFIX: skpe-saas-homol
+      DOMAIN_NAME: sparks-homol.sparkoop.com.br
+      PREVIEW_BIND: 127.0.0.1:18080:8080
+      SSH_PORT: 22
+    steps:
+      - name: Check Out Exact Commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Derive Release Metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          short_sha="${GITHUB_SHA::7}"
+          release_name="${RELEASE_PREFIX}-${short_sha}"
+          release_dir="/docker/${release_name}"
+          image_name="${RELEASE_PREFIX}:${short_sha}"
+
+          {
+            echo "short_sha=${short_sha}"
+            echo "release_name=${release_name}"
+            echo "release_dir=${release_dir}"
+            echo "image_name=${image_name}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Build Release Bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_root="${RUNNER_TEMP}/release"
+          mkdir -p "${release_root}/source"
+          cp -R deploy/hostinger/skpe-saas-homol/. "${release_root}/"
+          git archive \
+            --format=tar.gz \
+            --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
+            "${GITHUB_SHA}"
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${HOSTINGER_SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${SSH_PORT}" "${{ secrets.HOSTINGER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Prepare Remote Release Directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" \
+            "mkdir -p '${{ steps.meta.outputs.release_dir }}'"
+
+      - name: Upload Release Bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          scp -P "${SSH_PORT}" -r \
+            "${RUNNER_TEMP}/release/." \
+            "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ steps.meta.outputs.release_dir }}/"
+
+      - name: Write Remote Environment File
+        shell: bash
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SKPE_SAAS_HOMOL_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SKPE_SAAS_HOMOL_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" <<EOF
+          cat > '${{ steps.meta.outputs.release_dir }}/.env' <<ENVFILE
+          IMAGE_NAME=${{ steps.meta.outputs.image_name }}
+          PREVIEW_BIND=${PREVIEW_BIND}
+          SPARKS_HOST=${DOMAIN_NAME}
+          VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+          VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
+          ENVFILE
+          EOF
+
+      - name: Deploy Remote Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" \
+            "cd '${{ steps.meta.outputs.release_dir }}' && chmod +x deploy-remote.sh && GITHUB_SHA='${GITHUB_SHA}' RELEASE_SHORT_SHA='${{ steps.meta.outputs.short_sha }}' ./deploy-remote.sh"
