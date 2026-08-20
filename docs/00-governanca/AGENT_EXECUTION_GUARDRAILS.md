@@ -111,6 +111,14 @@ Este documento é de leitura obrigatória antes da geração de qualquer código
 
 12. Não reintroduzir composição estrutural do shell no `SkpeCockpit`.
 
+13. Superfícies densas adotadas sob o `ApplicationShell` devem herdar dele o scroll vertical principal, sem recriar owner estrutural concorrente.
+
+14. Scroll local continua permitido para tabelas largas, drawers, modais e overlays, desde que não compita com o scroll estrutural da página.
+
+15. Quando uma decisão relevante de shell, densidade, tipografia ou responsividade for classificada como `VISUAL DISCOVERY`, preferir validação prévia no Prototype Lab existente antes de ampliar implementação.
+
+16. `Prototype != production implementation`.
+
 ## Princípio operacional
 
 > Ler o estado atual → identificar o padrão canônico vigente → preservar o que já está correto → corrigir apenas o drift → não criar padrão concorrente.
