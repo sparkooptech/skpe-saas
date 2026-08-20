@@ -29,7 +29,7 @@ usado para fazer downgrade se `origin/main` ja estiver mais avancada.
 
 Status:
 
-`OPERACIONAL E VALIDADA`
+`OPERACIONAL, VALIDADA E CONCLUIDA EM HOMOL`
 
 Fluxo validado:
 
@@ -44,9 +44,9 @@ Fluxo validado:
 -> `sparks-homol`
 -> `rollback quando necessario`
 
-Ultima imagem validada no marco:
+Ultima imagem validada:
 
-`skpe-saas-homol:b56d019`
+`skpe-saas-homol:e45f640`
 
 Container:
 
@@ -59,6 +59,14 @@ Health:
 Proveniencia:
 
 `EXACT PROVENANCE`
+
+Deploy SHA final:
+
+`e45f6403bfe8d9c2720ecbad029f078563690993`
+
+Workflow final:
+
+`32390154856 - SUCCESS`
 
 ### Banco e Supabase
 
@@ -73,40 +81,29 @@ Deployment de frontend/infraestrutura nao autoriza mudancas de banco.
 
 ### Acesso temporario por IP
 
-Enquanto o endereco publico definitivo e resolvido, existe acesso
-temporario por:
+Status:
 
-`http://179.198.118.251:5191/`
-
-Login:
-
-`http://179.198.118.251:5191/login`
-
-Esse acesso e fornecido por container auxiliar de forwarding e nao
-substitui o container oficial.
+`REMOVIDO`
 
 Forwarder:
 
 `sparks-homol-temp-access`
 
-O forwarder deve ser removido quando o dominio definitivo estiver
-validado.
+Porta temporaria removida:
+
+`5191`
 
 ### Dominios
 
-O dominio inicialmente preparado:
+Dominio oficial HOMOL:
 
-`sparks-homol.sparkoop.com.br`
+`https://sparks.sparkoop.com`
 
-continua com questao de administracao DNS fora do fluxo atual.
+Roteamento final validado:
 
-Foi identificado um caminho controlavel em:
+`Host(\`sparks-homol.sparkoop.com.br\`) || Host(\`sparks.sparkoop.com\`)`
 
-`sparks.sparkoop.com`
-
-O registro antigo que apontava para Railway foi retirado.
-
-Destino desejado:
+Destino validado:
 
 `sparks.sparkoop.com`
 -> `179.198.118.251`
@@ -115,7 +112,15 @@ Destino desejado:
 -> `sparks-homol`
 -> Nginx `:8080`
 
-A alteracao ainda precisa ser concluida de forma versionada e controlada.
+Estado final:
+
+- DNS: `PASS`
+- Docker: `PASS`
+- Traefik: `PASS`
+- TLS: `PASS`
+- `/`: `200`
+- `/login`: `200`
+- `/healthz`: `200`
 
 ## Proximos passos
 
@@ -140,6 +145,10 @@ Resultado esperado:
 
 ### P2 - Concluir `sparks.sparkoop.com`
 
+Status:
+
+`CONCLUIDO`
+
 Criar/validar no DNS do dominio `sparkoop.com`:
 
 - Type: `A`
@@ -149,6 +158,10 @@ Criar/validar no DNS do dominio `sparkoop.com`:
 Nao alterar outros registros de `sparkoop.com`.
 
 ### P3 - Router Traefik versionado
+
+Status:
+
+`CONCLUIDO`
 
 Aplicar sobre uma branch NOVA baseada na `origin/main` atual somente o
 delta necessario para aceitar:
@@ -171,6 +184,10 @@ Preservar:
 
 ### P4 - Deployment do novo hostname
 
+Status:
+
+`CONCLUIDO`
+
 Depois do DNS existir e do patch ser versionado:
 
 - executar pipeline oficial
@@ -182,6 +199,10 @@ Depois do DNS existir e do patch ser versionado:
 - confirmar proveniencia Git -> release -> image
 
 ### P5 - Remover acesso temporario
+
+Status:
+
+`CONCLUIDO`
 
 Somente depois de `sparks.sparkoop.com` estar validado:
 
@@ -273,6 +294,6 @@ Esta frente estara consolidada quando:
 2. `sparks.sparkoop.com` estiver resolvendo para a Hostinger.
 3. Traefik aceitar o novo hostname de forma versionada.
 4. HTTPS e aplicacao estiverem validados.
-5. Acesso temporario `:5191` puder ser removido.
+5. Acesso temporario `:5191` tiver sido removido.
 6. Trabalho local legitimo de Robson estiver protegido no GitHub.
 7. Worktrees/branches temporarios puderem ser higienizados com seguranca.
