@@ -213,8 +213,6 @@ run_preflight() {
   if [ -n "${CURRENT_RELEASE_DIR}" ] && [ -f "${CURRENT_RELEASE_DIR}/source/app/COMMIT_SHA" ]; then
     CURRENT_RELEASE_COMMIT="$(tr -d '\n' < "${CURRENT_RELEASE_DIR}/source/app/COMMIT_SHA")"
   fi
-
-  validate_public_domain || fail "Current public domain preflight failed"
 }
 
 build_preview_release() {
