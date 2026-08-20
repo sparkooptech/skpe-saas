@@ -7,7 +7,7 @@ services:
       - sparks-homol-net
     labels:
       - traefik.enable=true
-      - traefik.http.routers.sparks-homol.rule=Host(`${SPARKS_HOST}`)
+      - traefik.http.routers.sparks-homol.rule=${SPARKS_ROUTER_RULE}
       - traefik.http.routers.sparks-homol.entrypoints=websecure
       - traefik.http.routers.sparks-homol.tls.certresolver=letsencrypt
       - traefik.http.services.sparks-homol.loadbalancer.server.port=8080

@@ -19,7 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RELEASE_PREFIX: skpe-saas-homol
-      DOMAIN_NAME: sparks-homol.sparkoop.com.br
+      SPARKS_PUBLIC_HOST: sparks-homol.sparkoop.com.br
+      SPARKS_ROUTER_RULE: 'Host(`sparks-homol.sparkoop.com.br`) || Host(`sparks.sparkoop.com`)'
       PREVIEW_BIND: 127.0.0.1:18080:8080
       SSH_PORT: 22
       HOSTINGER_FALLBACK_IP: 179.198.118.251
@@ -63,8 +64,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "PUBLIC DNS VALIDATION DEFERRED"
-          echo "Reason: ${DOMAIN_NAME} missing from authoritative DNS."
-          echo "TODO: Restore public-domain preflight and post-deploy smoke test after ${DOMAIN_NAME} is restored in authoritative DNS."
+          echo "Reason: ${SPARKS_PUBLIC_HOST} missing from authoritative DNS."
+          echo "TODO: Restore public-domain preflight and post-deploy smoke test after ${SPARKS_PUBLIC_HOST} is restored in authoritative DNS."
 
       - name: Configure SSH
         shell: bash
@@ -166,7 +167,8 @@ jobs:
           cat > '${{ steps.meta.outputs.release_dir }}/.env' <<ENVFILE
           IMAGE_NAME=${{ steps.meta.outputs.image_name }}
           PREVIEW_BIND=${PREVIEW_BIND}
-          SPARKS_HOST=${DOMAIN_NAME}
+          SPARKS_PUBLIC_HOST=${SPARKS_PUBLIC_HOST}
+          SPARKS_ROUTER_RULE='${SPARKS_ROUTER_RULE}'
           VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
           VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
           ENVFILE
@@ -187,4 +189,4 @@ jobs:
           echo "PUBLIC USER ACCESS VALIDATION: DEFERRED"
           echo "PUBLIC TLS VALIDATION: DEFERRED"
           echo "Reason: authoritative DNS record not available."
-          echo "TODO: Restore public-domain preflight and post-deploy smoke test after ${DOMAIN_NAME} is restored in authoritative DNS."
+          echo "TODO: Restore public-domain preflight and post-deploy smoke test after ${SPARKS_PUBLIC_HOST} is restored in authoritative DNS."
