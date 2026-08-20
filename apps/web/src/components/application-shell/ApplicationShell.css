@@ -94,9 +94,9 @@
 
 .application-shell-context-item span {
   color: #68757c;
-  font-size: 0.68rem;
-  font-weight: 750;
-  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
@@ -179,7 +179,7 @@
   color: #35443f;
   cursor: pointer;
   font: inherit;
-  font-weight: 720;
+  font-weight: 700;
   text-align: left;
 }
 
@@ -244,6 +244,14 @@
   min-width: 0;
   margin: 0 auto;
   padding: 2.5rem;
+}
+
+.application-shell-page-fluid {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .application-shell-footer {

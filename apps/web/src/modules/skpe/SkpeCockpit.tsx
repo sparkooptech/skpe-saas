@@ -75,6 +75,11 @@ export type SkpeOverviewShellPayload = {
   children: ReactNode
 }
 
+const SHELL_SECTIONS = new Set<CockpitSection>([
+  'overview',
+  'artifacts',
+])
+
 type SkpeCapabilities = {
   can_view_overview: boolean
   can_view_journey: boolean
@@ -5343,15 +5348,23 @@ export function SkpeCockpit({
   }
 
   const scrollToPageTop = () => {
-    const scrollingElement = document.scrollingElement
-    scrollingElement?.scrollTo({ top: 0, behavior: 'smooth' })
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
+    const shellOwnsScroll =
+      mode === 'module' &&
+      Boolean(renderOverviewShell) &&
+      SHELL_SECTIONS.has(activeSection)
+
+    const scrollOwner = (
+      shellOwnsScroll
+        ? document.querySelector('.application-shell-content')
+        : document.querySelector('.skpe-main')
+    ) as HTMLElement | null
+
+    if (scrollOwner) {
+      scrollOwner.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' })
-    document
-      .querySelector<HTMLElement>('.application-shell-content')
-      ?.scrollTo({ top: 0, behavior: 'smooth' })
-    document.querySelector<HTMLElement>('.skpe-main')?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   useEffect(() => {
@@ -5506,8 +5519,8 @@ export function SkpeCockpit({
 
   if (
     mode === 'module' &&
-    activeSection === 'overview' &&
-    renderOverviewShell
+    renderOverviewShell &&
+    SHELL_SECTIONS.has(activeSection)
   ) {
     return renderOverviewShell({
       brand: (
@@ -5618,25 +5631,37 @@ export function SkpeCockpit({
         setShellMobileOpen(false)
         shellMenuButtonRef.current?.focus()
       },
-      children: (
-        <div className="application-shell-page">
-          <OverviewSection
-            organizationId={organizationId}
-            organizationName={organizationDisplayName}
-            organizationCode={organizationCode}
-            projectContext={projectContext}
-            canManageJourney={canManageJourney}
-            canViewOverview={canViewOverview}
-            canViewJourney={canViewJourney}
-            canViewInitiatives={canViewInitiatives}
-            canViewArtifacts={canViewArtifacts}
-            canViewGovernance={canViewGovernance}
-            startingProject={startingProject}
-            onStartProject={() => void startStrategicProject()}
-            onNavigate={navigateToSection}
-          />
-        </div>
-      ),
+      children:
+        activeSection === 'overview' ? (
+          <div className="application-shell-page">
+            <OverviewSection
+              organizationId={organizationId}
+              organizationName={organizationDisplayName}
+              organizationCode={organizationCode}
+              projectContext={projectContext}
+              canManageJourney={canManageJourney}
+              canViewOverview={canViewOverview}
+              canViewJourney={canViewJourney}
+              canViewInitiatives={canViewInitiatives}
+              canViewArtifacts={canViewArtifacts}
+              canViewGovernance={canViewGovernance}
+              startingProject={startingProject}
+              onStartProject={() => void startStrategicProject()}
+              onNavigate={navigateToSection}
+            />
+          </div>
+        ) : (
+          <div className="application-shell-page-fluid">
+            <MethodologyArtifactsSection
+              organizationId={organizationId}
+              projectId={projectContext?.project_id ?? ''}
+              canManage={canManageArtifacts}
+              canGenerateDeliveryKit={capabilities?.can_generate_delivery_kit ?? canViewArtifacts}
+              onBack={() => navigateToSection('journey')}
+              backLabel="Voltar para Jornada Estratégica"
+            />
+          </div>
+        ),
     })
   }
 
