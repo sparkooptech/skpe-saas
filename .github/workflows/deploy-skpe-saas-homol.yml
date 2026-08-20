@@ -163,13 +163,12 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SKPE_SAAS_HOMOL_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -euo pipefail
-          router_rule_shell_escaped="$(printf '%q' "${SPARKS_ROUTER_RULE}")"
           ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" <<EOF
           cat > '${{ steps.meta.outputs.release_dir }}/.env' <<ENVFILE
           IMAGE_NAME=${{ steps.meta.outputs.image_name }}
           PREVIEW_BIND=${PREVIEW_BIND}
           SPARKS_PUBLIC_HOST=${SPARKS_PUBLIC_HOST}
-          SPARKS_ROUTER_RULE=${router_rule_shell_escaped}
+          SPARKS_ROUTER_RULE='${SPARKS_ROUTER_RULE}'
           VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
           VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
           ENVFILE
