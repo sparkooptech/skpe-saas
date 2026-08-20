@@ -31,13 +31,21 @@ load_env() {
 validate_public_domain() {
   local body_file
   body_file="$(mktemp)"
+  local curl_args=(
+    --insecure
+    --fail
+    --silent
+    --show-error
+    --location
+    --resolve "${SPARKS_PUBLIC_HOST}:443:127.0.0.1"
+  )
 
-  if ! curl --fail --silent --show-error --location "https://${SPARKS_PUBLIC_HOST}/healthz" > /dev/null; then
+  if ! curl "${curl_args[@]}" "https://${SPARKS_PUBLIC_HOST}/healthz" > /dev/null; then
     rm -f "${body_file}"
     return 1
   fi
 
-  if ! curl --fail --silent --show-error --location "https://${SPARKS_PUBLIC_HOST}/" > "${body_file}"; then
+  if ! curl "${curl_args[@]}" "https://${SPARKS_PUBLIC_HOST}/" > "${body_file}"; then
     rm -f "${body_file}"
     return 1
   fi

@@ -20,6 +20,7 @@ jobs:
     env:
       RELEASE_PREFIX: skpe-saas-homol
       SPARKS_PUBLIC_HOST: sparks-homol.sparkoop.com.br
+      SPARKS_CANONICAL_HOST: sparks.sparkoop.com
       SPARKS_ROUTER_RULE: 'Host(`sparks-homol.sparkoop.com.br`) || Host(`sparks.sparkoop.com`)'
       PREVIEW_BIND: 127.0.0.1:18080:8080
       SSH_PORT: 22
@@ -187,8 +188,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "PUBLIC DNS STATUS: MISSING"
-          echo "PUBLIC USER ACCESS VALIDATION: DEFERRED"
-          echo "PUBLIC TLS VALIDATION: DEFERRED"
-          echo "Reason: authoritative DNS record not available."
-          echo "TODO: Restore public-domain preflight and post-deploy smoke test after ${SPARKS_PUBLIC_HOST} is restored in authoritative DNS."
+          assert_public_url() {
+            local url="$1"
+            local body_match="${2:-}"
+            local body_file
+            body_file="$(mktemp)"
+
+            for attempt in $(seq 1 24); do
+              if curl --fail --silent --show-error --location "${url}" > "${body_file}"; then
+                if [ -z "${body_match}" ] || grep -Eq "${body_match}" "${body_file}"; then
+                  rm -f "${body_file}"
+                  return 0
+                fi
+              fi
+
+              sleep 5
+            done
+
+            rm -f "${body_file}"
+            return 1
+          }
+
+          assert_public_url "https://${SPARKS_CANONICAL_HOST}/healthz"
+          assert_public_url "https://${SPARKS_CANONICAL_HOST}/login"
+          assert_public_url "https://${SPARKS_CANONICAL_HOST}/" 'Plataforma SPARKs|<div id="root">'
