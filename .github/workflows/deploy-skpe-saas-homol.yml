@@ -163,16 +163,18 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SKPE_SAAS_HOMOL_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -euo pipefail
-          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" <<EOF
-          cat > '${{ steps.meta.outputs.release_dir }}/.env' <<ENVFILE
-          IMAGE_NAME=${{ steps.meta.outputs.image_name }}
-          PREVIEW_BIND=${PREVIEW_BIND}
-          SPARKS_PUBLIC_HOST=${SPARKS_PUBLIC_HOST}
-          SPARKS_ROUTER_RULE='${SPARKS_ROUTER_RULE}'
-          VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-          VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
-          ENVFILE
-          EOF
+          env_file="${RUNNER_TEMP}/release/.env"
+          {
+            printf 'IMAGE_NAME=%s\n' '${{ steps.meta.outputs.image_name }}'
+            printf 'PREVIEW_BIND=%s\n' "${PREVIEW_BIND}"
+            printf 'SPARKS_PUBLIC_HOST=%s\n' "${SPARKS_PUBLIC_HOST}"
+            printf "SPARKS_ROUTER_RULE='%s'\n" "${SPARKS_ROUTER_RULE}"
+            printf 'VITE_SUPABASE_URL=%s\n' "${VITE_SUPABASE_URL}"
+            printf 'VITE_SUPABASE_PUBLISHABLE_KEY=%s\n' "${VITE_SUPABASE_PUBLISHABLE_KEY}"
+          } > "${env_file}"
+          scp -P "${SSH_PORT}" \
+            "${env_file}" \
+            "${HOSTINGER_USER}@${HOSTINGER_HOST}:${{ steps.meta.outputs.release_dir }}/.env"
 
       - name: Deploy Remote Release
         shell: bash
