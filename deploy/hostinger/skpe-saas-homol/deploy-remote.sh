@@ -51,6 +51,23 @@ validate_public_domain() {
   return 0
 }
 
+wait_for_public_domain() {
+  local max_attempts="${1:-24}"
+  local sleep_seconds="${2:-5}"
+  local attempt=1
+
+  while [ "${attempt}" -le "${max_attempts}" ]; do
+    if validate_public_domain; then
+      return 0
+    fi
+
+    sleep "${sleep_seconds}"
+    attempt=$((attempt + 1))
+  done
+
+  return 1
+}
+
 wait_for_health() {
   local container_name="$1"
   local max_attempts="${2:-30}"
@@ -173,7 +190,7 @@ perform_rollback() {
     docker rename "${BACKUP_CONTAINER}" "${PUBLIC_CONTAINER}"
     docker start "${PUBLIC_CONTAINER}" >/dev/null
 
-    if wait_for_health "${PUBLIC_CONTAINER}" 30 && validate_public_domain; then
+    if wait_for_health "${PUBLIC_CONTAINER}" 30 && wait_for_public_domain 24 5; then
       restore_ok=1
     fi
   fi
@@ -279,7 +296,7 @@ cutover_release() {
     exit "${ROLLBACK_FAILURE_EXIT_CODE}"
   fi
 
-  if ! validate_public_domain; then
+  if ! wait_for_public_domain 24 5; then
     log "CUTOVER FAIL: public domain validation failed"
     if perform_rollback; then
       cleanup_failed_release
