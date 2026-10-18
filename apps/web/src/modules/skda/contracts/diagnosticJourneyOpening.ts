@@ -5,7 +5,6 @@ export interface DiagnosticInitiativeCreationPlan {
   target_organization_id: string
   target_initiative_class: 'project'
   target_category_code: 'operational'
-  target_code: string
   target_name: string
   target_proposal_origin: 'module'
   target_source_module_code: 'SK-DA'
@@ -21,7 +20,6 @@ export function planDiagnosticInitiative(command: DiagnosticJourneyOpeningComman
     target_organization_id: command.organizationId,
     target_initiative_class: 'project',
     target_category_code: 'operational',
-    target_code: `SKDA-${key}`,
     target_name: `Jornada DA - ${command.kind}`,
     target_proposal_origin: 'module',
     target_source_module_code: 'SK-DA',
