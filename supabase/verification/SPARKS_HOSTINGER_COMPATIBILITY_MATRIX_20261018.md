@@ -36,3 +36,11 @@ Status: levantamento parcial, somente leitura. NENHUMA migracao executada. Vincu
 
 ## Restricoes
 Nao alterar sparks_prd, sparks_homol, sparks-homol, outros bancos/containers, Supabase, DNS ou usuarios sem gates e autorizacao apropriados. Nao adicionar custos. Nao tocar em alteracoes paralelas SK-PE nao commitadas.
+
+## Complemento de inventario G1 - 2026-10-18
+- Supabase CLI local: 2.116.0; PostgreSQL major_version = 17 no config.toml; API publica schemas public e graphql_public e search_path adicional public, extensions.
+- Edge Functions encontradas no repositorio: create-platform-user, invite-platform-user, lookup-address-by-cep, skpe-import-incorporation. Inventario LOCAL, nao confirma que estejam implantadas na origem remota.
+- Criacao/convite de usuarios e importacao SK-PE sao contratos que exigem prova de equivalencia, seguranca e auditoria no destino.
+- O estado efetivo das migracoes e os objetos da origem Supabase ainda precisam ser consultados de forma read-only. Os 327 arquivos locais nao comprovam 327 migracoes aplicadas.
+- O banco de homologacao e o banco de producao Hostinger nao receberam migracoes; nenhum teste de restauracao foi executado.
+- As tentativas adicionais de inspecao automatica foram parcialmente bloqueadas por controles de seguranca da ferramenta; nao houve contorno de bloqueios.
