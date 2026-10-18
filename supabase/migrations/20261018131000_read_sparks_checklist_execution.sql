@@ -16,15 +16,18 @@ begin
   if auth.uid() is null then
     raise exception 'Autenticacao obrigatoria.' using errcode = '42501';
   end if;
+  if target_execution_id is null or target_organization_id is null then
+    raise exception 'Identificadores de checklist obrigatorios.' using errcode = '22023';
+  end if;
+  -- Check tenant authorization BEFORE looking up a record to avoid an existence oracle.
+  if not (public.is_platform_super_admin() or public.is_organization_admin(target_organization_id)) then
+    raise exception 'Permissao de leitura insuficiente.' using errcode = '42501';
+  end if;
   select * into v_execution
   from public.sparks_checklist_executions
   where id = target_execution_id and organization_id = target_organization_id;
   if not found then
     raise exception 'Checklist nao encontrado na organizacao.' using errcode = '22023';
-  end if;
-  -- Until dedicated checklist read roles are introduced, administrative access only.
-  if not (public.is_platform_super_admin() or public.is_organization_admin(target_organization_id)) then
-    raise exception 'Permissao de leitura insuficiente.' using errcode = '42501';
   end if;
   select coalesce(jsonb_agg(jsonb_build_object(
     'id', item.id,
