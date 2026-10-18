@@ -1,0 +1,200 @@
+{
+  "source": "Supabase DEV",
+  "captured_at": "2026-10-18",
+  "buckets": [
+    {
+      "id": "methodology-artifacts",
+      "public": false,
+      "maxBytes": 52428800,
+      "objects": 0
+    },
+    {
+      "id": "organization-branding",
+      "public": false,
+      "maxBytes": 5242880,
+      "objects": 11
+    },
+    {
+      "id": "sparks-evidence",
+      "public": false,
+      "maxBytes": 52428800,
+      "objects": 1
+    },
+    {
+      "id": "user-avatars",
+      "public": false,
+      "maxBytes": 5242880,
+      "objects": 3
+    }
+  ],
+  "policies": [
+    {
+      "name": "organization_branding_select",
+      "cmd": "SELECT",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "organization_branding_insert",
+      "cmd": "INSERT",
+      "role": "authenticated",
+      "using": false,
+      "check": true
+    },
+    {
+      "name": "organization_branding_update",
+      "cmd": "UPDATE",
+      "role": "authenticated",
+      "using": true,
+      "check": true
+    },
+    {
+      "name": "organization_branding_delete",
+      "cmd": "DELETE",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "p_methodology_storage_read",
+      "cmd": "SELECT",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "p_methodology_storage_insert",
+      "cmd": "INSERT",
+      "role": "authenticated",
+      "using": false,
+      "check": true
+    },
+    {
+      "name": "p_methodology_storage_update",
+      "cmd": "UPDATE",
+      "role": "authenticated",
+      "using": true,
+      "check": true
+    },
+    {
+      "name": "p_methodology_storage_delete",
+      "cmd": "DELETE",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "sparks_evidence_storage_read",
+      "cmd": "SELECT",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "sparks_evidence_storage_insert",
+      "cmd": "INSERT",
+      "role": "authenticated",
+      "using": false,
+      "check": true
+    },
+    {
+      "name": "sparks_evidence_storage_update",
+      "cmd": "UPDATE",
+      "role": "authenticated",
+      "using": true,
+      "check": true
+    },
+    {
+      "name": "sparks_evidence_storage_delete",
+      "cmd": "DELETE",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "user_avatars_select_own",
+      "cmd": "SELECT",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "user_avatars_insert_own",
+      "cmd": "INSERT",
+      "role": "authenticated",
+      "using": false,
+      "check": true
+    },
+    {
+      "name": "user_avatars_update_own",
+      "cmd": "UPDATE",
+      "role": "authenticated",
+      "using": true,
+      "check": true
+    },
+    {
+      "name": "user_avatars_delete_own",
+      "cmd": "DELETE",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "user_avatars_select_organization_admin",
+      "cmd": "SELECT",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "user_avatars_insert_organization_admin",
+      "cmd": "INSERT",
+      "role": "authenticated",
+      "using": false,
+      "check": true
+    },
+    {
+      "name": "user_avatars_update_organization_admin",
+      "cmd": "UPDATE",
+      "role": "authenticated",
+      "using": true,
+      "check": true
+    },
+    {
+      "name": "user_avatars_delete_organization_admin",
+      "cmd": "DELETE",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "user_avatars_select_super_admin",
+      "cmd": "SELECT",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    },
+    {
+      "name": "user_avatars_insert_super_admin",
+      "cmd": "INSERT",
+      "role": "authenticated",
+      "using": false,
+      "check": true
+    },
+    {
+      "name": "user_avatars_update_super_admin",
+      "cmd": "UPDATE",
+      "role": "authenticated",
+      "using": true,
+      "check": true
+    },
+    {
+      "name": "user_avatars_delete_super_admin",
+      "cmd": "DELETE",
+      "role": "authenticated",
+      "using": true,
+      "check": false
+    }
+  ]
+}
