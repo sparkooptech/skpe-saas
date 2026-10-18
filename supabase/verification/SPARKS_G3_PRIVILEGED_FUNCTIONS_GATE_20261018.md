@@ -24,3 +24,15 @@ Consulta direta somente leitura no DEV:
 - Das 702 SECURITY DEFINER: 662 search_path explicitamente vazio, 28 search_path=public, 9 search_path=public, auth, 2 search_path=public, extensions, 1 search_path=pg_catalog.
 - Esta contagem nao equivale a auditoria de seguranca individual, nem prova que os search_paths sao seguros em todas as funcoes.
 - Ao migrar, preservar ou adaptar explicitamente proprietarios, search_path, grants e referencias qualificadas. Nao converter proprietario automaticamente para superusuario Hostinger.
+
+## Matriz efetiva de EXECUTE por papel - 2026-10-18 22:43Z
+Consulta read-only has_function_privilege no Supabase DEV para 702 funcoes SECURITY DEFINER de public:
+
+| anon | authenticated | funcoes |
+| --- | --- | ---: |
+| negado | permitido | 363 |
+| negado | negado | 166 |
+| permitido | permitido | 163 |
+| permitido | negado | 10 |
+
+Totais: 173 com EXECUTE efetivo para anon, 526 para authenticated. Estes privilegios podem resultar de grants diretos, via PUBLIC ou heranca; a consulta nao discrimina a origem. A existencia de EXECUTE nao implica explorabilidade nem bypass de controles internos. Antes de replicar, revisar assinaturas, grants, guardas de autorizacao e politicas por organizacao.
