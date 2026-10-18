@@ -25,7 +25,8 @@ begin
   if target_organization_id is null then
     raise exception 'Organizacao obrigatoria.' using errcode = '22023';
   end if;
-  if not (public.is_platform_super_admin() or public.is_organization_admin(target_organization_id)) then
+  if not (public.is_platform_super_admin() or public.is_organization_admin(target_organization_id)
+    or public.has_module_permission(target_organization_id,'SK-DA','journeys.open')) then
     raise exception 'Abertura DA exige administrador autorizado.' using errcode = '42501';
   end if;
   if length(v_reason) < 10 or length(v_key) not between 1 and 160 then
@@ -52,6 +53,20 @@ begin
   if not exists (select 1 from public.profiles p where p.id = target_consultant_user_id and p.active = true)
      or not exists (select 1 from public.profiles p where p.id = target_provisional_representative_user_id and p.active = true) then
     raise exception 'Responsaveis nao encontrados no diretorio.' using errcode = '22023';
+  end if;
+  -- Consultant must hold an active SK-DA SPARKOOP lead assignment for this tenant.
+  if not exists (
+    select 1 from public.user_module_roles umr
+    join public.organization_modules om on om.id = umr.organization_module_id
+    join public.module_roles mr on mr.id = umr.module_role_id
+    join public.modules m on m.id = om.module_id
+    where om.organization_id = target_organization_id and m.code = 'SK-DA'
+      and mr.code = 'sparkoop_lead' and mr.active = true
+      and umr.user_id = target_consultant_user_id and umr.status = 'active'
+      and umr.valid_from <= timezone('utc',now())
+      and (umr.valid_until is null or umr.valid_until >= timezone('utc',now()))
+  ) then
+    raise exception 'Consultor nao designado como lider SPARKOOP DA.' using errcode = '42501';
   end if;
   -- A provisional representative may be the SPARKOOP consultant before kickoff,
   -- but a different person must have an active organization membership.

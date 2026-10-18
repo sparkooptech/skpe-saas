@@ -9,7 +9,7 @@
 - Modulo SK-DA: planned, zero organizacoes vinculadas e zero habilitacoes.
 - sparks_checklist_executions e skda_journeys ausentes.
 - Historico real supabase_migrations.schema_migrations: 308 versoes registradas; ultima 20261007234118 (harden_strategic_learning_lifecycle); zero versoes com prefixo 20261018.
-- Os oito arquivos DA/CORE 20261018 existem localmente, mas nao constam no historico do banco consultado.
+- Os nove arquivos DA/CORE 20261018 existem localmente, mas nao constam no historico do banco consultado.
 - Branch Supabase main consta MIGRATIONS_FAILED (registro de agosto); causa nao determinada. Esse estado da branch nao comprova falha do banco principal.
 - Deploy web documentado em deploy/hostinger/skpe-saas-homol/; rollback de conteiner NAO recupera banco de dados.
 
@@ -20,8 +20,9 @@
 4. 20261018055000_govern_sparks_checklist_lifecycle.sql
 5. 20261018131000_read_sparks_checklist_execution.sql
 6. 20261018133000_create_skda_journey_foundation.sql
-7. 20261018134500_create_governed_skda_journey_opening.sql
-8. 20261018135500_read_governed_skda_journey.sql
+7. 20261018134000_seed_skda_leadership_roles.sql
+8. 20261018134500_create_governed_skda_journey_opening.sql
+9. 20261018135500_read_governed_skda_journey.sql
 
 ## Gates obrigatorios
 1. Identificar ambiente e banco de destino; nao presumir que Supabase DEV e Hostinger HOMOL.
