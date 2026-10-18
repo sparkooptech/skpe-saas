@@ -90,3 +90,8 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - Executado `g2-vps-preflight-readonly.sh` por SSH com stdin de ProcessStartInfo e LF preservado: exit code 0, staging vazio, mode 700, GPG/OpenSSL/sha256sum/flock presentes, 153270864 KiB livres no momento do teste.
 - Em verificacao posterior, `supabase projects list --output json` retornou novamente Invalid access token (exit 1) na sessao de automacao. O resultado anterior 21:52 de exit 0 nao deve ser tratado como autenticacao permanente. Nenhum token foi exibido ou copiado.
 - Nao executar dump ate acesso estavel e custodia de chave independente. Nenhum backup/restore real executado.
+
+## Ensaio sintetico GPG na VPS - 2026-10-18 22:19Z
+- `deploy/hostinger/skpe-saas-homol/g2-synthetic-gpg-roundtrip.sh` executado remotamente com bash stdin normalizado para LF; exit 0.
+- Criada chave RSA 3072 descartavel sem passphrase apenas em tmpfs `/dev/shm`, encrypt/decrypt GPG e `cmp` com payload inteiramente sintetico: PASS. `trap` remove diretorio temporario.
+- Nenhuma chave operacional criada, nenhum dado real acessado, nenhum backup real executado. O teste nao valida recuperacao off-VPS nem cadeia de custodia.
