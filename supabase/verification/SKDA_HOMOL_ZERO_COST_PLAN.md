@@ -44,3 +44,11 @@ Data: 2026-10-18. Situacao: proposta tecnica, nao provisionada.
 - Memoria fisica reportada: 8.28 GB totais e apenas 1.20 GB livres no momento da verificacao. Gate de capacidade NAO aprovado para subir outra stack Supabase completa com seguranca.
 - SSH para VPS Hostinger nao foi comprovado nesta sessao; consulta de configuracao SSH local nao autentica no servidor.
 - Decisao: nao iniciar contêineres nem criar banco neste momento; verificar capacidade e conectividade read-only da VPS antes de escolher Hostinger ou stack local reduzida. Se nao houver folga, pedir nova decisao sobre janela operacional, sem custo extra.
+## Inventario R2G2-ACER em 2026-10-18 (somente leitura)
+- Equipamento remoto R2G2-ACER online, Windows 10 Pro x64, Acer Aspire M5-481PT, 4 processadores logicos.
+- RAM 6.24 GB instalada, cerca de 1.65 GB livre no momento; C: aproximadamente 329 GB livres.
+- Docker Desktop instalado e daemon responde, versao 29.8.1, limite de memoria Docker ~2.95 GB; nenhum container existente.
+- WSL 2 presente: Ubuntu e docker-desktop parados. Node.js 24.21.0 instalado.
+- Git e Supabase CLI nao encontrados no PATH. Virtualizacao reportada como desabilitada por Win32_Processor, mas Docker/WSL existentes exigem verificacao antes de concluir bloqueio de hardware.
+- Decisao: nao instalar ferramentas ou iniciar stack Supabase completa ainda; limite Docker 2.95 GB e baixa RAM disponivel tornam inviavel declarar homologacao confiavel. R2G2-ACER pode servir como executor auxiliar ou para testes reduzidos, apos verificar capacidade e autorizacao.
+- Nenhum comando de instalacao, criacao, limpeza ou alteracao executado no R2G2-ACER.
