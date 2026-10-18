@@ -18,4 +18,8 @@ docker exec "$name" pg_restore -U postgres -d postgres /tmp/synthetic.dump >/dev
 count=$(docker exec "$name" psql -U postgres -Atc "select count(*) from demo.records")
 policy=$(docker exec "$name" psql -U postgres -Atc "select count(*) from pg_policies where schemaname='demo' and policyname='org_read'")
 docker exec "$name" psql -U postgres -v ON_ERROR_STOP=1 -c "set role authenticated; set app.organization_id='100'; do \$\$ begin if (select count(*) from demo.records) <> 1 then raise exception 'tenant isolation failed'; end if; end \$\$;" >/dev/null
-echo "SYNTHETIC_RESTORE=PASS ROWS=$count RLS_POLICY=$policy TENANT_100_VISIBLE=1"
+# Validate the second tenant and anonymous access after restoration.
+docker exec "$name" psql -U postgres -v ON_ERROR_STOP=1 -c "set role authenticated; set app.organization_id='200'; do \$\$ begin if (select count(*) from demo.records) <> 1 then raise exception 'tenant 200 isolation failed'; end if; end \$\$;" >/dev/null
+docker exec "$name" psql -U postgres -v ON_ERROR_STOP=1 -c "set role authenticated; set app.organization_id='999'; do \$\$ begin if (select count(*) from demo.records) <> 0 then raise exception 'unknown tenant leaked rows'; end if; end \$\$;" >/dev/null
+if docker exec "$name" psql -U postgres -v ON_ERROR_STOP=1 -c "set role anon; select count(*) from demo.records;" >/dev/null 2>&1; then echo 'ANON_ACCESS_UNEXPECTED'; exit 3; fi
+echo "SYNTHETIC_RESTORE=PASS ROWS=$count RLS_POLICY=$policy TENANTS_100_200=ISOLATED UNKNOWN_TENANT=EMPTY ANON=DENIED"
