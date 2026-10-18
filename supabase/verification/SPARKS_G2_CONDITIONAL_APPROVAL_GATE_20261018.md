@@ -85,3 +85,8 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - SSH BatchMode Hostinger funciona. Supabase CLI `projects list` retornou Invalid access token em processo remoto. O projeto DEV continua vinculado localmente, mas link nao equivale a sessao autenticada.
 - Novo script de diagnostico sem leitura de credenciais: `deploy/hostinger/skpe-saas-homol/g2-cli-auth-diagnostic.ps1`.
 - Nao tentar contornar com extracao de tokens de browser, keyring ou logs. Solicitar autenticacao interativa apenas se necessaria para dump. Nao houve dump real.
+
+## VPS preflight homologado e auth instavel - 2026-10-18 22:04Z
+- Executado `g2-vps-preflight-readonly.sh` por SSH com stdin de ProcessStartInfo e LF preservado: exit code 0, staging vazio, mode 700, GPG/OpenSSL/sha256sum/flock presentes, 153270864 KiB livres no momento do teste.
+- Em verificacao posterior, `supabase projects list --output json` retornou novamente Invalid access token (exit 1) na sessao de automacao. O resultado anterior 21:52 de exit 0 nao deve ser tratado como autenticacao permanente. Nenhum token foi exibido ou copiado.
+- Nao executar dump ate acesso estavel e custodia de chave independente. Nenhum backup/restore real executado.
