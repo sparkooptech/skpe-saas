@@ -35,3 +35,26 @@ export async function getDiagnosticJourney(organizationId: string, journeyId: st
   if (journey.organizationId !== organizationId || journey.id !== journeyId) throw new Error('Resposta DA fora do escopo solicitado.')
   return journey
 }
+
+/** Explicit handover: server validates active organizational membership and writes audit. */
+export async function assignDiagnosticOrganizationLead(command: {
+  organizationId: string
+  journeyId: string
+  representativeUserId: string
+  changeReason: string
+}): Promise<string> {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (![command.organizationId, command.journeyId, command.representativeUserId].every(value => uuid.test(value))) {
+    throw new Error('Identificadores da transferencia DA invalidos.')
+  }
+  if (command.changeReason.trim().length < 10) throw new Error('Justificativa de transferencia insuficiente.')
+  const { data, error } = await supabase.rpc('assign_skda_organization_lead', {
+    target_organization_id: command.organizationId,
+    target_journey_id: command.journeyId,
+    target_representative_user_id: command.representativeUserId,
+    change_reason: command.changeReason.trim(),
+  })
+  if (error) throw new Error(error.message)
+  if (data !== command.journeyId) throw new Error('Transferencia DA retornou identificador divergente.')
+  return data
+}
