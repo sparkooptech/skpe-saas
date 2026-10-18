@@ -49,9 +49,22 @@ begin
     raise exception 'SK-DA nao habilitado nesta organizacao.' using errcode = '42501';
   end if;
   -- Provisional roles are explicit identities; final organizational sign-off is separately governed.
-  if not exists (select 1 from public.profiles p where p.id = target_consultant_user_id)
-     or not exists (select 1 from public.profiles p where p.id = target_provisional_representative_user_id) then
+  if not exists (select 1 from public.profiles p where p.id = target_consultant_user_id and p.active = true)
+     or not exists (select 1 from public.profiles p where p.id = target_provisional_representative_user_id and p.active = true) then
     raise exception 'Responsaveis nao encontrados no diretorio.' using errcode = '22023';
+  end if;
+  -- A provisional representative may be the SPARKOOP consultant before kickoff,
+  -- but a different person must have an active organization membership.
+  if target_provisional_representative_user_id <> target_consultant_user_id
+     and not exists (
+       select 1 from public.organization_memberships membership
+       where membership.organization_id = target_organization_id
+         and membership.user_id = target_provisional_representative_user_id
+         and membership.status = 'active'
+         and membership.valid_from <= timezone('utc',now())
+         and (membership.valid_until is null or membership.valid_until >= timezone('utc',now()))
+     ) then
+    raise exception 'Representante provisorio sem vinculo ativo com a organizacao.' using errcode = '42501';
   end if;
   v_fingerprint := md5(concat_ws('|',target_organization_id::text,target_instrument_id::text,
     target_assessment_cycle_id::text,target_journey_kind,target_consultant_user_id::text,
