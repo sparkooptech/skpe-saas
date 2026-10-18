@@ -34,3 +34,13 @@ Data: 2026-10-18. Situacao: proposta tecnica, nao provisionada.
 - Nao provisionado; nenhuma migracao executada.
 - Sem prova de capacidade livre, backup restauravel, backend Supabase compativel ou SSH para VPS nesta etapa.
 - Proximo passo seguro: inventario somente leitura da VPS com conexao autenticada ja configurada e verificacao do runtime local.
+
+## Inventario local verificado em 2026-10-18 (somente leitura)
+- RMKB-NTB: Docker Engine 29.6.2 e Supabase CLI 2.116.0 presentes.
+- Contêiner existente supabase_db_skpe-saas: PostgreSQL 17.6.1, healthy; manter intacto.
+- Supabase local: Auth, Kong, PostgREST, Studio e demais servicos parados; somente DB ativo.
+- Configuracao canônica usa project_id skpe-saas, API 54321, DB 54322, shadow 54320. Nunca reutilizar estas portas ou o mesmo project_id para homologacao.
+- Disco C: aproximadamente 239 GB livres.
+- Memoria fisica reportada: 8.28 GB totais e apenas 1.20 GB livres no momento da verificacao. Gate de capacidade NAO aprovado para subir outra stack Supabase completa com seguranca.
+- SSH para VPS Hostinger nao foi comprovado nesta sessao; consulta de configuracao SSH local nao autentica no servidor.
+- Decisao: nao iniciar contêineres nem criar banco neste momento; verificar capacidade e conectividade read-only da VPS antes de escolher Hostinger ou stack local reduzida. Se nao houver folga, pedir nova decisao sobre janela operacional, sem custo extra.
