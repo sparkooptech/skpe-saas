@@ -41,3 +41,10 @@ Todos os contratos necessarios testados, com evidencias de requests/responses se
 - Storage: EvidenceManagementWorkspace remove objetos de sparks-evidence; MethodologyArtifactsSection envia para methodology-artifacts e cria signed URLs; DeliveryKitDialog faz download; SkpeCockpit cria signed URLs para user-avatars.
 - Atenção: methodology-artifacts nao apareceu entre os 3 buckets com objetos no agrupamento storage.objects. Bucket vazio nao aparece nesse agrupamento. Confirmar existencia e politicas diretamente no catalogo de buckets antes de concluir que falta.
 - Testes necessarios: fluxo OAuth, convite, reset de senha, leitura/escrita com RLS, assinatura de URLs, download de evidencias, incorporacao e isolamento multi-tenant. Sem backend substituto, testes de configuracao nao sao testes de paridade funcional.
+
+## Storage - baseline confirmado no catalogo DEV (2026-10-18)
+- Existem QUATRO buckets e TODOS public=false: methodology-artifacts (0 objetos), organization-branding (11), sparks-evidence (1), user-avatars (3). O agrupamento anterior por storage.objects omitia bucket vazio.
+- Limites de arquivo em bytes: methodology-artifacts 52428800, organization-branding 5242880, sparks-evidence 52428800, user-avatars 5242880.
+- Existem 24 politicas em storage.objects: 4 organization_branding (SELECT/INSERT/UPDATE/DELETE), 4 p_methodology_storage, 4 sparks_evidence_storage, 12 user_avatars (proprio usuario, administrador da organizacao, super_admin, por operacao).
+- Os nomes e comandos das politicas foram confirmados; a equivalencia das expressoes USING/WITH CHECK, dos grants, do JWT e do isolamento de tenant ainda NAO foi testada.
+- G3 exige testes de autorizacao para cada bucket e papel, URLs assinadas, upload/download/remocao, limites de tamanho e caminhos. Proibir fallback de acesso publico indiscriminado.
