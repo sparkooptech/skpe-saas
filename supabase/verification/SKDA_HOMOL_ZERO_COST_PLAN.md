@@ -52,3 +52,9 @@ Data: 2026-10-18. Situacao: proposta tecnica, nao provisionada.
 - Git e Supabase CLI nao encontrados no PATH. Virtualizacao reportada como desabilitada por Win32_Processor, mas Docker/WSL existentes exigem verificacao antes de concluir bloqueio de hardware.
 - Decisao: nao instalar ferramentas ou iniciar stack Supabase completa ainda; limite Docker 2.95 GB e baixa RAM disponivel tornam inviavel declarar homologacao confiavel. R2G2-ACER pode servir como executor auxiliar ou para testes reduzidos, apos verificar capacidade e autorizacao.
 - Nenhum comando de instalacao, criacao, limpeza ou alteracao executado no R2G2-ACER.
+## Gate Hostinger: coleta de capacidade sem acesso SSH confirmado
+- Script somente leitura: `deploy/hostinger/skpe-saas-homol/skda-capacity-preflight-readonly.sh`.
+- Executar exclusivamente em terminal autenticado da VPS, apos identificar o servidor correto; o script nao pede senhas, nao imprime variaveis de ambiente e nao altera arquivos, contêineres ou bancos.
+- Resultado necessario: CPU, RAM livre, uso real dos containers, espaco e inodes, portas e presenca de ferramentas PostgreSQL.
+- SSH do RMKB-NTB: nenhuma configuracao/chave no perfil consultado; nao tentar adivinhar host, credenciais ou endereco IP.
+- Sem inventario da VPS nao ha aprovacao tecnica para iniciar Supabase, criar banco ou subir container.
