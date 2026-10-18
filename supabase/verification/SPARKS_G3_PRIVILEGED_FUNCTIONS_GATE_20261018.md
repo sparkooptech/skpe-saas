@@ -17,3 +17,10 @@
 
 ## Status
 Consultas read-only concluidas; backup e restore reais ainda nao realizados. CLI do RMKB-NTB retornou Invalid access token. Nao foram aplicadas mudancas no DEV ou na Hostinger.
+
+## Auditoria complementar de proprietarios e search_path - 2026-10-18 22:37Z
+Consulta direta somente leitura no DEV:
+- Schema public: 757 funcoes owner postgres (702 SECURITY DEFINER), 31 owner supabase_admin (0 SECURITY DEFINER).
+- Das 702 SECURITY DEFINER: 662 search_path explicitamente vazio, 28 search_path=public, 9 search_path=public, auth, 2 search_path=public, extensions, 1 search_path=pg_catalog.
+- Esta contagem nao equivale a auditoria de seguranca individual, nem prova que os search_paths sao seguros em todas as funcoes.
+- Ao migrar, preservar ou adaptar explicitamente proprietarios, search_path, grants e referencias qualificadas. Nao converter proprietario automaticamente para superusuario Hostinger.
