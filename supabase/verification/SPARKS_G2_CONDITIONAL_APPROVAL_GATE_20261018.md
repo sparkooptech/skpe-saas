@@ -1,0 +1,28 @@
+# SPARKs | G2 - Registro de precondicoes e autorizacao condicional
+
+Data: 2026-10-18
+Autorizacao do usuario: preparar e executar ensaio G2 SOMENTE se origem correta confirmada, capacidade disponivel e nenhum custo adicional.
+Status: NAO INICIADO backup/restore. Bloqueios de precondicao permanecem.
+
+## Evidencias verificadas
+- Supabase conectado lista somente projeto skpe-saas-dev (ref vumbfpbcozjebomcthdw). Isso NAO comprova que e a origem definitiva de producao.
+- apps/web/.env.local usa a mesma referencia DEV. apps/web/.env.example nao identifica origem.
+- Workflow .github/workflows/deploy-skpe-saas-homol.yml injeta URL por secret SKPE_SAAS_HOMOL_SUPABASE_URL; valor nao consultado. Portanto, o endpoint efetivamente implantado nao foi confirmado.
+- SSH nao interativo de RMKB-NTB para alias sparkoop-hostinger recusado com Permission denied (publickey,password); exit code 255. Nao repetir por outros meios para contornar autenticacao.
+- Inventario historico da VPS indica espaco livre, mas capacidade efetiva sob carga e recursos para restore isolado NAO foram revalidados nesta sessao.
+- A conexao atual Supabase oferece consultas SQL, mas nao foi comprovado um canal de exportacao consistente com papeis/privilegios e copia binaria de Storage. Nao chamar dump SQL avulso de backup restauravel.
+
+## Decisao de seguranca
+- Nao executar backup, copiar dados pessoais, criar banco/volume/servico ou iniciar restore enquanto origem, acesso, capacidade e custo nao estiverem comprovados.
+- Nao usar outros bancos existentes como destino; nao alterar Supabase ou Hostinger operacionais.
+- Nao assumir que pausa manual de lancamentos equivale a bloqueio tecnico de escrita.
+- Preservar identidades, UUIDs, papeis, SUPER-ADMIN e politicas de tenant.
+
+## Evidencias faltantes para liberar ensaio
+1. Confirmacao inequivoca da origem operacional correta e identificador do projeto, com concordancia entre aplicacao implantada e origem.
+2. Acesso autorizado e funcional ao Hostinger pelo RMKB-NTB, ou canal administrativo formal que permita ensaio segregado.
+3. Preflight atualizado de CPU, RAM, disco, I/O e espaco para backup + restauracao, sem upgrade ou novo custo.
+4. Metodo de backup consistente e criptografado, exportacao de objetos binarios e validacao de checksums; destino temporario isolado e politica de descarte aprovada.
+5. Confirmacao de ausencia de custo adicional e de que nao ha mudanca de producao.
+
+A aprovacao condicional continua valida; este registro nao solicita autorizacao para qualquer operacao fora dessas condicoes.
