@@ -78,3 +78,10 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - Script `deploy/hostinger/skpe-saas-homol/g2-preflight-no-secrets.ps1` criado para verificar escopo DEV, Supabase CLI, SSH, staging vazio e permissoes sem imprimir segredos ou executar dump.
 - Executado sob sessao remota Desktop Commander: CLI retorna `Invalid access token` nessa sessao, embora usuario tenha obtido `projects list` autenticado em terminal interativo. Logo, autenticacao NAO esta comprovada no contexto nao interativo de execucao; NAO contornar via extracao de tokens.
 - Backup/restore G2 nao executados. Proximo passo: resolver diferenca de sessao CLI sem expor tokens e estabelecer recuperacao independente da VPS.
+
+## Diagnostico de autenticacao CLI - 2026-10-18 21:38Z
+- RMKB-NTB usuario Windows RMKB; HOME C:\\Users\\RMKB; CLI supabase 2.116.0 via scoop.
+- Sem SUPABASE_ACCESS_TOKEN em Process/User/Machine; ~/.supabase contem traces e telemetry.json, nao arquivo access-token. Nao foram impressos tokens.
+- SSH BatchMode Hostinger funciona. Supabase CLI `projects list` retornou Invalid access token em processo remoto. O projeto DEV continua vinculado localmente, mas link nao equivale a sessao autenticada.
+- Novo script de diagnostico sem leitura de credenciais: `deploy/hostinger/skpe-saas-homol/g2-cli-auth-diagnostic.ps1`.
+- Nao tentar contornar com extracao de tokens de browser, keyring ou logs. Solicitar autenticacao interativa apenas se necessaria para dump. Nao houve dump real.
