@@ -72,3 +72,9 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - Consulta sob role postgres confirma SELECT em auth.users e storage.objects, mas isso nao demonstra exportacao completa de dados Auth, hashes, roles, grants, nem bytes fisicos Storage.
 - Estimativa baseada em metadados, nao checksum de arquivos nem tamanho de dump final. Nao assumir equivalencia de componentes Supabase internos na Hostinger.
 - Nenhum backup ou restore real executado; staging continua sem arquivos de dados. Capacidade de disco nao e gargalo principal do ensaio DEV; exportacao consistente, chaves recuperaveis e integridade ainda sao gates.
+
+## Novo inventario e preflight automatizado - 2026-10-18 21:28Z
+- Storage DEV: organization-branding 11/1.431.110 bytes, sparks-evidence 1/320.735, user-avatars 3/754.142, methodology-artifacts 0/0; todos privados. Soma 15 objetos/2.505.987 bytes (metadados, nao leitura fisica).
+- Script `deploy/hostinger/skpe-saas-homol/g2-preflight-no-secrets.ps1` criado para verificar escopo DEV, Supabase CLI, SSH, staging vazio e permissoes sem imprimir segredos ou executar dump.
+- Executado sob sessao remota Desktop Commander: CLI retorna `Invalid access token` nessa sessao, embora usuario tenha obtido `projects list` autenticado em terminal interativo. Logo, autenticacao NAO esta comprovada no contexto nao interativo de execucao; NAO contornar via extracao de tokens.
+- Backup/restore G2 nao executados. Proximo passo: resolver diferenca de sessao CLI sem expor tokens e estabelecer recuperacao independente da VPS.
