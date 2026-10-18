@@ -14,3 +14,8 @@ Aprovadas as diretrizes propostas: retencao de 30 dias; preferencia por chave pr
 
 ## Status deste registro
 Autorizacao: SIM. Custodia externa: ainda nao comprovada. Contingencia na VPS: autorizada, nao implementada. CLI autenticada no processo remoto: NAO (Invalid access token). Backup real: NAO. Restore real: NAO. Sem alteracoes nos bancos e servicos.
+
+## Reconferencia de metadados Storage por conexao Supabase - 2026-10-18 22:28Z
+- Consulta read-only direta ao projeto DEV autorizado: 15 objetos, 2.505.987 bytes declarados, zero objetos sem size ou MIME nos metadados consultados.
+- Isto NAO comprova integridade dos bytes fisicos e nao constitui backup.
+- CLI automatizada segue Invalid access token; autenticar somente por via oficial, sem copiar tokens por logs ou chat.
