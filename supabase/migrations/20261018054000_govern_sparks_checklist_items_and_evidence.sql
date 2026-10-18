@@ -26,10 +26,10 @@ begin
   select * into v_execution from public.sparks_checklist_executions
   where id = target_execution_id for update;
   if not found then
-    raise exception 'Execucao inexistente.' using errcode = '22023';
+    raise exception 'Checklist indisponivel ou acesso nao autorizado.' using errcode = '42501';
   end if;
   if not (public.is_platform_super_admin() or public.is_organization_admin(v_execution.organization_id)) then
-    raise exception 'Permissao administrativa necessaria.' using errcode = '42501';
+    raise exception 'Checklist indisponivel ou acesso nao autorizado.' using errcode = '42501';
   end if;
   if v_execution.status in ('completed','cancelled') then
     raise exception 'Execucao encerrada nao pode ser alterada.' using errcode = '22023';
@@ -104,11 +104,11 @@ begin
   join public.sparks_checklist_executions execution on execution.id = item.execution_id
   where item.id = target_execution_item_id for update of execution;
   if not found then
-    raise exception 'Item de execucao inexistente.' using errcode = '22023';
+    raise exception 'Item indisponivel ou acesso nao autorizado.' using errcode = '42501';
   end if;
   if not (public.is_platform_super_admin() or public.is_organization_admin(v_execution.organization_id))
     or not public.can_manage_sparks_evidence(v_execution.organization_id) then
-    raise exception 'Permissao de evidencia e checklist necessaria.' using errcode = '42501';
+    raise exception 'Item indisponivel ou acesso nao autorizado.' using errcode = '42501';
   end if;
   if v_execution.status in ('completed','cancelled') then
     raise exception 'Execucao encerrada nao pode receber evidencia.' using errcode = '22023';

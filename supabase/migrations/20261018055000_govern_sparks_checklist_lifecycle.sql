@@ -21,10 +21,10 @@ begin
   select * into v_execution from public.sparks_checklist_executions
   where id = target_execution_id for update;
   if not found then
-    raise exception 'Execucao inexistente.' using errcode = '22023';
+    raise exception 'Checklist indisponivel ou acesso nao autorizado.' using errcode = '42501';
   end if;
   if not (public.is_platform_super_admin() or public.is_organization_admin(v_execution.organization_id)) then
-    raise exception 'Permissao administrativa necessaria.' using errcode = '42501';
+    raise exception 'Checklist indisponivel ou acesso nao autorizado.' using errcode = '42501';
   end if;
   if length(trim(coalesce(change_reason,''))) < 10 then
     raise exception 'Justificativa obrigatoria (minimo de 10 caracteres).' using errcode = '22023';
