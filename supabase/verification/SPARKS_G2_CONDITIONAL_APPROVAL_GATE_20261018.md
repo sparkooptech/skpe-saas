@@ -59,3 +59,10 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - gpg e openssl disponiveis, mas keyring GPG root nao tem destinatario publico configurado. Diretorio com chmod 700 NAO e armazenamento criptografado.
 - PROIBIDO exportar dump ou objetos brutos para este diretorio ate chave publica de destinatario aprovada, recuperacao comprovada fora da VPS, fluxo streaming-encrypt sem arquivos temporarios plaintext, e verificacao de exportabilidade Auth/Storage.
 - Nenhum backup, dump, restauracao, servico, volume Docker ou banco foi criado/alterado. Pasta vazia nao deve ser removida sem autorizacao.
+
+## Teste sintetico de criptografia em memoria - 2026-10-18 21:19Z
+- OpenSSL 3.0.13 e GnuPG 2.4.4 na VPS. `systemd-creds has-tpm2` indica suporte parcial, sem garantia de portabilidade de recuperacao.
+- Teste de pipe `printf synthetic-G2-only | openssl enc -aes-256-cbc -pbkdf2 -salt ... | openssl enc -d ... | sha256sum` comparado com hash SHA-256 do original: 437c24da5f0a3018bc58a68d8eef439ab08e1ec56ffbcd0696c0d7aa0f1295df; iguais.
+- Senha do teste e apenas literal sintetico publico, NUNCA usar como segredo real. AES-CBC neste comando nao fornece autenticidade; nao adotar como formato final de backup sem projeto de AEAD/integridade e gestao de chaves.
+- Nenhum arquivo gravado no staging; conteudo da pasta permanece 0 entradas. Nenhum dado real, backup ou restore executado.
+- Proximos gates: recuperacao independente da VPS, custodia de chaves, exportacao Auth/Storage consistente, snapshot, limites de CPU, isolamento e reconcilicao.
