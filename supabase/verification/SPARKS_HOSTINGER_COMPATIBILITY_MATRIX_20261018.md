@@ -44,3 +44,14 @@ Nao alterar sparks_prd, sparks_homol, sparks-homol, outros bancos/containers, Su
 - O estado efetivo das migracoes e os objetos da origem Supabase ainda precisam ser consultados de forma read-only. Os 327 arquivos locais nao comprovam 327 migracoes aplicadas.
 - O banco de homologacao e o banco de producao Hostinger nao receberam migracoes; nenhum teste de restauracao foi executado.
 - As tentativas adicionais de inspecao automatica foram parcialmente bloqueadas por controles de seguranca da ferramenta; nao houve contorno de bloqueios.
+
+## Inventario da origem DEV via conector Supabase - 2026-10-18
+- Projeto acessivel: skpe-saas-dev (vumbfpbcozjebomcthdw), sa-east-1, ACTIVE_HEALTHY, PostgreSQL 17.6.1. A listagem do conector retorna somente esse projeto; NAO prova inexistencia de outro projeto ou da origem PRD fora da conta conectada.
+- Catalogo pg_class (consultas read-only): public 219 tabelas e 11 views; auth 27 tabelas; storage 8 tabelas. Total 254 tabelas e 11 views nesses 3 schemas.
+- pg_policies: public 247 politicas, storage 24, auth 0 (na consulta aos tres schemas). Total 271 politicas.
+- pg_proc: public 788 funcoes, auth 4, storage 19. Total 811 entradas de funcoes, incluindo overloads e rotinas internas dos schemas.
+- Edge Functions remotas ativas com verify_jwt=true: invite-platform-user (v2), create-platform-user (v4), lookup-address-by-cep (v2), skpe-import-incorporation (v11).
+- Listagem aproximada de tabelas do conector mostra dados em auth.users, organizations, organization_memberships, skpe_journey_items, skpe_import_records e outras. Contagens aproximadas do conector nao substituem COUNT(*) transacional ou reconciliacao por tabela.
+- Extensoes instaladas na origem incluem pgcrypto, uuid-ossp, pg_trgm, pg_stat_statements, supabase_vault, hypopg e index_advisor. vector, pgjwt, pg_net e pg_cron disponiveis, mas nao instaladas. Nao copiar automaticamente extensoes internas do Supabase para a Hostinger.
+- O usuario declarou suspensao manual de entrada e manutencao de dados. Isso NAO e bloqueio tecnico de escrita e nao prova consistencia de snapshot.
+- G1 continua aberto ate identificacao da origem efetiva de producao, inventario de buckets/objetos, grants, triggers, dependencias e estado das migracoes. G2 permanece nao homologado ate backup e RESTORE comprovado.
