@@ -34,6 +34,17 @@ test('DA preflight is read-only and inspects prerequisites', () => {
   }
 })
 
+test('DA preflight reconciles all eight versions against migration ledger', () => {
+  const expectedVersions = migrationFiles.map(filename => filename.slice(0, 14))
+  for (const version of expectedVersions) {
+    assert.match(preflight, new RegExp(`'${version}'`))
+  }
+  assert.match(preflight, /supabase_migrations\.schema_migrations/)
+  assert.match(preflight, /'not_applied'/)
+  assert.match(preflight, /'recorded'/)
+  assert.match(preflight, /latest_recorded_version/)
+})
+
 test('DA deployment remains gated by tested recovery and environment identity', () => {
   assert.match(gate, /RESTAURACAO TESTADA/)
   assert.match(gate, /Hostinger HOMOL/)
