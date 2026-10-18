@@ -15,6 +15,7 @@ const migrationFiles = [
   '20261018133000_create_skda_journey_foundation.sql',
   '20261018134000_seed_skda_leadership_roles.sql',
   '20261018134500_create_governed_skda_journey_opening.sql',
+  '20261018135000_govern_skda_organization_lead_handover.sql',
   '20261018135500_read_governed_skda_journey.sql',
 ]
 
@@ -35,7 +36,7 @@ test('DA preflight is read-only and inspects prerequisites', () => {
   }
 })
 
-test('DA preflight reconciles all nine versions against migration ledger', () => {
+test('DA preflight reconciles all ten versions against migration ledger', () => {
   const expectedVersions = migrationFiles.map(filename => filename.slice(0, 14))
   for (const version of expectedVersions) {
     assert.match(preflight, new RegExp(`'${version}'`))

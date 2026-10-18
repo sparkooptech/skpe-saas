@@ -28,12 +28,13 @@ where n.nspname = 'public'
                    'create_sparks_initiative','can_manage_sparks_initiatives')
 order by p.proname;
 
--- Compare the nine expected migration versions with the actual database ledger.
+-- Compare the ten expected migration versions with the actual database ledger.
 -- Missing versions are expected BEFORE deployment; present versions require reconciliation.
 with expected(version) as (values
   ('20261018052000'), ('20261018053000'), ('20261018054000'),
   ('20261018055000'), ('20261018131000'), ('20261018133000'),
-  ('20261018134000'), ('20261018134500'), ('20261018135500')
+  ('20261018134000'), ('20261018134500'), ('20261018135000'),
+  ('20261018135500')
 )
 select e.version,
        case when m.version is null then 'not_applied' else 'recorded' end as migration_state,
