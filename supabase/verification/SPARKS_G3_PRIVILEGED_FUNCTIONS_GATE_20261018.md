@@ -36,3 +36,10 @@ Consulta read-only has_function_privilege no Supabase DEV para 702 funcoes SECUR
 | permitido | negado | 10 |
 
 Totais: 173 com EXECUTE efetivo para anon, 526 para authenticated. Estes privilegios podem resultar de grants diretos, via PUBLIC ou heranca; a consulta nao discrimina a origem. A existencia de EXECUTE nao implica explorabilidade nem bypass de controles internos. Antes de replicar, revisar assinaturas, grants, guardas de autorizacao e politicas por organizacao.
+
+## Triagem de RPCs sensiveis acessiveis a anon - 2026-10-18 22:52Z
+Foram inspecionadas apenas definicoes/metadados, sem invocar as funcoes. Amostra de 10 RPCs: set_platform_admin_user_role, set_platform_admin_user_module_role, set_platform_admin_organization_status, request_platform_user_invitation, cancel_platform_user_invitation, update_platform_admin_user_profile, set_platform_admin_user_organizational_role, get_platform_admin_users, assign_skpe_person_role e delete_skpe_organizational_area.
+- Oito contem referencia textual a is_platform_super_admin ou require_platform_super_admin.
+- assign_skpe_person_role e delete_skpe_organizational_area nao possuem essa referencia especifica, mas contem referencia a outro mecanismo de autorizacao (padrao textual can_manage/has_module_permission/require_/is_organization_admin/is_active_member/assert_/auth.uid) e RAISE EXCEPTION.
+- Inspecao por padrao textual nao prova que a guarda e executada em todos os caminhos. Testes de autorizacao negativos sao obrigatorios em banco de ensaio isolado; nao testar mutacoes em DEV operacional.
+- Prioridade: revisao individual das duas funcoes e das rotas de chamada, depois amostra ampliada das 173 funcoes anon-executaveis.
