@@ -37,7 +37,7 @@ export function validateDiagnosticJourneyOpening(command: DiagnosticJourneyOpeni
     if (!UUID.test(command[key])) errors.push(`${key}: UUID inválido`)
   }
   if (!diagnosticJourneyKinds.includes(command.kind)) errors.push('Jornada não reconhecida')
-  if (command.idempotencyKey.trim().length === 0 || command.idempotencyKey.length > 160) errors.push('Chave idempotente inválida')
+  if (command.idempotencyKey.trim().length === 0 || command.idempotencyKey.trim().length > 160) errors.push('Chave idempotente inválida')
   if (command.changeReason.trim().length < 10) errors.push('Justificativa insuficiente')
   return errors
 }

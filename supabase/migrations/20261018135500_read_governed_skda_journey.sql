@@ -11,6 +11,9 @@ begin
   if auth.uid() is null then
     raise exception 'Autenticacao obrigatoria.' using errcode = '42501';
   end if;
+  if target_organization_id is null or target_journey_id is null then
+    raise exception 'Identificadores DA obrigatorios.' using errcode = '22023';
+  end if;
   if not (public.is_platform_super_admin() or public.is_organization_admin(target_organization_id)) then
     raise exception 'Acesso nao autorizado a jornada DA.' using errcode = '42501';
   end if;

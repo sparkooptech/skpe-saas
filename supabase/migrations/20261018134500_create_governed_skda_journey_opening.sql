@@ -22,6 +22,9 @@ begin
   if auth.uid() is null then
     raise exception 'Autenticacao obrigatoria.' using errcode = '42501';
   end if;
+  if target_organization_id is null then
+    raise exception 'Organizacao obrigatoria.' using errcode = '22023';
+  end if;
   if not (public.is_platform_super_admin() or public.is_organization_admin(target_organization_id)) then
     raise exception 'Abertura DA exige administrador autorizado.' using errcode = '42501';
   end if;
@@ -30,6 +33,7 @@ begin
   end if;
   if target_instrument_id is null or target_assessment_cycle_id is null
      or target_consultant_user_id is null or target_provisional_representative_user_id is null
+     or target_journey_kind is null
      or target_journey_kind not in ('assisted_diagnosis','self_assessment','improvement_plan','monitoring') then
     raise exception 'Dados obrigatorios da jornada invalidos.' using errcode = '22023';
   end if;
