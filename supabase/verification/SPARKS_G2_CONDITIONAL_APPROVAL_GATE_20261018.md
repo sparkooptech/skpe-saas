@@ -26,3 +26,9 @@ Status: NAO INICIADO backup/restore. Bloqueios de precondicao permanecem.
 5. Confirmacao de ausencia de custo adicional e de que nao ha mudanca de producao.
 
 A aprovacao condicional continua valida; este registro nao solicita autorizacao para qualquer operacao fora dessas condicoes.
+
+## Confirmacao adicional do usuario - 2026-10-18 20:14:34Z
+- O usuario confirmou expressamente que o projeto Supabase `skpe-saas-dev` (ref `vumbfpbcozjebomcthdw`) e objeto da transicao para Hostinger.
+- G2: escopo da origem DEV confirmado. NAO inferir que este seja o unico projeto operacional ou o endpoint da aplicacao publicada; conferir implantacao separadamente.
+- Ainda bloqueado: acesso SSH autorizado e funcional, preflight atualizado de capacidade, metodo de backup consistente e comprovacao de custo zero.
+- A autorizacao condicional do ensaio ja foi concedida; nao pedir novamente a mesma aprovacao quando as precondicoes forem satisfeitas.
