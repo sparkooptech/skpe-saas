@@ -62,3 +62,9 @@ Nao alterar sparks_prd, sparks_homol, sparks-homol, outros bancos/containers, Su
 - public: zero tabelas comuns/particionadas sem RLS habilitada entre 219 tabelas inspecionadas. Habilitacao de RLS nao comprova correcao das politicas.
 - Contagens exatas no momento da consulta: auth.users 28, public.profiles 28, public.organization_memberships 37. Nao ha garantia de snapshot atomico entre consultas separadas.
 - A suspensao manual de escrita comunicada pelo usuario nao impede jobs, APIs ou sessoes ativas de gravar; conferir congelamento efetivo antes de snapshot final.
+
+## Integridade referencial de usuarios e evidencia - 2026-10-18
+- auth.users: 28 total, 28 sem deleted_at. Usuarios sem public.profiles correspondente: 0. public.organization_memberships sem auth.users correspondente: 0.
+- Storage: consulta read-only de metadados identificou 15 objetos nos 3 buckets. A unica public.sparks_evidence_versions com storage_bucket e storage_path preenchidos corresponde a um registro storage.objects: 1 referencia, 0 sem correspondencia. Isso nao prova existencia fisica, integridade binaria ou capacidade de download do arquivo.
+- A lista de objetos inclui um PDF de evidencia de balancete 2025; nao registrar caminhos ou dados do documento em logs publicos. Preservar classificacao, autorizacao, confidencialidade e hashes ao migrar.
+- Todos os resultados refletem consultas distintas, sem snapshot atomico. G2 exige exportacao consistente, copia de objetos e ensaio de restauracao isolado.
