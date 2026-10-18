@@ -127,9 +127,16 @@ begin
   insert into public.sparks_checklist_item_evidence (
     execution_item_id,evidence_asset_id,created_by
   ) values (target_execution_item_id,target_evidence_asset_id,auth.uid())
-  on conflict (execution_item_id,evidence_asset_id) do update
-    set purpose = excluded.purpose
+  on conflict (execution_item_id,evidence_asset_id) do nothing
   returning id into v_evidence_link_id;
+
+  if v_evidence_link_id is null then
+    select id into v_evidence_link_id
+    from public.sparks_checklist_item_evidence
+    where execution_item_id = target_execution_item_id
+      and evidence_asset_id = target_evidence_asset_id;
+    return v_evidence_link_id;
+  end if;
 
   insert into public.sparks_checklist_audit (
     execution_id,action,actor_id,after_state,change_reason
