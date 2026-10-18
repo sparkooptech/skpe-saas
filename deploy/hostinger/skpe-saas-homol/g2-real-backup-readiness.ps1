@@ -20,7 +20,16 @@ if([string]::IsNullOrWhiteSpace($receipt.key_fingerprint)){throw 'G2_BLOCKED: mi
 if([string]::IsNullOrWhiteSpace($receipt.recovery_evidence)){throw 'G2_BLOCKED: missing recovery evidence'}
 $public=Get-Content -LiteralPath $PublicKeyPath -Raw
 if($public -notmatch '-----BEGIN PGP PUBLIC KEY BLOCK-----'){throw 'G2_BLOCKED: not an armored GPG public key'}
-$cli=(Get-Command supabase -ErrorAction Stop).Source
+# Inspect the actual OpenPGP public-key fingerprint, not only its ASCII armor.
+$gpg=(Get-Command gpg -ErrorAction SilentlyContinue)
+if(-not $gpg){throw 'G2_BLOCKED: GPG executable unavailable for fingerprint verification'}
+$keyDetails=(& $gpg.Source --batch --no-default-keyring --with-colons --import-options show-only --import $PublicKeyPath 2>$null | Out-String)
+if($LASTEXITCODE -ne 0){throw 'G2_BLOCKED: public key cannot be parsed by GPG'}
+$fingerprints=@($keyDetails -split "`n" | Where-Object {$_ -match '^fpr:'} | ForEach-Object {($_ -split ':')[9].Trim()})
+$expectedFingerprint=([string]$receipt.key_fingerprint).Trim().ToUpperInvariant()
+if($expectedFingerprint -notmatch '^[0-9A-F]{40}$'){throw 'G2_BLOCKED: invalid custody fingerprint format'}
+if($fingerprints.Count -lt 1 -or $fingerprints[0].ToUpperInvariant() -ne $expectedFingerprint){throw 'G2_BLOCKED: public key fingerprint differs from custody receipt'}
+# Custody receipt remains an attestation: independently verified recovery evidence is required operationally.$cli=(Get-Command supabase -ErrorAction Stop).Source
 $old=$ErrorActionPreference
 try {
  $ErrorActionPreference='Continue'
