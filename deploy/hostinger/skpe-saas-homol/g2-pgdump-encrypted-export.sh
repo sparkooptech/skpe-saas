@@ -15,9 +15,19 @@ sink="$base/g2-encrypted-stream-sink.sh"
 export G2_PUBLIC_KEY_FILE="$key/public.asc"
 export G2_EXPECTED_FPR
 G2_EXPECTED_FPR=$(cat "$key/fingerprint")
-export G2_OUTPUT_DIR="$base/encrypted-backups"
+backup_dir="$base/encrypted-backups"
+export G2_OUTPUT_DIR="$backup_dir"
 mkdir -p -m 700 "$G2_OUTPUT_DIR"
 [[ "$(stat -c %a "$G2_OUTPUT_DIR")" == 700 ]] || { echo 'G2_BLOCKED=BACKUP_DIR_PERMISSIONS'; exit 2; }
+# Isolate this attempt: any failed or interrupted dump leaves no committed backup.
+attempt=$(mktemp -d "$backup_dir/.g2-attempt.XXXXXXXX")
+chmod 700 "$attempt"
+export G2_OUTPUT_DIR="$attempt"
+committed=no
+cleanup(){
+  if [[ "$committed" != yes ]]; then rm -rf -- "$attempt"; fi
+}
+trap cleanup EXIT
 # No pg_dump output is written on the host. Docker has no mounts and no published ports.
 # PG URL is delivered on stdin to the container's entrypoint, not a process argument.
 # The container prints only pg_dump binary output on stdout.
@@ -26,6 +36,14 @@ docker run --rm --network bridge --read-only --tmpfs /tmp:rw,noexec,nosuid,size=
   export PGCONNECT_TIMEOUT=15
   export PGDATABASE="$uri"; unset uri; exec pg_dump --format=custom --no-owner --no-privileges --schema=public --schema=auth --schema=storage
 ' < "$G2_DATABASE_URL_FILE" | bash "$sink"
-echo 'G2_POSTGRES_EXPORT=STREAMED_TO_ENCRYPTION'
+# A completed pg_dump plus completed GPG are both required (pipefail).
+shopt -s nullglob
+artifacts=("$attempt"/*.pgdump.gpg)
+[[ ${#artifacts[@]} == 1 ]] || { echo 'G2_BLOCKED=ARTIFACT_COUNT'; exit 2; }
+sha256sum -c "${artifacts[0]}.sha256" >/dev/null
+mv -- "${artifacts[0]}" "${artifacts[0]}.sha256" "$backup_dir/"
+rmdir "$attempt"
+committed=yes
+printf 'G2_POSTGRES_EXPORT=ENCRYPTED_AND_COMMITTED\n'
 echo 'G2_STORAGE_OBJECT_BYTES=NOT_INCLUDED'
 echo 'G2_EDGE_FUNCTIONS=NOT_INCLUDED'
