@@ -1,0 +1,19 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { diagnosticJourneyOpeningRequiresAtomicRpc, planDiagnosticInitiative } from '../src/modules/skda/contracts/diagnosticJourneyOpening.ts'
+
+const uuid = '123e4567-e89b-42d3-a456-426614174000'
+
+test('DA opening uses operational CORE initiative without SK-PE binding', () => {
+  const plan = planDiagnosticInitiative({ organizationId: uuid, instrumentId: uuid, assessmentCycleId: uuid, kind: 'assisted_diagnosis', consultantUserId: uuid, provisionalRepresentativeUserId: uuid, idempotencyKey: 'journey-001', changeReason: 'Abertura da jornada' })
+  assert.equal(plan.target_initiative_class, 'project')
+  assert.equal(plan.target_category_code, 'operational')
+  assert.equal(plan.target_source_module_code, 'SK-DA')
+  assert.equal(plan.target_proposal_source_reference, 'journey-001')
+  assert.equal('skpe_project_id' in plan, false)
+  assert.equal(diagnosticJourneyOpeningRequiresAtomicRpc(), true)
+})
+
+test('DA opening rejects malformed inputs before preparing initiative', () => {
+  assert.throws(() => planDiagnosticInitiative({ organizationId: 'invalid', instrumentId: uuid, assessmentCycleId: uuid, kind: 'monitoring', consultantUserId: uuid, provisionalRepresentativeUserId: uuid, idempotencyKey: '', changeReason: 'short' }))
+})
