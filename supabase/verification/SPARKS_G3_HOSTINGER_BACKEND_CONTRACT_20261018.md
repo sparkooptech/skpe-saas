@@ -34,3 +34,10 @@ Estado: desenho e homologacao pendentes. Nenhuma implantacao executada.
 
 ## Condicao de saida
 Todos os contratos necessarios testados, com evidencias de requests/responses sem dados pessoais, regras de tenant e super_admin aprovadas, e rollback comprovado em homologacao. Ate la, G3 NAO CONCLUIDO.
+
+## G3 - Contratos localizados no frontend - 2026-10-18
+- Auth: App.tsx usa getSession, onAuthStateChange, signInWithOAuth, signInWithPassword, signOut, resetPasswordForEmail e updateUser. UserProfileDialog tambem usa resetPasswordForEmail.
+- Edge Functions: PlatformAdmin usa create-platform-user e invite-platform-user; CanonicalImportStaging usa skpe-import-incorporation em diversas operacoes. Existem outras invocacoes no SkpeCockpit, que precisam ser rastreadas por nome.
+- Storage: EvidenceManagementWorkspace remove objetos de sparks-evidence; MethodologyArtifactsSection envia para methodology-artifacts e cria signed URLs; DeliveryKitDialog faz download; SkpeCockpit cria signed URLs para user-avatars.
+- Atenção: methodology-artifacts nao apareceu entre os 3 buckets com objetos no agrupamento storage.objects. Bucket vazio nao aparece nesse agrupamento. Confirmar existencia e politicas diretamente no catalogo de buckets antes de concluir que falta.
+- Testes necessarios: fluxo OAuth, convite, reset de senha, leitura/escrita com RLS, assinatura de URLs, download de evidencias, incorporacao e isolamento multi-tenant. Sem backend substituto, testes de configuracao nao sao testes de paridade funcional.
