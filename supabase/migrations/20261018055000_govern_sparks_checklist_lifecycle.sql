@@ -38,6 +38,12 @@ begin
   ) then
     raise exception 'Transicao de situacao nao permitida.' using errcode = '22023';
   end if;
+  if target_status in ('under_review','completed') and not exists (
+    select 1 from public.sparks_checklist_execution_items item
+    where item.execution_id = target_execution_id
+  ) then
+    raise exception 'Checklist sem itens nao pode ser revisado ou concluido.' using errcode = '22023';
+  end if;
   if target_status = 'under_review' then
     select count(*) into v_unresolved
     from public.sparks_checklist_execution_items item
