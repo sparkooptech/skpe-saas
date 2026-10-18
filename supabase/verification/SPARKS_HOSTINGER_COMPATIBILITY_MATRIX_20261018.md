@@ -55,3 +55,10 @@ Nao alterar sparks_prd, sparks_homol, sparks-homol, outros bancos/containers, Su
 - Extensoes instaladas na origem incluem pgcrypto, uuid-ossp, pg_trgm, pg_stat_statements, supabase_vault, hypopg e index_advisor. vector, pgjwt, pg_net e pg_cron disponiveis, mas nao instaladas. Nao copiar automaticamente extensoes internas do Supabase para a Hostinger.
 - O usuario declarou suspensao manual de entrada e manutencao de dados. Isso NAO e bloqueio tecnico de escrita e nao prova consistencia de snapshot.
 - G1 continua aberto ate identificacao da origem efetiva de producao, inventario de buckets/objetos, grants, triggers, dependencias e estado das migracoes. G2 permanece nao homologado ate backup e RESTORE comprovado.
+
+## Confirmacoes adicionais read-only na origem DEV - 2026-10-18
+- supabase_migrations.schema_migrations: 308 migracoes aplicadas; maior version 20261007234118. Os 327 arquivos SQL locais nao equivalem a 327 migracoes aplicadas.
+- storage.objects por bucket: organization-branding 11, sparks-evidence 1, user-avatars 3; total 15 registros de metadados de objetos. Integridade fisica e checksums ainda NAO validados. Consulta adicional de configuracao de buckets foi bloqueada pela seguranca da ferramenta.
+- public: zero tabelas comuns/particionadas sem RLS habilitada entre 219 tabelas inspecionadas. Habilitacao de RLS nao comprova correcao das politicas.
+- Contagens exatas no momento da consulta: auth.users 28, public.profiles 28, public.organization_memberships 37. Nao ha garantia de snapshot atomico entre consultas separadas.
+- A suspensao manual de escrita comunicada pelo usuario nao impede jobs, APIs ou sessoes ativas de gravar; conferir congelamento efetivo antes de snapshot final.
