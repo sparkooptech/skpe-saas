@@ -58,3 +58,26 @@ export async function assignDiagnosticOrganizationLead(command: {
   if (data !== command.journeyId) throw new Error('Transferencia DA retornou identificador divergente.')
   return data
 }
+
+export interface DiagnosticOrganizationLeadCandidate {
+  userId: string
+  displayName: string
+  email: string
+}
+
+/** Authorized tenant directory; never query profiles directly from the browser. */
+export async function listDiagnosticOrganizationLeadCandidates(organizationId: string): Promise<DiagnosticOrganizationLeadCandidate[]> {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuid.test(organizationId)) throw new Error('Organizacao DA invalida.')
+  const { data, error } = await supabase.rpc('list_skda_organization_lead_candidates', { target_organization_id: organizationId })
+  if (error) throw new Error(error.message)
+  if (!Array.isArray(data)) throw new Error('Diretorio organizacional DA invalido.')
+  return data.map((row: unknown) => {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error('Candidato DA invalido.')
+    const candidate = row as Record<string, unknown>
+    if (typeof candidate.user_id !== 'string' || !uuid.test(candidate.user_id)
+      || typeof candidate.display_name !== 'string' || !candidate.display_name.trim()
+      || typeof candidate.email !== 'string' || !candidate.email.trim()) throw new Error('Candidato DA invalido.')
+    return { userId: candidate.user_id, displayName: candidate.display_name, email: candidate.email }
+  })
+}
