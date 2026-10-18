@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { resolveSparksBackendConfig } from './sparksBackendConfig'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabasePublishableKey =
@@ -14,7 +15,13 @@ if (!supabasePublishableKey) {
   )
 }
 
+const backend = resolveSparksBackendConfig({
+  VITE_SPARKS_BACKEND_TARGET: import.meta.env.VITE_SPARKS_BACKEND_TARGET,
+  VITE_SUPABASE_URL: supabaseUrl,
+  VITE_SUPABASE_PUBLISHABLE_KEY: supabasePublishableKey,
+})
+
 export const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey,
+  backend.apiUrl,
+  backend.publishableKey,
 )
