@@ -2,7 +2,10 @@
 
 ## Evidencias verificadas (somente leitura)
 - Supabase skpe-saas-dev (ref vumbfpbcozjebomcthdw), PostgreSQL 17; nao identificado como Hostinger homologacao.
-- sparks_initiatives, profiles e categoria INITIATIVE_CATEGORY/operational presentes.
+- Banco postgres, PostgreSQL 17.6; organizations, sparks_initiatives e profiles presentes.
+- Categoria INITIATIVE_CATEGORY/operational confirmada com active=true.
+- Colunas sparks_domain_values.active e organization_modules.enabled/status/valid_from/valid_until confirmadas no catalogo real.
+- Assinaturas verificadas: is_platform_super_admin(), is_organization_admin(uuid), can_manage_sparks_initiatives(uuid,text) e create_sparks_initiative(uuid,text,text,text,text,text,text,text,uuid,uuid,text,text,text,text,date,date,text).
 - Modulo SK-DA: planned, zero organizacoes vinculadas e zero habilitacoes.
 - sparks_checklist_executions e skda_journeys ausentes.
 - Branch Supabase main consta MIGRATIONS_FAILED (registro de agosto); causa nao determinada.
