@@ -29,7 +29,8 @@ $fingerprints=@($keyDetails -split "`n" | Where-Object {$_ -match '^fpr:'} | For
 $expectedFingerprint=([string]$receipt.key_fingerprint).Trim().ToUpperInvariant()
 if($expectedFingerprint -notmatch '^[0-9A-F]{40}$'){throw 'G2_BLOCKED: invalid custody fingerprint format'}
 if($fingerprints.Count -lt 1 -or $fingerprints[0].ToUpperInvariant() -ne $expectedFingerprint){throw 'G2_BLOCKED: public key fingerprint differs from custody receipt'}
-# Custody receipt remains an attestation: independently verified recovery evidence is required operationally.$cli=(Get-Command supabase -ErrorAction Stop).Source
+# Custody receipt remains an attestation: independently verified recovery evidence is required operationally.
+$cli=(Get-Command supabase -ErrorAction Stop).Source
 $old=$ErrorActionPreference
 try {
  $ErrorActionPreference='Continue'
