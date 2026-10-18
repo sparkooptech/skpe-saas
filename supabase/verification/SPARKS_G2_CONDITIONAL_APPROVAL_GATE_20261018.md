@@ -66,3 +66,9 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - Senha do teste e apenas literal sintetico publico, NUNCA usar como segredo real. AES-CBC neste comando nao fornece autenticidade; nao adotar como formato final de backup sem projeto de AEAD/integridade e gestao de chaves.
 - Nenhum arquivo gravado no staging; conteudo da pasta permanece 0 entradas. Nenhum dado real, backup ou restore executado.
 - Proximos gates: recuperacao independente da VPS, custodia de chaves, exportacao Auth/Storage consistente, snapshot, limites de CPU, isolamento e reconcilicao.
+
+## Dimensionamento de origem DEV - 2026-10-18 21:21Z
+- Consulta SQL read-only no projeto vumbfpbcozjebomcthdw: banco 54 MB; 15 objetos Storage com metadata.size numerico em todos; soma declarada 2.505.987 bytes (aprox. 2,39 MiB); 28 usuarios auth.
+- Consulta sob role postgres confirma SELECT em auth.users e storage.objects, mas isso nao demonstra exportacao completa de dados Auth, hashes, roles, grants, nem bytes fisicos Storage.
+- Estimativa baseada em metadados, nao checksum de arquivos nem tamanho de dump final. Nao assumir equivalencia de componentes Supabase internos na Hostinger.
+- Nenhum backup ou restore real executado; staging continua sem arquivos de dados. Capacidade de disco nao e gargalo principal do ensaio DEV; exportacao consistente, chaves recuperaveis e integridade ainda sao gates.
