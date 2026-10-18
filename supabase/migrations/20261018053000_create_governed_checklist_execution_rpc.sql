@@ -25,6 +25,10 @@ begin
   if auth.uid() is null then
     raise exception 'Autenticacao obrigatoria.' using errcode = '42501';
   end if;
+  if target_organization_id is null or target_template_version_id is null or target_id is null
+     or target_type is null then
+    raise exception 'Organizacao, modelo e destino sao obrigatorios.' using errcode = '22023';
+  end if;
   -- Conservative first release: administrator-only until dedicated checklist permissions exist.
   if not (public.is_platform_super_admin() or public.is_organization_admin(target_organization_id)) then
     raise exception 'Permissao administrativa necessaria para gerar checklists.' using errcode = '42501';
@@ -46,7 +50,7 @@ begin
   ) then
     raise exception 'Modulo nao habilitado para a organizacao.' using errcode = '42501';
   end if;
-  if target_type not in ('organization', 'sparks_initiative') then
+  if target_type is null or target_type not in ('organization', 'sparks_initiative') then
     -- skda_journey and skpe_project require dedicated scoped validators before activation.
     raise exception 'Tipo de destino ainda nao habilitado para geracao governada.' using errcode = '22023';
   end if;
