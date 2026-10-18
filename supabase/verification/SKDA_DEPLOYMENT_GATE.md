@@ -8,7 +8,9 @@
 - Assinaturas verificadas: is_platform_super_admin(), is_organization_admin(uuid), can_manage_sparks_initiatives(uuid,text) e create_sparks_initiative(uuid,text,text,text,text,text,text,text,uuid,uuid,text,text,text,text,date,date,text).
 - Modulo SK-DA: planned, zero organizacoes vinculadas e zero habilitacoes.
 - sparks_checklist_executions e skda_journeys ausentes.
-- Branch Supabase main consta MIGRATIONS_FAILED (registro de agosto); causa nao determinada.
+- Historico real supabase_migrations.schema_migrations: 308 versoes registradas; ultima 20261007234118 (harden_strategic_learning_lifecycle); zero versoes com prefixo 20261018.
+- Os oito arquivos DA/CORE 20261018 existem localmente, mas nao constam no historico do banco consultado.
+- Branch Supabase main consta MIGRATIONS_FAILED (registro de agosto); causa nao determinada. Esse estado da branch nao comprova falha do banco principal.
 - Deploy web documentado em deploy/hostinger/skpe-saas-homol/; rollback de conteiner NAO recupera banco de dados.
 
 ## Ordem de migracoes
