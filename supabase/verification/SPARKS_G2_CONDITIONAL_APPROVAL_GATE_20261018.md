@@ -51,3 +51,11 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - Repositorio agora ignora supabase/verification/g2-backups/, *.dump, *.backup, *.pgdump e respectivas variantes .gpg; isso evita commit acidental, mas NAO substitui criptografia ou controle de acesso.
 - PostgreSQL compartilhado nao tem role postgres local disponivel; evitar presumir credenciais/roles. Nenhuma modificacao no PostgreSQL da Hostinger.
 - G2 backup/restore ainda NAO executados: faltam metodo de exportacao consistente sem vazamento de segredo, chave/destino de guarda criptografada e verificacao de bytes dos objetos Storage.
+
+## Preparacao VPS para armazenamento criptografado - 2026-10-18 21:10Z
+- Usuario solicitou avancar apos proposta de preparar armazenamento na propria VPS sem custo adicional.
+- Criado SOMENTE diretorio vazio `/root/sparks-g2-secure-staging` na VPS Hostinger; `drwx------ root:root`, permissoes 700, sem dados copiados.
+- VPS: 147GB livres, 12GiB RAM disponivel, 31 conteineres; carga 1m 3.71 em 4 vCPU (amostra, risco de concorrencia). Sistema de arquivos ext4, sem evidencia de criptografia de volume.
+- gpg e openssl disponiveis, mas keyring GPG root nao tem destinatario publico configurado. Diretorio com chmod 700 NAO e armazenamento criptografado.
+- PROIBIDO exportar dump ou objetos brutos para este diretorio ate chave publica de destinatario aprovada, recuperacao comprovada fora da VPS, fluxo streaming-encrypt sem arquivos temporarios plaintext, e verificacao de exportabilidade Auth/Storage.
+- Nenhum backup, dump, restauracao, servico, volume Docker ou banco foi criado/alterado. Pasta vazia nao deve ser removida sem autorizacao.
