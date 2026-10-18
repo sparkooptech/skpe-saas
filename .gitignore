@@ -21,3 +21,11 @@ supabase/.temp/
 /_audit/
 tmp/
 supabase/migrations/*.bak
+
+# G2: artefatos de backup, restauracao e dados sensiveis (nunca versionar)
+supabase/verification/g2-backups/
+*.dump
+*.backup
+*.pgdump
+*.dump.gpg
+*.backup.gpg

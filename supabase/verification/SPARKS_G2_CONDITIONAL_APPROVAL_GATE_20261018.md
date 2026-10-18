@@ -42,3 +42,12 @@ A aprovacao condicional continua valida; este registro nao solicita autorizacao 
 - CLI Supabase local 2.116.0, linked project-ref correto, mas `supabase projects list` falha com `Invalid access token`. Nao ha DATABASE_URL/SUPABASE_DB_PASSWORD/SUPABASE_ACCESS_TOKEN/PGPASSWORD definidos no ambiente do processo verificado. Sem credencial de exportacao validada.
 - Resultado: G2 preflight de infraestrutura parcial; backup e restore NAO executados. Bloqueio atual e canal de exportacao autenticado/consistente e inventario de bytes Storage, alem de limites de carga e custo comprovados.
 - Proxima acao humana segura: renovar login CLI pelo proprio usuario (`supabase login`), sem enviar token ao chat, e confirmar `supabase projects list`. Nao confundir acesso API com credenciais de banco necessarias para dump.
+
+## Preflight adicional - 2026-10-18 20:33Z
+- Supabase CLI autenticado, projeto vinculado e confirmado pelo comando projects list no repositorio canonico.
+- `supabase db dump --dry-run` imprime PGPASSWORD temporario em texto claro; PROIBIDO usar dry-run em logs, tickets, console compartilhado ou commits. Credencial ja exposta na saida operacional deve ser tratada como comprometida ate invalidacao/expiracao.
+- Volume C: do RMKB-NTB: BitLocker FullyDecrypted, ProtectionStatus Off, 0% criptografia. NAO guardar dump bruto no C:.
+- VPS Hostinger: raiz ext4, gpg e openssl presentes; nao ha confirmacao de criptografia em repouso ou chave publica de destinatario aprovada.
+- Repositorio agora ignora supabase/verification/g2-backups/, *.dump, *.backup, *.pgdump e respectivas variantes .gpg; isso evita commit acidental, mas NAO substitui criptografia ou controle de acesso.
+- PostgreSQL compartilhado nao tem role postgres local disponivel; evitar presumir credenciais/roles. Nenhuma modificacao no PostgreSQL da Hostinger.
+- G2 backup/restore ainda NAO executados: faltam metodo de exportacao consistente sem vazamento de segredo, chave/destino de guarda criptografada e verificacao de bytes dos objetos Storage.
