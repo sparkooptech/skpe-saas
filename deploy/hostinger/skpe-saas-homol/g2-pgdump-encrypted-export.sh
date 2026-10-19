@@ -35,7 +35,7 @@ trap cleanup EXIT
 docker run --rm --network bridge --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --memory 512m --cpus 1 -i postgres:17-alpine sh -c '
   IFS= read -r uri
   export PGCONNECT_TIMEOUT=15
-  export PGDATABASE="$uri"; unset uri; exec pg_dump --format=custom --no-owner --no-privileges --schema=public --schema=auth --schema=storage
+  exec pg_dump --dbname="$uri" --format=custom --no-owner --no-privileges --schema=public --schema=auth --schema=storage
 ' < "$G2_DATABASE_URL_FILE" | bash "$sink"
 # A completed pg_dump plus completed GPG are both required (pipefail).
 shopt -s nullglob
