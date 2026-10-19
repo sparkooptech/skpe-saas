@@ -9,6 +9,7 @@ sink="$base/g2-encrypted-stream-sink.sh"
 : "${G2_DATABASE_URL_FILE:?Missing root-only database URL file}"
 [[ -f "$G2_DATABASE_URL_FILE" && ! -L "$G2_DATABASE_URL_FILE" ]] || { echo 'G2_BLOCKED=DB_URL_FILE'; exit 2; }
 [[ "$(stat -c %a "$G2_DATABASE_URL_FILE")" == 600 ]] || { echo 'G2_BLOCKED=DB_URL_PERMISSIONS'; exit 2; }
+bash "$base/g2-dev-source-identity-guard.sh"
 [[ -s "$key/public.asc" && -s "$key/fingerprint" && -s "$sink" ]] || { echo 'G2_BLOCKED=KEY_OR_SINK'; exit 2; }
 # The caller must attest project-ref and pg_dump scope separately.
 [[ "${G2_CONFIRMED_PROJECT_REF:-}" == 'vumbfpbcozjebomcthdw' ]] || { echo 'G2_BLOCKED=SOURCE_PROJECT_NOT_CONFIRMED'; exit 2; }
