@@ -29,14 +29,20 @@ cleanup(){
   if [[ "$committed" != yes ]]; then rm -rf -- "$attempt"; fi
 }
 trap cleanup EXIT
-# No pg_dump output is written on the host. Docker has no mounts and no published ports.
-# PG URL is delivered on stdin to the container's entrypoint, not a process argument.
-# The container prints only pg_dump binary output on stdout.
-docker run --rm --network bridge --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --memory 512m --cpus 1 -i postgres:17-alpine sh -c '
-  IFS= read -r uri
-  export PGCONNECT_TIMEOUT=15
-  exec pg_dump --dbname="$uri" --format=custom --no-owner --no-privileges --schema=public --schema=auth --schema=storage
-' < "$G2_DATABASE_URL_FILE" | bash "$sink"
+# The connection is parsed into libpq service and pgpass files in VPS tmpfs.
+# Neither the URI nor the password appears in docker/pg_dump arguments or environment.
+libpq_dir=$(mktemp -d /dev/shm/sparks-g2-libpq.XXXXXXXX)
+rmdir "$libpq_dir"
+cleanup(){
+  rm -rf -- "$libpq_dir"
+  if [[ "$committed" != yes ]]; then rm -rf -- "$attempt"; fi
+}
+trap cleanup EXIT
+python3 "$base/g2-uri-to-libpq-tmpfs.py" "$G2_DATABASE_URL_FILE" "$libpq_dir"
+docker run --rm --network bridge --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --memory 512m --cpus 1 \
+  --mount "type=bind,source=$libpq_dir,target=/run/g2,readonly" \
+  -e PGSERVICEFILE=/run/g2/pg_service.conf -e PGPASSFILE=/run/g2/pgpass \
+  postgres:17-alpine pg_dump --dbname=service=g2 --format=custom --no-owner --no-privileges --schema=public --schema=auth --schema=storage | bash "$sink"
 # A completed pg_dump plus completed GPG are both required (pipefail).
 shopt -s nullglob
 artifacts=("$attempt"/*.pgdump.gpg)
