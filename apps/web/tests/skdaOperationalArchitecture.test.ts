@@ -23,6 +23,14 @@ test('SK-DA workspace uses the diagnosis domain on the shared platform', () => {
   assert.match(workspace, /\.from\('skda_findings'/)
 })
 
+test('DA-02 interview workspace uses the canonical interview domain', () => {
+  assert.match(workspace, /\.from\('skda_interviews'/)
+  assert.match(workspace, /diagnosis_id:selected\.id/)
+  assert.match(workspace, /status:'planned'/)
+  assert.match(migration, /create table public\.skda_interviews/)
+  assert.match(migration, /foreign key\(diagnosis_id,organization_id\) references public\.skda_diagnoses/)
+})
+
 test('canonical SK-DA schema models diagnosis, not project', () => {
   assert.match(migration, /create table public\.skda_diagnoses/)
   assert.doesNotMatch(migration, /create table public\.skda_projects/)

@@ -202,6 +202,154 @@
   margin: 0 0 8px;
 }
 
+.skda-journey {
+  display: grid;
+  gap: 12px;
+}
+
+.skda-journey-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.skda-journey-head span,
+.skda-phase-panel span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .65;
+}
+
+.skda-journey-head h3,
+.skda-phase-panel h3 {
+  margin: 3px 0 0;
+}
+
+.skda-journey-head b {
+  font-size: 22px;
+}
+
+.skda-phase-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.skda-phase-nav button {
+  display: grid;
+  grid-template-columns: 58px minmax(0,1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid rgba(127,127,127,.22);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.skda-phase-nav button.active {
+  border-color: currentColor;
+  box-shadow: 0 0 0 1px currentColor inset;
+}
+
+.skda-phase-nav small {
+  font-weight: 800;
+}
+
+.skda-phase-nav span {
+  font-size: 12px;
+}
+
+.skda-phase-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(127,127,127,.22);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.skda-phase-panel p {
+  margin: 0;
+}
+
+.skda-phase-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(127,127,127,.18);
+}
+
+.skda-phase-summary strong {
+  font-size: 18px;
+}
+
+.skda-phase-workspace {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.skda-phase-workspace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skda-phase-workspace-head h4 {
+  margin: 0;
+}
+
+.skda-phase-empty {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed rgba(127,127,127,.32);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.skda-interview-list {
+  display: grid;
+  gap: 8px;
+}
+
+.skda-interview-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(127,127,127,.2);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.skda-interview-list article > div {
+  display: grid;
+  gap: 3px;
+}
+
+.skda-interview-list article > div:last-child {
+  text-align: right;
+}
+
+.skda-interview-list small,
+.skda-interview-list span {
+  font-size: 11px;
+  opacity: .7;
+}
+
+.skda-interview-list strong,
+.skda-interview-list b {
+  font-size: 12px;
+}
+
 .skda-modal-backdrop {
   position: fixed;
   inset: 0;
