@@ -31,6 +31,14 @@ test('DA-02 interview workspace uses the canonical interview domain', () => {
   assert.match(migration, /foreign key\(diagnosis_id,organization_id\) references public\.skda_diagnoses/)
 })
 
+test('DA-01 reuses transversal evidence and stores only contextual correlation', () => {
+  assert.match(workspace, /\.from\('sparks_evidence_assets'/)
+  assert.match(workspace, /\.from\('skda_evidence_correlations'/)
+  assert.match(workspace, /target_type:'diagnosis'/)
+  assert.match(workspace, /evidence_asset_id:asset\.id/)
+  assert.doesNotMatch(workspace, /insert\([\s\S]*?sparks_evidence_assets/)
+})
+
 test('canonical SK-DA schema models diagnosis, not project', () => {
   assert.match(migration, /create table public\.skda_diagnoses/)
   assert.doesNotMatch(migration, /create table public\.skda_projects/)

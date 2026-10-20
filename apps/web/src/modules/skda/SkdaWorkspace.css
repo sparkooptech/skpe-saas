@@ -315,12 +315,14 @@
   text-align: center;
 }
 
-.skda-interview-list {
+.skda-interview-list,
+.skda-evidence-list {
   display: grid;
   gap: 8px;
 }
 
-.skda-interview-list article {
+.skda-interview-list article,
+.skda-evidence-list article {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -330,23 +332,29 @@
   padding: 12px;
 }
 
-.skda-interview-list article > div {
+.skda-interview-list article > div,
+.skda-evidence-list article > div {
   display: grid;
   gap: 3px;
 }
 
-.skda-interview-list article > div:last-child {
+.skda-interview-list article > div:last-child,
+.skda-evidence-list article > div:last-child {
   text-align: right;
 }
 
 .skda-interview-list small,
-.skda-interview-list span {
+.skda-interview-list span,
+.skda-evidence-list small,
+.skda-evidence-list span {
   font-size: 11px;
   opacity: .7;
 }
 
 .skda-interview-list strong,
-.skda-interview-list b {
+.skda-interview-list b,
+.skda-evidence-list strong,
+.skda-evidence-list b {
   font-size: 12px;
 }
 

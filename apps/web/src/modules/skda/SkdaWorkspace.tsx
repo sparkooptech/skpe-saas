@@ -28,6 +28,8 @@ type Diagnosis = {
 type Metrics = { responses: number; interviews: number; evidence: number; findings: number }
 type Phase = { code: string; title: string; description: string; statusKey: string }
 type Interview = { id: string; code: string; title: string; interviewee_name: string | null; interviewee_role: string | null; status: string; channel: string; scheduled_start: string | null }
+type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null }
+type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
@@ -51,6 +53,21 @@ const TYPES: Record<string,string> = {
   pdgc:'PDGC / Avaliacoop', maturity:'Maturidade', custom:'Personalizado', other:'Outro',
 }
 
+const EVIDENCE_TYPES: Record<string,string> = {
+  document:'Documento', dataset:'Base de dados', indicator:'Indicador', self_assessment:'Autoavaliação',
+  assisted_diagnosis:'Diagnóstico assistido', action_plan:'Plano de ação', interview:'Entrevista', workshop:'Oficina',
+  bmc:'BMC', vpc:'VPC', benchmark:'Benchmark', market_study:'Estudo de mercado', legal_reference:'Referência legal',
+  image:'Imagem', audio:'Áudio', video:'Vídeo', other:'Outro',
+}
+
+const EVIDENCE_STATUS: Record<string,string> = {
+  pending:'Pendente', under_review:'Em revisão', validated:'Validada', rejected:'Rejeitada', outdated:'Desatualizada', superseded:'Substituída',
+}
+
+const RELIABILITY: Record<string,string> = {
+  not_assessed:'Não avaliada', very_low:'Muito baixa', low:'Baixa', moderate:'Moderada', high:'Alta', very_high:'Muito alta',
+}
+
 export function SkdaWorkspace(props: Props) {
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -62,6 +79,8 @@ export function SkdaWorkspace(props: Props) {
   const [showInterviewCreate, setShowInterviewCreate] = useState(false)
   const [activePhaseCode, setActivePhaseCode] = useState('DA-00')
   const [interviews, setInterviews] = useState<Interview[]>([])
+  const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
+  const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
   const [interviewForm, setInterviewForm] = useState({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
   const [form, setForm] = useState({
     code:'', name:'', description:'', diagnosisType:'pdgc',
@@ -75,6 +94,7 @@ export function SkdaWorkspace(props: Props) {
 
   const canManage = ['administrator','coordinator'].includes(props.userRoleCode)
   const canEditInterviews = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
+  const canLinkEvidence = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
 
   const loadDiagnoses = async () => {
     setLoading(true)
@@ -107,6 +127,27 @@ export function SkdaWorkspace(props: Props) {
 
   useEffect(() => {
     const run = async () => {
+      if (!selectedId) { setEvidenceAssets([]); setEvidenceCorrelations([]); return }
+      const [assetsResult, correlationsResult] = await Promise.all([
+        supabase
+          .from('sparks_evidence_assets' as never)
+          .select('id,title,evidence_type,validation_status,reliability_level,reference_date' as never)
+          .eq('organization_id', props.organizationId)
+          .is('archived_at', null)
+          .order('updated_at', { ascending:false }),
+        supabase
+          .from('skda_evidence_correlations' as never)
+          .select('id,evidence_asset_id,usage_type,validation_status' as never)
+          .eq('diagnosis_id', selectedId),
+      ])
+      setEvidenceAssets((assetsResult.data ?? []) as unknown as EvidenceAsset[])
+      setEvidenceCorrelations((correlationsResult.data ?? []) as unknown as EvidenceCorrelation[])
+    }
+    void run()
+  }, [selectedId, props.organizationId])
+
+  useEffect(() => {
+    const run = async () => {
       if (!selectedId) { setInterviews([]); return }
       const { data } = await supabase
         .from('skda_interviews' as never)
@@ -134,6 +175,35 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [selectedId])
+
+  const linkEvidence = async (asset: EvidenceAsset) => {
+    if (!selected) return
+    if (evidenceCorrelations.some((item) => item.evidence_asset_id === asset.id)) return
+
+    setSaving(true)
+    setError('')
+    const { data, error: saveError } = await supabase
+      .from('skda_evidence_correlations' as never)
+      .insert({
+        organization_id:props.organizationId,
+        diagnosis_id:selected.id,
+        evidence_asset_id:asset.id,
+        target_type:'diagnosis',
+        target_id:selected.id,
+        usage_type:'support',
+        relevance_level:'important',
+        validation_status:'pending',
+      } as never)
+      .select('id,evidence_asset_id,usage_type,validation_status' as never)
+      .single()
+
+    setSaving(false)
+    if (saveError) { setError(saveError.message); return }
+
+    const created = data as unknown as EvidenceCorrelation
+    setEvidenceCorrelations((current) => [...current, created])
+    setMetrics((current) => ({ ...current, evidence:current.evidence + 1 }))
+  }
 
   const createInterview = async () => {
     if (!selected || !interviewForm.code.trim() || !interviewForm.title.trim()) {
@@ -278,6 +348,18 @@ export function SkdaWorkspace(props: Props) {
             {activePhase.code === 'DA-06' && <><span>Destino da execução</span><strong>Iniciativas</strong></>}
             {activePhase.code === 'DA-00' && <><span>Estado</span><strong>{STATUS[selected.status] ?? selected.status}</strong></>}
           </div>
+          {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
+            <div className="skda-phase-workspace-head"><h4>Evidências disponíveis no Core</h4><span>{evidenceAssets.length} ativo(s)</span></div>
+            {evidenceAssets.length === 0 ? <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p> : <div className="skda-evidence-list">
+              {evidenceAssets.map((asset) => {
+                const correlation = evidenceCorrelations.find((item) => item.evidence_asset_id === asset.id)
+                return <article key={asset.id}>
+                  <div><small>{EVIDENCE_TYPES[asset.evidence_type] ?? asset.evidence_type}</small><strong>{asset.title}</strong><span>{EVIDENCE_STATUS[asset.validation_status] ?? asset.validation_status} · Confiabilidade: {RELIABILITY[asset.reliability_level] ?? asset.reliability_level}</span></div>
+                  <div>{correlation ? <b>Vinculada ao diagnóstico</b> : canLinkEvidence ? <button type="button" className="skda-primary" disabled={saving} onClick={() => void linkEvidence(asset)}>Vincular</button> : <span>Disponível</span>}</div>
+                </article>
+              })}
+            </div>}
+          </div>}
           {activePhase.code === 'DA-02' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Entrevistas do diagnóstico</h4>{canEditInterviews && <button type="button" className="skda-primary" onClick={() => setShowInterviewCreate(true)}>Nova entrevista</button>}</div>
             {interviews.length === 0 ? <p className="skda-phase-empty">Nenhuma entrevista registrada.</p> : <div className="skda-interview-list">
