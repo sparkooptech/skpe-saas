@@ -39,6 +39,17 @@ test('DA-01 reuses transversal evidence and stores only contextual correlation',
   assert.doesNotMatch(workspace, /insert\([\s\S]*?sparks_evidence_assets/)
 })
 
+test('DA-00 and DA-03 govern catalog assignment and question assessment', () => {
+  assert.match(workspace, /\.from\('skda_catalog_versions'/)
+  assert.match(workspace, /\.from\('skda_questions'/)
+  assert.match(workspace, /\.from\('skda_responses'/)
+  assert.match(workspace, /onConflict:'diagnosis_id,question_id'/)
+  assert.match(workspace, /catalogLocked = metrics\.responses > 0/)
+  assert.match(workspace, /canEditAssessment = \['administrator','coordinator','diagnostician'\]/)
+  assert.match(workspace, /canEditInterviews = \['administrator','coordinator','interviewer'\]/)
+  assert.match(migration, /unique\(diagnosis_id,question_id\)/)
+})
+
 test('canonical SK-DA schema models diagnosis, not project', () => {
   assert.match(migration, /create table public\.skda_diagnoses/)
   assert.doesNotMatch(migration, /create table public\.skda_projects/)

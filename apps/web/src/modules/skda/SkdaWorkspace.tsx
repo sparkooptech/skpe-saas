@@ -18,6 +18,7 @@ type Diagnosis = {
   name: string
   description: string | null
   diagnosis_type: string
+  catalog_version_id: string | null
   reference_year: number | null
   status: string
   current_phase_code: string
@@ -30,6 +31,9 @@ type Phase = { code: string; title: string; description: string; statusKey: stri
 type Interview = { id: string; code: string; title: string; interviewee_name: string | null; interviewee_role: string | null; status: string; channel: string; scheduled_start: string | null }
 type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
+type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
+type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; display_order: number }
+type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; confidence_level: string }
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
@@ -68,6 +72,10 @@ const RELIABILITY: Record<string,string> = {
   not_assessed:'Não avaliada', very_low:'Muito baixa', low:'Baixa', moderate:'Moderada', high:'Alta', very_high:'Muito alta',
 }
 
+const CLASSIFICATION: Record<string,string> = {
+  confirmed:'Confirmada', reported:'Relatada', gap:'Lacuna', not_applicable:'Não aplicável', not_evaluated:'Não avaliada',
+}
+
 export function SkdaWorkspace(props: Props) {
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -81,6 +89,9 @@ export function SkdaWorkspace(props: Props) {
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
+  const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [responses, setResponses] = useState<Response[]>([])
   const [interviewForm, setInterviewForm] = useState({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
   const [form, setForm] = useState({
     code:'', name:'', description:'', diagnosisType:'pdgc',
@@ -93,15 +104,16 @@ export function SkdaWorkspace(props: Props) {
   )
 
   const canManage = ['administrator','coordinator'].includes(props.userRoleCode)
-  const canEditInterviews = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
+  const canEditInterviews = ['administrator','coordinator','interviewer'].includes(props.userRoleCode)
   const canLinkEvidence = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
+  const canEditAssessment = ['administrator','coordinator','diagnostician'].includes(props.userRoleCode)
 
   const loadDiagnoses = async () => {
     setLoading(true)
     setError('')
     const { data, error: loadError } = await supabase
       .from('skda_diagnoses' as never)
-      .select('id,code,name,description,diagnosis_type,reference_year,status,current_phase_code,progress,created_at' as never)
+      .select('id,code,name,description,diagnosis_type,catalog_version_id,reference_year,status,current_phase_code,progress,created_at' as never)
       .eq('organization_id', props.organizationId)
       .is('archived_at', null)
       .order('created_at', { ascending:false })
@@ -120,6 +132,38 @@ export function SkdaWorkspace(props: Props) {
   }
 
   useEffect(() => { void loadDiagnoses() }, [props.organizationId])
+
+  useEffect(() => {
+    const run = async () => {
+      const { data } = await supabase
+        .from('skda_catalog_versions' as never)
+        .select('id,code,version_code,name,framework_code' as never)
+        .eq('status', 'published')
+        .order('effective_from', { ascending:false, nullsFirst:false })
+      setCatalogs((data ?? []) as unknown as CatalogVersion[])
+    }
+    void run()
+  }, [])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selected?.catalog_version_id) { setQuestions([]); setResponses([]); return }
+      const [questionsResult, responsesResult] = await Promise.all([
+        supabase
+          .from('skda_questions' as never)
+          .select('id,code,axis_name,criterion_name,question_text,display_order' as never)
+          .eq('catalog_version_id', selected.catalog_version_id)
+          .order('display_order', { ascending:true }),
+        supabase
+          .from('skda_responses' as never)
+          .select('id,question_id,classification,response_status,answer_text,confidence_level' as never)
+          .eq('diagnosis_id', selected.id),
+      ])
+      setQuestions((questionsResult.data ?? []) as unknown as Question[])
+      setResponses((responsesResult.data ?? []) as unknown as Response[])
+    }
+    void run()
+  }, [selected?.id, selected?.catalog_version_id])
 
   useEffect(() => {
     setActivePhaseCode(selected?.current_phase_code ?? 'DA-00')
@@ -175,6 +219,43 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [selectedId])
+
+  const assignCatalog = async (catalogVersionId: string) => {
+    if (!selected || !canManage) return
+    setSaving(true)
+    setError('')
+    const { error: saveError } = await supabase
+      .from('skda_diagnoses' as never)
+      .update({ catalog_version_id:catalogVersionId || null } as never)
+      .eq('id', selected.id)
+      .eq('organization_id', props.organizationId)
+    setSaving(false)
+    if (saveError) { setError(saveError.message); return }
+    await loadDiagnoses()
+  }
+
+  const saveClassification = async (question: Question, classification: string) => {
+    if (!selected || !canEditAssessment) return
+    setSaving(true)
+    setError('')
+    const hadResponse = responses.some((item) => item.question_id === question.id)
+    const { data, error: saveError } = await supabase
+      .from('skda_responses' as never)
+      .upsert({
+        organization_id:props.organizationId,
+        diagnosis_id:selected.id,
+        question_id:question.id,
+        classification,
+        response_status:'draft',
+      } as never, { onConflict:'diagnosis_id,question_id' })
+      .select('id,question_id,classification,response_status,answer_text,confidence_level' as never)
+      .single()
+    setSaving(false)
+    if (saveError) { setError(saveError.message); return }
+    const saved = data as unknown as Response
+    setResponses((current) => [...current.filter((item) => item.question_id !== question.id), saved])
+    setMetrics((current) => ({ ...current, responses:hadResponse ? current.responses : current.responses + 1 }))
+  }
 
   const linkEvidence = async (asset: EvidenceAsset) => {
     if (!selected) return
@@ -306,6 +387,8 @@ export function SkdaWorkspace(props: Props) {
   )
 
   const activePhase = PHASES.find((phase) => phase.code === activePhaseCode) ?? PHASES[0]
+  const selectedCatalog = catalogs.find((catalog) => catalog.id === selected?.catalog_version_id) ?? null
+  const catalogLocked = metrics.responses > 0
 
   const secondary = selected ? (
     <div className="skda-detail">
@@ -348,6 +431,10 @@ export function SkdaWorkspace(props: Props) {
             {activePhase.code === 'DA-06' && <><span>Destino da execução</span><strong>Iniciativas</strong></>}
             {activePhase.code === 'DA-00' && <><span>Estado</span><strong>{STATUS[selected.status] ?? selected.status}</strong></>}
           </div>
+          {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
+            <div className="skda-phase-workspace-head"><h4>Catálogo metodológico</h4><span>{selectedCatalog ? selectedCatalog.framework_code : 'Não definido'}</span></div>
+            {catalogs.length === 0 ? <p className="skda-phase-empty">Nenhum catálogo publicado está disponível. O diagnóstico pode ser aberto, mas a avaliação por questão depende de um catálogo publicado.</p> : <label className="skda-inline-field"><span>Versão do catálogo</span><select value={selected.catalog_version_id ?? ''} disabled={!canManage || saving || catalogLocked} onChange={(e) => void assignCatalog(e.target.value)}><option value="">Selecione...</option>{catalogs.map((catalog) => <option key={catalog.id} value={catalog.id}>{catalog.name} · {catalog.version_code}</option>)}</select>{catalogLocked && <small>Catálogo bloqueado após o início da avaliação para preservar a rastreabilidade das respostas.</small>}</label>}
+          </div>}
           {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Evidências disponíveis no Core</h4><span>{evidenceAssets.length} ativo(s)</span></div>
             {evidenceAssets.length === 0 ? <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p> : <div className="skda-evidence-list">
@@ -367,6 +454,18 @@ export function SkdaWorkspace(props: Props) {
                 <div><small>{interview.code}</small><strong>{interview.title}</strong><span>{interview.interviewee_name || 'Entrevistado não informado'}{interview.interviewee_role ? ' · '+interview.interviewee_role : ''}</span></div>
                 <div><b>{interview.status === 'planned' ? 'Planejada' : interview.status}</b><span>{interview.scheduled_start ? new Date(interview.scheduled_start).toLocaleString('pt-BR') : 'Sem data'}</span></div>
               </article>)}
+            </div>}
+          </div>}
+          {activePhase.code === 'DA-03' && <div className="skda-phase-workspace">
+            <div className="skda-phase-workspace-head"><h4>Avaliação por questão</h4><span>{selectedCatalog ? selectedCatalog.name : 'Catálogo não definido'}</span></div>
+            {!selected.catalog_version_id ? <p className="skda-phase-empty">Defina o catálogo na fase DA-00 antes de iniciar a avaliação.</p> : questions.length === 0 ? <p className="skda-phase-empty">O catálogo selecionado ainda não possui questões disponíveis.</p> : <div className="skda-question-list">
+              {questions.map((question) => {
+                const response = responses.find((item) => item.question_id === question.id)
+                return <article key={question.id}>
+                  <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
+                  <label><span>Classificação</span><select value={response?.classification ?? 'not_evaluated'} disabled={!canEditAssessment || saving} onChange={(e) => void saveClassification(question, e.target.value)}>{Object.entries(CLASSIFICATION).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                </article>
+              })}
             </div>}
           </div>}
         </section>
