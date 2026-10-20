@@ -1,0 +1,16 @@
+{
+  "utc": "2026-10-20T17:02:59.246Z",
+  "scope": "real internal Storage gateway SDK; synthetic files only; no browser or legacy blobs",
+  "sdk_version": "2.110.8",
+  "runtime_ready": true,
+  "custom_fetch": false,
+  "checks": 122,
+  "passed": 122,
+  "failed": 0,
+  "terminal_error": null,
+  "new_users": 0,
+  "synthetic_objects_created": 4,
+  "synthetic_objects_removed": 4,
+  "possible_retained_synthetic_objects": 0,
+  "container_exit_code": 0
+}

@@ -1,0 +1,10 @@
+{
+  "utc": "2026-10-20T17:59:35.893491+00:00",
+  "synthetic_organization_modules_created": 2,
+  "scoped_synthetic_role_assignments_created": 3,
+  "existing_catalog_unchanged": true,
+  "global_roles_changed": false,
+  "validity_days": 2,
+  "rehearsal_rollback": true,
+  "module_visibility_verified": true
+}
