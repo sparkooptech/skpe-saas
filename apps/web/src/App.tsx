@@ -9,6 +9,7 @@ import { supabase } from './lib/supabase'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { SkpeWorkspace } from './modules/skpe/app/SkpeWorkspace'
+import { SkdaWorkspace } from './modules/skda/SkdaWorkspace'
 import {
   parsePlatformRoute,
   platformRoutes,
@@ -1317,7 +1318,7 @@ function App() {
       (module) => module.module_code === currentModuleCode,
     ) ?? nextModules.find((module) => module.module_code === 'SK-PE')
 
-    if (nextModule?.module_code === 'SK-PE') {
+    if (nextModule && ['SK-PE', 'SK-DA'].includes(nextModule.module_code)) {
       setOpenedModule(nextModule)
       navigate(platformRoutes.module(organization.organization_id, nextModule.module_code))
       return
@@ -1330,7 +1331,7 @@ function App() {
   const handleOpenModule = (
     module: PlatformModule,
   ) => {
-    if (module.module_code === 'SK-PE') {
+    if (['SK-PE', 'SK-DA'].includes(module.module_code)) {
       setOpenedModule(module)
       clearMessage()
       if (selectedOrganization) {
@@ -1879,7 +1880,20 @@ function App() {
     )
   }
 
-  if (openedModule && selectedOrganization) {
+  if (openedModule?.module_code === 'SK-DA' && selectedOrganization) {
+    return (
+      <SkdaWorkspace
+        organizationId={selectedOrganization.organization_id}
+        organizationName={selectedOrganization.trade_name ?? selectedOrganization.legal_name}
+        organizationCode={selectedOrganization.organization_code}
+        userRoleCode={openedModule.role_code}
+        userRoleName={openedModule.role_name}
+        onReturnToModules={handleReturnToModules}
+      />
+    )
+  }
+
+  if (openedModule?.module_code === 'SK-PE' && selectedOrganization) {
     return (
       <>
 <SkpeWorkspace
@@ -1902,7 +1916,7 @@ function App() {
           code: module.module_code,
           name: module.module_name,
           description: module.module_description,
-          available: module.module_code === 'SK-PE',
+          available: ['SK-PE', 'SK-DA'].includes(module.module_code),
         }))}
         activeModuleCode={openedModule.module_code}
         onSwitchOrganization={handleSwitchWorkspaceOrganization}
