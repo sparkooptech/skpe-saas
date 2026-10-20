@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-20T18:01:23.309Z",
+  "scope": "synthetic artifact create-version-validate via actual frontend",
+  "checks": 7,
+  "passed": 7,
+  "failed": 0,
+  "terminal_error": "TimeoutError:locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.skpe-artifact-drawer-panel').getByText(/Artefato validado e protegido/i) to be visible\n",
+  "title": "G2 TESTE NAVEGADOR - Artefato Sintetico 20261020",
+  "new_users": 0,
+  "container_exit": 1,
+  "flow": "artifact",
+  "source_head": "8aa6e6ff087ff072a238b4c801f69b914ee726c3"
+}

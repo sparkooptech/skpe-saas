@@ -1,0 +1,11 @@
+{
+  "utc": "2026-10-20T16:56:27.955520+00:00",
+  "checks": 105,
+  "passed": 105,
+  "failed": 0,
+  "synthetic_users": 4,
+  "synthetic_organizations": 2,
+  "real_accounts_used": 0,
+  "public_ports": 0,
+  "scope": "direct-internal-HTTP-Auth-PostgREST; not full frontend or storage"
+}

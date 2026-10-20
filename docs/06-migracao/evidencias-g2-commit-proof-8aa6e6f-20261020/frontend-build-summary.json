@@ -1,0 +1,8 @@
+{
+  "source_head": "8aa6e6ff087ff072a238b4c801f69b914ee726c3",
+  "source_archive_sha256": "c54f18067941944c8d8d707d62abf5389c19153ab698c7eb249542216bc203bc",
+  "frontend_archive_sha256": "671f73e57b95c2f29406176cfc2e31399109f1065c45b2104ea9b94baaf488ce",
+  "target": "https://g2-api.test:8443",
+  "build_method": "node:22-alpine npm ci + npm run build",
+  "utc": "2026-10-20T17:52:22.953559+00:00"
+}

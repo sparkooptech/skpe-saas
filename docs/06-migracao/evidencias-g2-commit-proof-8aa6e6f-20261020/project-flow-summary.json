@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-20T18:00:27.091Z",
+  "scope": "actual frontend project initiation for synthetic organization A only",
+  "checks": 11,
+  "passed": 11,
+  "failed": 0,
+  "project_creation_http_success": true,
+  "terminal_error": null,
+  "new_users": 0,
+  "container_exit": 0,
+  "flow": "project",
+  "source_head": "8aa6e6ff087ff072a238b4c801f69b914ee726c3"
+}

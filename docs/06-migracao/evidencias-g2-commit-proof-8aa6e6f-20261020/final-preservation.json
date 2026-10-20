@@ -1,0 +1,60 @@
+{
+  "utc": "2026-10-20T18:04:27.186843+00:00",
+  "commit": "8aa6e6ff087ff072a238b4c801f69b914ee726c3",
+  "protected_unchanged": true,
+  "network_internal": true,
+  "network_members_exact": true,
+  "active_proof_running": true,
+  "active_proof_public_ports": 0,
+  "protected": {
+    "sparks-g2-homol-copy-20261019": true,
+    "sparks-g2-recovery-proof-20261020-01": true,
+    "sparks-g2-restore-20261019": true
+  },
+  "proof": {
+    "sparks-g2-commit-proof-20261020-01": {
+      "running": true,
+      "ports": {},
+      "readonly_root": true,
+      "network_mode": "sparks-g2-proof-net-20261020-01"
+    },
+    "sparks-g2-proof-auth-20261020-01": {
+      "running": true,
+      "ports": {},
+      "readonly_root": true,
+      "network_mode": "sparks-g2-proof-net-20261020-01"
+    },
+    "sparks-g2-proof-rest-20261020-01": {
+      "running": true,
+      "ports": {},
+      "readonly_root": true,
+      "network_mode": "sparks-g2-proof-net-20261020-01"
+    },
+    "sparks-g2-proof-gateway-20261020-01": {
+      "running": true,
+      "ports": {},
+      "readonly_root": true,
+      "network_mode": "sparks-g2-proof-net-20261020-01"
+    },
+    "sparks-g2-proof-storage-20261020-01": {
+      "running": true,
+      "ports": {},
+      "readonly_root": true,
+      "network_mode": "sparks-g2-proof-net-20261020-01"
+    },
+    "sparks-g2-proof-ui-https-20261020-01": {
+      "running": true,
+      "ports": {},
+      "readonly_root": true,
+      "network_mode": "sparks-g2-proof-net-20261020-01"
+    }
+  },
+  "network_members": [
+    "sparks-g2-commit-proof-20261020-01",
+    "sparks-g2-proof-auth-20261020-01",
+    "sparks-g2-proof-gateway-20261020-01",
+    "sparks-g2-proof-rest-20261020-01",
+    "sparks-g2-proof-storage-20261020-01",
+    "sparks-g2-proof-ui-https-20261020-01"
+  ]
+}

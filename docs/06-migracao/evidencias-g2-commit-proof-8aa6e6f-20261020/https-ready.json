@@ -1,0 +1,10 @@
+{
+  "utc": "2026-10-20T17:53:28.777364+00:00",
+  "source_head": "8aa6e6ff087ff072a238b4c801f69b914ee726c3",
+  "frontend": "https://g2-ui.test:8443",
+  "api": "https://g2-api.test:8443",
+  "public_ports": 0,
+  "source_code_changes": 0,
+  "gateway_delta": "one proof-only HTTPS UI origin in two CORS maps",
+  "global_trust_changed": false
+}

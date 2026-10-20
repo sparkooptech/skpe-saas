@@ -1,0 +1,8 @@
+{
+  "auth_health": 200,
+  "rest_ready": 200,
+  "network_internal": true,
+  "published_ports": 0,
+  "commit": "8aa6e6ff087ff072a238b4c801f69b914ee726c3",
+  "proof": true
+}

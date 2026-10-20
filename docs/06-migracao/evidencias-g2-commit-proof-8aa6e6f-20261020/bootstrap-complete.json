@@ -1,0 +1,7 @@
+{
+  "baseline_exact": true,
+  "source": "g2_recovery_v5",
+  "commit": "8aa6e6ff087ff072a238b4c801f69b914ee726c3",
+  "g2_security_deltas": true,
+  "migration_applied": true
+}

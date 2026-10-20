@@ -1,0 +1,12 @@
+{
+  "utc": "2026-10-20T18:02:55.710Z",
+  "scope": "synthetic project portability JSON XLSX HTML ZIP via actual frontend",
+  "checks": 13,
+  "passed": 13,
+  "failed": 0,
+  "terminal_error": null,
+  "new_users": 0,
+  "container_exit": 0,
+  "flow": "portability",
+  "source_head": "8aa6e6ff087ff072a238b4c801f69b914ee726c3"
+}

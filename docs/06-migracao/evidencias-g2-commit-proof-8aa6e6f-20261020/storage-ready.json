@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-20T16:59:41.146520+00:00",
+  "storage_health": 200,
+  "image_version": "1.84.5",
+  "schema_unchanged": true,
+  "all_table_contents_unchanged": true,
+  "acl_entries": 4805,
+  "only_storage_connection_role_adapted": true,
+  "freeze_id": 73,
+  "versioning_enabled": false,
+  "existing_instances_unchanged": true,
+  "published_ports": 0,
+  "gateway_storage_routed": false
+}
