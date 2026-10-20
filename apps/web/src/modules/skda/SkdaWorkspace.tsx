@@ -34,6 +34,7 @@ type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: 
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; display_order: number }
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; confidence_level: string }
+type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null }
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
@@ -76,6 +77,12 @@ const CLASSIFICATION: Record<string,string> = {
   confirmed:'Confirmada', reported:'Relatada', gap:'Lacuna', not_applicable:'Não aplicável', not_evaluated:'Não avaliada',
 }
 
+const FINDING_TYPES: Record<string,string> = {
+  strength:'Força', gap:'Lacuna', opportunity:'Oportunidade', risk:'Risco', observation:'Observação',
+}
+
+const PRIORITIES: Record<string,string> = { low:'Baixa', medium:'Média', high:'Alta', critical:'Crítica' }
+
 export function SkdaWorkspace(props: Props) {
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -85,6 +92,7 @@ export function SkdaWorkspace(props: Props) {
   const [error, setError] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [showInterviewCreate, setShowInterviewCreate] = useState(false)
+  const [showFindingCreate, setShowFindingCreate] = useState(false)
   const [activePhaseCode, setActivePhaseCode] = useState('DA-00')
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
@@ -92,7 +100,9 @@ export function SkdaWorkspace(props: Props) {
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [responses, setResponses] = useState<Response[]>([])
+  const [findings, setFindings] = useState<Finding[]>([])
   const [interviewForm, setInterviewForm] = useState({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
+  const [findingForm, setFindingForm] = useState({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'' })
   const [form, setForm] = useState({
     code:'', name:'', description:'', diagnosisType:'pdgc',
     referenceYear:String(new Date().getFullYear()),
@@ -107,6 +117,7 @@ export function SkdaWorkspace(props: Props) {
   const canEditInterviews = ['administrator','coordinator','interviewer'].includes(props.userRoleCode)
   const canLinkEvidence = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
   const canEditAssessment = ['administrator','coordinator','diagnostician'].includes(props.userRoleCode)
+  const canEditFindings = ['administrator','coordinator','diagnostician','reviewer'].includes(props.userRoleCode)
 
   const loadDiagnoses = async () => {
     setLoading(true)
@@ -189,6 +200,19 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [selectedId, props.organizationId])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selectedId) { setFindings([]); return }
+      const { data } = await supabase
+        .from('skda_findings' as never)
+        .select('id,finding_type,title,description,priority,status,recommendation,question_id' as never)
+        .eq('diagnosis_id', selectedId)
+        .order('created_at', { ascending:false })
+      setFindings((data ?? []) as unknown as Finding[])
+    }
+    void run()
+  }, [selectedId])
 
   useEffect(() => {
     const run = async () => {
@@ -284,6 +308,40 @@ export function SkdaWorkspace(props: Props) {
     const created = data as unknown as EvidenceCorrelation
     setEvidenceCorrelations((current) => [...current, created])
     setMetrics((current) => ({ ...current, evidence:current.evidence + 1 }))
+  }
+
+  const createFinding = async () => {
+    if (!selected || !findingForm.title.trim() || !findingForm.description.trim()) {
+      setError('Informe título e descrição do achado.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    const { data, error: saveError } = await supabase
+      .from('skda_findings' as never)
+      .insert({
+        organization_id:props.organizationId,
+        diagnosis_id:selected.id,
+        question_id:findingForm.questionId || null,
+        finding_type:findingForm.findingType,
+        title:findingForm.title.trim(),
+        description:findingForm.description.trim(),
+        priority:findingForm.priority,
+        status:'open',
+        recommendation:findingForm.recommendation.trim() || null,
+      } as never)
+      .select('id,finding_type,title,description,priority,status,recommendation,question_id' as never)
+      .single()
+
+    setSaving(false)
+    if (saveError) { setError(saveError.message); return }
+
+    const created = data as unknown as Finding
+    setFindings((current) => [created, ...current])
+    setMetrics((current) => ({ ...current, findings:current.findings + 1 }))
+    setFindingForm({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'' })
+    setShowFindingCreate(false)
   }
 
   const createInterview = async () => {
@@ -468,6 +526,24 @@ export function SkdaWorkspace(props: Props) {
               })}
             </div>}
           </div>}
+          {activePhase.code === 'DA-04' && <div className="skda-phase-workspace">
+            <div className="skda-phase-workspace-head"><h4>Achados do diagnóstico</h4>{canEditFindings && <button type="button" className="skda-primary" onClick={() => setShowFindingCreate(true)}>Novo achado</button>}</div>
+            {findings.length === 0 ? <p className="skda-phase-empty">Nenhum achado registrado.</p> : <div className="skda-finding-list">
+              {findings.map((finding) => <article key={finding.id}>
+                <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Prioridade {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.description}</span></div>
+                <div><b>{finding.status === 'open' ? 'Aberto' : finding.status}</b>{finding.question_id && <span>Vinculado a uma questão</span>}</div>
+              </article>)}
+            </div>}
+          </div>}
+          {activePhase.code === 'DA-05' && <div className="skda-phase-workspace">
+            <div className="skda-phase-workspace-head"><h4>Recomendações para devolutiva</h4><span>{findings.filter((finding) => Boolean(finding.recommendation)).length} recomendação(ões)</span></div>
+            {findings.filter((finding) => Boolean(finding.recommendation)).length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação registrada nos achados.</p> : <div className="skda-finding-list">
+              {findings.filter((finding) => Boolean(finding.recommendation)).map((finding) => <article key={finding.id}>
+                <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span></div>
+                <div><b>Recomendação</b><span>Origem rastreável no achado</span></div>
+              </article>)}
+            </div>}
+          </div>}
         </section>
       </div>
     </div>
@@ -475,6 +551,21 @@ export function SkdaWorkspace(props: Props) {
 
   return <>
     <TransversalWorkspace className="skda-workspace" header={header} primary={primary} secondary={secondary} />
+    {showFindingCreate && selected && <div className="skda-modal-backdrop">
+      <section className="skda-modal" role="dialog" aria-modal="true">
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-04 · Achados e lacunas</p><h2>Registrar achado</h2></div><button type="button" onClick={() => setShowFindingCreate(false)}>×</button></div>
+        <div className="skda-form-grid">
+          <label><span>Tipo</span><select value={findingForm.findingType} onChange={(e)=>setFindingForm(v=>({...v,findingType:e.target.value}))}>{Object.entries(FINDING_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Prioridade</span><select value={findingForm.priority} onChange={(e)=>setFindingForm(v=>({...v,priority:e.target.value}))}>{Object.entries(PRIORITIES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label className="wide"><span>Questão relacionada</span><select value={findingForm.questionId} onChange={(e)=>setFindingForm(v=>({...v,questionId:e.target.value}))}><option value="">Sem vínculo direto</option>{questions.map((question) => <option key={question.id} value={question.id}>{question.code} · {question.question_text}</option>)}</select></label>
+          <label className="wide"><span>Título *</span><input value={findingForm.title} onChange={(e)=>setFindingForm(v=>({...v,title:e.target.value}))} placeholder="Lacuna na formalização do processo"/></label>
+          <label className="wide"><span>Descrição *</span><textarea rows={4} value={findingForm.description} onChange={(e)=>setFindingForm(v=>({...v,description:e.target.value}))}/></label>
+          <label className="wide"><span>Recomendação</span><textarea rows={4} value={findingForm.recommendation} onChange={(e)=>setFindingForm(v=>({...v,recommendation:e.target.value}))} placeholder="Ação recomendada para tratar o achado"/></label>
+        </div>
+        {error && <div className="skda-alert">{error}</div>}
+        <div className="skda-modal-actions"><button type="button" onClick={() => setShowFindingCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createFinding()}>{saving?'Salvando...':'Registrar achado'}</button></div>
+      </section>
+    </div>}
     {showInterviewCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
         <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-02 · Entrevistas</p><h2>Registrar entrevista</h2></div><button type="button" onClick={() => setShowInterviewCreate(false)}>×</button></div>

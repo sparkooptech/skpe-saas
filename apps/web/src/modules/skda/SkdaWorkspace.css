@@ -376,13 +376,15 @@
 }
 
 .skda-interview-list,
-.skda-evidence-list {
+.skda-evidence-list,
+.skda-finding-list {
   display: grid;
   gap: 8px;
 }
 
 .skda-interview-list article,
-.skda-evidence-list article {
+.skda-evidence-list article,
+.skda-finding-list article {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -393,20 +395,24 @@
 }
 
 .skda-interview-list article > div,
-.skda-evidence-list article > div {
+.skda-evidence-list article > div,
+.skda-finding-list article > div {
   display: grid;
   gap: 3px;
 }
 
 .skda-interview-list article > div:last-child,
-.skda-evidence-list article > div:last-child {
+.skda-evidence-list article > div:last-child,
+.skda-finding-list article > div:last-child {
   text-align: right;
 }
 
 .skda-interview-list small,
 .skda-interview-list span,
 .skda-evidence-list small,
-.skda-evidence-list span {
+.skda-evidence-list span,
+.skda-finding-list small,
+.skda-finding-list span {
   font-size: 11px;
   opacity: .7;
 }
@@ -414,7 +420,9 @@
 .skda-interview-list strong,
 .skda-interview-list b,
 .skda-evidence-list strong,
-.skda-evidence-list b {
+.skda-evidence-list b,
+.skda-finding-list strong,
+.skda-finding-list b {
   font-size: 12px;
 }
 

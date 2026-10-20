@@ -50,6 +50,15 @@ test('DA-00 and DA-03 govern catalog assignment and question assessment', () => 
   assert.match(migration, /unique\(diagnosis_id,question_id\)/)
 })
 
+test('DA-04 and DA-05 keep findings and recommendations in the DA domain', () => {
+  assert.match(workspace, /\.from\('skda_findings'/)
+  assert.match(workspace, /finding_type:findingForm\.findingType/)
+  assert.match(workspace, /recommendation:findingForm\.recommendation/)
+  assert.match(workspace, /canEditFindings = \['administrator','coordinator','diagnostician','reviewer'\]/)
+  assert.match(migration, /finding_type text not null check \(finding_type in \('strength','gap','opportunity','risk','observation'\)\)/)
+  assert.match(migration, /recommendation text/)
+})
+
 test('canonical SK-DA schema models diagnosis, not project', () => {
   assert.match(migration, /create table public\.skda_diagnoses/)
   assert.doesNotMatch(migration, /create table public\.skda_projects/)
