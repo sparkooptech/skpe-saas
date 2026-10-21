@@ -1100,11 +1100,10 @@ function App() {
 
           setOrganizations([])
         } else {
-          setOrganizations(
-            ((organizationsResponse.data ?? []) as Organization[]).filter(
-              (organization) => organization.organization_code !== 'SKPE-V1-RUNTIME',
-            ),
-          )
+          // Preserve o tenant técnico na coleção interna para permitir
+          // roteamento direto governado durante homologação/E2E.
+          // A exclusão da homepage permanece concentrada em visibleOrganizations.
+          setOrganizations((organizationsResponse.data ?? []) as Organization[])
         }
 
         if (hierarchyResponse.error) {
