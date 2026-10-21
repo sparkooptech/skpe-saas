@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ApplicationShell } from '../../components/application-shell/ApplicationShell'
 import { TransversalWorkspace } from '../../components/application-shell/TransversalWorkspace'
+import { MetricCard } from '../../components/design-system'
 import { supabase } from '../../lib/supabase'
 import { AgendaSection } from '../skpe/features/agenda/AgendaSection'
 import { JourneyEventManageDialog } from '../skpe/features/journey/JourneyEventManageDialog'
@@ -570,8 +571,8 @@ export function SkdaWorkspace(props: Props) {
   }, [selected?.id, selected?.catalog_version_id])
 
   useEffect(() => {
-    setActivePhaseCode(selected?.current_phase_code ?? 'DA-00')
-  }, [selected?.id, selected?.current_phase_code])
+    setActivePhaseCode('OVERVIEW')
+  }, [selected?.id])
 
   useEffect(() => {
     const next: Record<string,AssessmentDraft> = {}
@@ -1415,11 +1416,12 @@ export function SkdaWorkspace(props: Props) {
       <h2>{selected.name}</h2>
       <p>{selected.description || 'Sem descrição informada.'}</p>
       <div className="skda-phase"><span>Fase atual</span><strong>{selected.current_phase_code}</strong><small>{STATUS[selected.status] ?? selected.status}</small></div>
+      {isOverview && <>
       <div className="skda-metrics">
-        <article><span>Questões avaliadas</span><strong>{metrics.responses}</strong><small>{assessmentCoverage}% da cobertura</small></article>
-        <article><span>Entrevistas</span><strong>{metrics.interviews}</strong><small>registradas na jornada</small></article>
-        <article><span>Evidências correlacionadas</span><strong>{metrics.evidence}</strong><small>ativos do Core vinculados</small></article>
-        <article><span>Achados</span><strong>{metrics.findings}</strong><small>forças, lacunas, riscos e oportunidades</small></article>
+        <MetricCard label="Questões avaliadas" value={metrics.responses} helper={String(assessmentCoverage) + '% da cobertura'} />
+        <MetricCard label="Entrevistas" value={metrics.interviews} helper="registradas na jornada" />
+        <MetricCard label="Evidências correlacionadas" value={metrics.evidence} helper="ativos do Core vinculados" />
+        <MetricCard label="Achados" value={metrics.findings} helper="forças, lacunas, riscos e oportunidades" />
       </div>
       <div className="skda-executive-grid">
         <article className="skda-executive-card">
@@ -1474,6 +1476,7 @@ export function SkdaWorkspace(props: Props) {
           </div>
         </article>
       </div>
+      </>}
 
       {isOverview && <section className="skda-evolution-overview">
         <div className="skda-phase-workspace-head">
@@ -1825,7 +1828,7 @@ export function SkdaWorkspace(props: Props) {
       onActivate:() => setActivePhaseCode(
         PHASES.some((phase) => phase.code === activePhaseCode) && activePhaseCode !== 'DA-06'
           ? activePhaseCode
-          : 'DA-00',
+          : selected?.current_phase_code ?? 'DA-00',
       ),
     },
     {

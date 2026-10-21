@@ -720,19 +720,22 @@
   background: #fff;
 }
 
-.skda-metrics article > span {
-  color: var(--skda-muted);
-  font-weight: 600;
+.skda-metrics .sparks-metric-card__label {
+  color: var(--skda-text);
+  font-weight: 800;
+  text-align: center;
 }
 
-.skda-metrics article > strong {
+.skda-metrics .sparks-metric-card__value {
   color: var(--skda-text);
   font-size: 2rem;
+  text-align: center;
 }
 
-.skda-metrics article > small {
+.skda-metrics .sparks-metric-card__helper {
   color: var(--skda-muted);
   line-height: 1.35;
+  text-align: center;
 }
 
 .skda-executive-grid {
