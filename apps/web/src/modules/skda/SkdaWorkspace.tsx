@@ -47,7 +47,7 @@ type CatalogVersion = { id: string; code: string; version_code: string; name: st
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; display_order: number }
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; evaluated_at: string | null; validated_at: string | null }
 type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; score: string }
-type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null }
+type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
@@ -164,7 +164,7 @@ export function SkdaWorkspace(props: Props) {
     methodologyNotes:'',
   })
   const [interviewForm, setInterviewForm] = useState({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
-  const [findingForm, setFindingForm] = useState({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'' })
+  const [findingForm, setFindingForm] = useState({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'', interviewId:'', ownerUserId:'', dueDate:'' })
   const [tacticalForm, setTacticalForm] = useState({
     findingId:'', initiativeClass:'project', categoryCode:'strategic', code:'', name:'', description:'',
     priority:'medium', criticality:'medium', primaryModelCode:'project_management', impactLevel:'medium',
@@ -385,7 +385,7 @@ export function SkdaWorkspace(props: Props) {
       if (!selectedId) { setFindings([]); return }
       const { data } = await supabase
         .from('skda_findings' as never)
-        .select('id,finding_type,title,description,priority,status,recommendation,question_id' as never)
+        .select('id,finding_type,title,description,priority,status,recommendation,question_id,interview_id,owner_user_id,due_date' as never)
         .eq('diagnosis_id', selectedId)
         .order('created_at', { ascending:false })
       setFindings((data ?? []) as unknown as Finding[])
@@ -721,6 +721,9 @@ export function SkdaWorkspace(props: Props) {
         organization_id:props.organizationId,
         diagnosis_id:selected.id,
         question_id:findingForm.questionId || null,
+        interview_id:findingForm.interviewId || null,
+        owner_user_id:findingForm.ownerUserId || null,
+        due_date:findingForm.dueDate || null,
         finding_type:findingForm.findingType,
         title:findingForm.title.trim(),
         description:findingForm.description.trim(),
@@ -728,7 +731,7 @@ export function SkdaWorkspace(props: Props) {
         status:'open',
         recommendation:findingForm.recommendation.trim() || null,
       } as never)
-      .select('id,finding_type,title,description,priority,status,recommendation,question_id' as never)
+      .select('id,finding_type,title,description,priority,status,recommendation,question_id,interview_id,owner_user_id,due_date' as never)
       .single()
 
     setSaving(false)
@@ -737,7 +740,7 @@ export function SkdaWorkspace(props: Props) {
     const created = data as unknown as Finding
     setFindings((current) => [created, ...current])
     setMetrics((current) => ({ ...current, findings:current.findings + 1 }))
-    setFindingForm({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'' })
+    setFindingForm({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'', interviewId:'', ownerUserId:'', dueDate:'' })
     setShowFindingCreate(false)
   }
 
@@ -1010,10 +1013,13 @@ export function SkdaWorkspace(props: Props) {
           {activePhase.code === 'DA-04' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Achados do diagnóstico</h4>{canEditFindings && <button type="button" className="skda-primary" onClick={() => setShowFindingCreate(true)}>Novo achado</button>}</div>
             {findings.length === 0 ? <p className="skda-phase-empty">Nenhum achado registrado.</p> : <div className="skda-finding-list">
-              {findings.map((finding) => <article key={finding.id}>
-                <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Prioridade {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.description}</span></div>
-                <div><b>{finding.status === 'open' ? 'Aberto' : finding.status}</b>{finding.question_id && <span>Vinculado a uma questão</span>}</div>
-              </article>)}
+              {findings.map((finding) => {
+                const owner = organizationUsers.find((user) => user.user_id === finding.owner_user_id)
+                return <article key={finding.id}>
+                  <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Prioridade {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.description}</span></div>
+                  <div><b>{finding.status === 'open' ? 'Aberto' : finding.status}</b>{finding.question_id && <span>Origem: questão</span>}{finding.interview_id && <span>Origem: entrevista</span>}{owner && <span>Responsável: {owner.user_display_name || owner.user_email}</span>}{finding.due_date && <span>Prazo: {new Date(finding.due_date+'T00:00:00').toLocaleDateString('pt-BR')}</span>}</div>
+                </article>
+              })}
             </div>}
           </div>}
           {activePhase.code === 'DA-05' && <div className="skda-phase-workspace">
@@ -1136,6 +1142,9 @@ export function SkdaWorkspace(props: Props) {
           <label><span>Tipo</span><select value={findingForm.findingType} onChange={(e)=>setFindingForm(v=>({...v,findingType:e.target.value}))}>{Object.entries(FINDING_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>Prioridade</span><select value={findingForm.priority} onChange={(e)=>setFindingForm(v=>({...v,priority:e.target.value}))}>{Object.entries(PRIORITIES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label className="wide"><span>Questão relacionada</span><select value={findingForm.questionId} onChange={(e)=>setFindingForm(v=>({...v,questionId:e.target.value}))}><option value="">Sem vínculo direto</option>{questions.map((question) => <option key={question.id} value={question.id}>{question.code} · {question.question_text}</option>)}</select></label>
+          <label className="wide"><span>Entrevista relacionada</span><select value={findingForm.interviewId} onChange={(e)=>setFindingForm(v=>({...v,interviewId:e.target.value}))}><option value="">Sem vínculo direto</option>{interviews.map((interview) => <option key={interview.id} value={interview.id}>{interview.code} · {interview.title}</option>)}</select></label>
+          <label><span>Responsável</span><select value={findingForm.ownerUserId} onChange={(e)=>setFindingForm(v=>({...v,ownerUserId:e.target.value}))}><option value="">Não definido</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}</option>)}</select></label>
+          <label><span>Prazo</span><input type="date" value={findingForm.dueDate} onChange={(e)=>setFindingForm(v=>({...v,dueDate:e.target.value}))}/></label>
           <label className="wide"><span>Título *</span><input value={findingForm.title} onChange={(e)=>setFindingForm(v=>({...v,title:e.target.value}))} placeholder="Lacuna na formalização do processo"/></label>
           <label className="wide"><span>Descrição *</span><textarea rows={4} value={findingForm.description} onChange={(e)=>setFindingForm(v=>({...v,description:e.target.value}))}/></label>
           <label className="wide"><span>Recomendação</span><textarea rows={4} value={findingForm.recommendation} onChange={(e)=>setFindingForm(v=>({...v,recommendation:e.target.value}))} placeholder="Ação recomendada para tratar o achado"/></label>
