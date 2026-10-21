@@ -75,6 +75,30 @@
   opacity: .65;
 }
 
+.skda-section-title small {
+  display: block;
+  margin-top: .35rem;
+  color: var(--skda-muted);
+  font-size: .8rem;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 1;
+}
+
+.skda-section-title-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex: 0 0 auto;
+}
+
+.skda-section-title-actions > strong {
+  min-width: 2rem;
+  text-align: center;
+  font-size: 1.6rem;
+}
+
 .skda-section-title strong {
   font-size: 28px;
 }

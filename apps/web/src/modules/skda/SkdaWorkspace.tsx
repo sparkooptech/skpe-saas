@@ -301,6 +301,26 @@ export function SkdaWorkspace(props: Props) {
     [diagnoses, selectedId],
   )
 
+  const formatDiagnosisBusinessTitle = (diagnosis: Diagnosis) => {
+    const metadata = diagnosis.metadata ?? {}
+    const maturityCode = typeof metadata.maturity_level_code === 'string' ? metadata.maturity_level_code.trim() : ''
+    const modelCode = typeof metadata.model_code === 'string' ? metadata.model_code.trim() : ''
+    const year = diagnosis.reference_year ? String(diagnosis.reference_year) : ''
+
+    if (maturityCode && modelCode && year) return `DA - ${maturityCode}/${modelCode} - ${year}`
+    if (modelCode && year) return `DA - ${modelCode} - ${year}`
+    if (year) return `DA - Em configuração - ${year}`
+    return 'DA - Em configuração'
+  }
+
+  const openInitiativeWorkspace = (initiativeId: string) => {
+    const target = new URL(window.location.href)
+    target.searchParams.set('section', 'initiatives')
+    target.searchParams.set('initiativeTab', 'kanban')
+    target.searchParams.set('initiativeId', initiativeId)
+    window.location.assign(target.toString())
+  }
+
   const assessedResponses = useMemo(
     () => responses.filter((item) => item.classification !== 'not_evaluated'),
     [responses],
@@ -1372,22 +1392,18 @@ export function SkdaWorkspace(props: Props) {
     if (created?.diagnosis_id) setSelectedId(created.diagnosis_id)
   }
 
-  const header = (
-    <div className="skda-header skda-header-compact">
-      <div>
-        <p className="skda-eyebrow">Jornada de Diagnóstico Assistido</p>
-        <h2>{selected?.name ?? 'Selecione ou inicie uma Jornada DA'}</h2>
-        <p>{selected ? `${selected.code} · ${STATUS[selected.status] ?? selected.status}` : 'A metodologia, a Agenda e o Plano de Ação permanecem integrados ao contexto da organização.'}</p>
-      </div>
-      {canManage && <button type="button" className="skda-primary" onClick={() => setShowCreate(true)}>Nova Jornada DA</button>}
-    </div>
-  )
-
   const primary = (
     <div>
       <div className="skda-section-title">
-        <div><span>Jornadas</span><h2>Jornadas de Diagnóstico Assistido</h2></div>
-        <strong>{diagnoses.length}</strong>
+        <div>
+          <span>Histórico de ciclos</span>
+          <h2>Jornadas de Diagnóstico Assistido</h2>
+          <small>Consulte os ciclos de Diagnóstico Assistido da organização e acompanhe sua evolução ao longo do tempo.</small>
+        </div>
+        <div className="skda-section-title-actions">
+          <strong>{diagnoses.length}</strong>
+          {canManage && <button type="button" className="skda-primary" onClick={() => setShowCreate(true)}>Nova Jornada DA</button>}
+        </div>
       </div>
       {error && <div className="skda-alert">{error}</div>}
       {loading ? <div className="skda-empty">Carregando Jornadas DA...</div> :
@@ -1395,7 +1411,7 @@ export function SkdaWorkspace(props: Props) {
        <div className="skda-list">
         {diagnoses.map((item) => (
           <button type="button" key={item.id} className={item.id===selectedId?'skda-diagnosis active':'skda-diagnosis'} onClick={() => setSelectedId(item.id)}>
-            <div><small>{item.code}</small><strong>{item.name}</strong><span>{TYPES[item.diagnosis_type] ?? item.diagnosis_type}{item.reference_year ? ' · '+item.reference_year : ''}</span></div>
+            <div><strong>{formatDiagnosisBusinessTitle(item)}</strong><span>{TYPES[item.diagnosis_type] ?? item.diagnosis_type}</span></div>
             <div className="skda-diagnosis-meta"><b>{STATUS[item.status] ?? item.status}</b><span>{Number(item.progress).toFixed(0)}%</span></div>
           </button>
         ))}
@@ -1412,10 +1428,6 @@ export function SkdaWorkspace(props: Props) {
 
   const secondary = selected ? (
     <div className="skda-detail">
-      <p className="skda-eyebrow">Diagnóstico selecionado</p>
-      <h2>{selected.name}</h2>
-      <p>{selected.description || 'Sem descrição informada.'}</p>
-      <div className="skda-phase"><span>Fase atual</span><strong>{selected.current_phase_code}</strong><small>{STATUS[selected.status] ?? selected.status}</small></div>
       {isOverview && <>
       <div className="skda-metrics">
         <MetricCard label="Questões avaliadas" value={metrics.responses} helper={String(assessmentCoverage) + '% da cobertura'} />
@@ -1541,7 +1553,7 @@ export function SkdaWorkspace(props: Props) {
             <h3>PDCL da Jornada DA</h3>
             <small>O diagnóstico não é uma sequência linear de telas: evidências, entrevistas, avaliação, checagem e aprendizado retroalimentam a própria compreensão da organização.</small>
           </div>
-          <span>{selected.execution_initiative_id ? 'Projeto da Jornada vinculado' : 'Projeto da Jornada pendente'}</span>
+          <span>{selected.execution_initiative_id ? 'Projeto de execução disponível' : 'Projeto de execução ainda não criado'}</span>
         </div>
         <div className="skda-pdcl-cycle">
           {PDCL_STAGES.map((stage) => (
@@ -1589,11 +1601,13 @@ export function SkdaWorkspace(props: Props) {
         </div>
         <div className="skda-project-bridge">
           <div>
-            <span>Execução da Jornada</span>
-            <strong>{selected.execution_initiative_id ? 'Projeto transversal associado' : 'A Jornada ainda precisa ser associada ao seu Projeto transversal'}</strong>
-            <small>O diagnóstico continua sendo o objeto metodológico do SK-DA; o Projeto organiza agenda, atividades, responsabilidades e execução sem duplicar o diagnóstico.</small>
+            <span>Projeto de execução da Jornada</span>
+            <strong>{selected.execution_initiative_id ? 'Agenda, responsabilidades, entregas e execução operacional da Jornada' : 'Crie o Projeto para operacionalizar a Jornada'}</strong>
+            <small>O Diagnóstico Assistido permanece como objeto metodológico. O Projeto organiza datas, responsáveis, entregas, atividades e acompanhamento da execução.</small>
           </div>
-          {!selected.execution_initiative_id && canManage && <button type="button" className="skda-primary" disabled={saving} onClick={() => void ensureDiagnosisProject()}>{saving ? 'Vinculando...' : 'Criar Projeto da Jornada'}</button>}
+          {selected.execution_initiative_id
+            ? <button type="button" className="skda-primary" onClick={() => openInitiativeWorkspace(selected.execution_initiative_id)}>Abrir projeto da Jornada</button>
+            : canManage && <button type="button" className="skda-primary" disabled={saving} onClick={() => void ensureDiagnosisProject()}>{saving ? 'Criando...' : 'Criar projeto da Jornada'}</button>}
         </div>
       </section>}
 
@@ -1894,7 +1908,6 @@ export function SkdaWorkspace(props: Props) {
     >
       <TransversalWorkspace
         className="skda-workspace"
-        header={header}
         primary={
           <div className="skda-dashboard-page">
             <section className="skda-diagnosis-switcher">{primary}</section>
