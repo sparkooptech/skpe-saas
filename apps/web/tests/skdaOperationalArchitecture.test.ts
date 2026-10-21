@@ -122,6 +122,11 @@ test('DA-06 UI uses the atomic tactical conversion contract', () => {
   assert.match(workspace, /tacticalDefaults/)
   assert.match(workspace, /target_contribution_weight:contributionWeight/)
   assert.match(workspace, /target_enabled_capabilities:tacticalForm\.enabledCapabilities/)
+  assert.match(workspace, /\.from\('sparks_initiative_origins'/)
+  assert.match(workspace, /\.from\('sparks_initiatives'/)
+  assert.match(workspace, /source_entity_type', 'skda_finding'/)
+  assert.match(workspace, /Iniciativa vinculada/)
+  assert.match(workspace, /Fato gerador rastreado/)
 })
 
 test('canonical SK-DA schema models diagnosis, not project', () => {

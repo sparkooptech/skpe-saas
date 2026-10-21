@@ -48,6 +48,8 @@ type Question = { id: string; code: string; axis_name: string | null; criterion_
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; evaluated_at: string | null; validated_at: string | null }
 type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; score: string }
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
+type InitiativeOrigin = { initiative_id: string; source_entity_id: string }
+type LinkedInitiative = { id: string; code: string; name: string; initiative_class: string; status: string; progress: number; sourceFindingId: string }
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
@@ -154,6 +156,7 @@ export function SkdaWorkspace(props: Props) {
   const [responses, setResponses] = useState<Response[]>([])
   const [assessmentDrafts, setAssessmentDrafts] = useState<Record<string,AssessmentDraft>>({})
   const [findings, setFindings] = useState<Finding[]>([])
+  const [linkedInitiatives, setLinkedInitiatives] = useState<LinkedInitiative[]>([])
   const [openingForm, setOpeningForm] = useState({
     referenceYear:String(new Date().getFullYear()),
     startedOn:'',
@@ -392,6 +395,54 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [selectedId])
+
+  useEffect(() => {
+    const run = async () => {
+      const findingIds = findings.map((finding) => finding.id)
+      if (!selectedId || findingIds.length === 0) {
+        setLinkedInitiatives([])
+        return
+      }
+
+      const { data: originData, error: originError } = await supabase
+        .from('sparks_initiative_origins' as never)
+        .select('initiative_id,source_entity_id' as never)
+        .eq('organization_id', props.organizationId)
+        .eq('source_module_code', 'SK-DA')
+        .eq('source_entity_type', 'skda_finding')
+        .in('source_entity_id', findingIds)
+
+      if (originError) {
+        setLinkedInitiatives([])
+        return
+      }
+
+      const origins = (originData ?? []) as unknown as InitiativeOrigin[]
+      const initiativeIds = [...new Set(origins.map((origin) => origin.initiative_id))]
+      if (initiativeIds.length === 0) {
+        setLinkedInitiatives([])
+        return
+      }
+
+      const { data: initiativeData, error: initiativeError } = await supabase
+        .from('sparks_initiatives' as never)
+        .select('id,code,name,initiative_class,status,progress' as never)
+        .eq('organization_id', props.organizationId)
+        .in('id', initiativeIds)
+
+      if (initiativeError) {
+        setLinkedInitiatives([])
+        return
+      }
+
+      const rows = (initiativeData ?? []) as unknown as Array<Omit<LinkedInitiative,'sourceFindingId'>>
+      setLinkedInitiatives(rows.map((initiative) => ({
+        ...initiative,
+        sourceFindingId:origins.find((origin) => origin.initiative_id === initiative.id)?.source_entity_id ?? '',
+      })))
+    }
+    void run()
+  }, [selectedId, props.organizationId, findings])
 
   useEffect(() => {
     const run = async () => {
@@ -1039,14 +1090,18 @@ export function SkdaWorkspace(props: Props) {
           {activePhase.code === 'DA-06' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Gestão Tática</h4><span>Fatos geradores preservados</span></div>
             {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação aceita está disponível para conversão tática.</p> : <div className="skda-finding-list">
-              {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').map((finding) => <article key={finding.id}>
-                <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Impacto sugerido {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span></div>
-                <div className="skda-finding-actions">
-                  <b>{finding.status === 'in_action' ? 'Em Gestão Tática' : 'Pronta para conversão'}</b>
-                  <span>Origem: SK-DA / achado</span>
-                  {finding.status === 'accepted' && canCreateTactical && <button type="button" className="skda-primary" onClick={() => openTacticalConversion(finding)}>Criar iniciativa</button>}
-                </div>
-              </article>)}
+              {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').map((finding) => {
+                const initiative = linkedInitiatives.find((item) => item.sourceFindingId === finding.id)
+                return <article key={finding.id}>
+                  <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Impacto sugerido {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span>{initiative && <div className="skda-linked-initiative"><small>Iniciativa vinculada</small><strong>{initiative.code} · {initiative.name}</strong><span>{INITIATIVE_CLASSES[initiative.initiative_class] ?? initiative.initiative_class} · {initiative.status} · {Number(initiative.progress ?? 0).toFixed(0)}%</span></div>}</div>
+                  <div className="skda-finding-actions">
+                    <b>{finding.status === 'in_action' ? 'Em Gestão Tática' : 'Pronta para conversão'}</b>
+                    <span>Origem: SK-DA / achado</span>
+                    {initiative && <span>Fato gerador rastreado</span>}
+                    {finding.status === 'accepted' && canCreateTactical && <button type="button" className="skda-primary" onClick={() => openTacticalConversion(finding)}>Criar iniciativa</button>}
+                  </div>
+                </article>
+              })}
             </div>}
           </div>}
         </section>

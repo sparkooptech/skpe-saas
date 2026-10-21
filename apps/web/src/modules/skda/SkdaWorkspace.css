@@ -1283,3 +1283,33 @@
     width: 100%;
   }
 }
+
+
+/* DA-06 — retorno visual da iniciativa transversal criada */
+.skda-linked-initiative {
+  display: grid;
+  gap: .2rem;
+  margin-top: .7rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--skda-border, #dce5e1);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--skda-primary, #176b53) 5%, white);
+}
+
+.skda-linked-initiative small {
+  color: var(--skda-muted, #607069);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.skda-linked-initiative strong {
+  color: var(--skda-text, #18231f);
+  font-size: .86rem;
+}
+
+.skda-linked-initiative span {
+  color: var(--skda-muted, #607069);
+  font-size: .74rem;
+}
