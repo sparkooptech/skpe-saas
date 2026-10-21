@@ -1986,7 +1986,7 @@ export function SkdaWorkspace(props: Props) {
         className="skda-workspace"
         primary={
           <div className="skda-dashboard-page">
-            <section className="skda-diagnosis-switcher">{primary}</section>
+            {isOverview && <section className="skda-diagnosis-switcher">{primary}</section>}
             {secondary}
           </div>
         }
