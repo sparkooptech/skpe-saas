@@ -473,18 +473,19 @@ export function SkdaWorkspace(props: Props) {
   }
 
   const updateAssessmentDraft = (questionId: string, patch: Partial<AssessmentDraft>) => {
-    setAssessmentDrafts((current) => ({
-      ...current,
-      [questionId]: {
+    setAssessmentDrafts((current) => {
+      const base = current[questionId] ?? {
         classification:'not_evaluated',
         answerText:'',
         rationale:'',
         confidenceLevel:'not_assessed',
         score:'',
-        ...(current[questionId] ?? {}),
-        ...patch,
-      },
-    }))
+      }
+      return {
+        ...current,
+        [questionId]: { ...base, ...patch },
+      }
+    })
   }
 
   const saveAssessment = async (question: Question) => {
