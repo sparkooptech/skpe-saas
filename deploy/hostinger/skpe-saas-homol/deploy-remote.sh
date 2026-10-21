@@ -60,8 +60,10 @@ validate_public_domain() {
 }
 
 validate_business_rest_route() {
-  local rest_status
-  rest_status="$(curl \
+  local anonymous_status
+  local publishable_status
+
+  anonymous_status="$(curl \
     --insecure \
     --silent \
     --output /dev/null \
@@ -69,7 +71,20 @@ validate_business_rest_route() {
     --resolve "${SPARKS_PUBLIC_HOST}:443:127.0.0.1" \
     "https://${SPARKS_PUBLIC_HOST}/rest/v1/" || true)"
 
-  [ "${rest_status}" = "401" ]
+  [ "${anonymous_status}" = "401" ] || return 1
+
+  [ -n "${VITE_SUPABASE_PUBLISHABLE_KEY:-}" ] || return 1
+
+  publishable_status="$(curl \
+    --insecure \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    --header "apikey: ${VITE_SUPABASE_PUBLISHABLE_KEY}" \
+    --resolve "${SPARKS_PUBLIC_HOST}:443:127.0.0.1" \
+    "https://${SPARKS_PUBLIC_HOST}/rest/v1/" || true)"
+
+  [ "${publishable_status}" = "200" ]
 }
 
 wait_for_public_domain() {

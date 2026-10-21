@@ -83,6 +83,18 @@ test('deployment refuses a release when the REST gateway route is broken', () =>
   )
   assert.match(
     deployScript,
+    /--header "apikey: \$\{VITE_SUPABASE_PUBLISHABLE_KEY\}"/,
+  )
+  assert.match(
+    deployScript,
+    /publishable_status[\s\S]*?= "200"/,
+  )
+  assert.match(
+    deployScript,
+    /anonymous_status[\s\S]*?= "401"/,
+  )
+  assert.match(
+    deployScript,
     /cutover_release\(\)[\s\S]*?remove_preview_container[\s\S]*?docker compose -f docker-compose\.yml up/,
   )
 })
