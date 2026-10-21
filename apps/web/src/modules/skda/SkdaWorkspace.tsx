@@ -61,6 +61,31 @@ type AssessmentDraft = { classification: string; answerText: string; rationale: 
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
 type InitiativeOrigin = { initiative_id: string; source_entity_id: string }
 type LinkedInitiative = { id: string; code: string; name: string; initiative_class: string; status: string; progress: number; sourceFindingId: string }
+type EvolutionRow = {
+  diagnosis_id: string
+  diagnosis_code: string
+  reference_year: number | null
+  diagnosis_status: string
+  question_id: string
+  response_id: string | null
+  response_status: string | null
+  validated_practice_count: number
+  validated_evidence_count: number
+  open_gap_count: number
+}
+type ActionFollowup = {
+  diagnosis_id: string
+  reference_year: number | null
+  finding_id: string
+  finding_title: string
+  cycle_number: number | null
+  initiative_id: string | null
+  initiative_name: string | null
+  initiative_status: string | null
+  initiative_progress: number | null
+  followup_state: string
+  execution_completed: boolean
+}
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
@@ -243,6 +268,8 @@ export function SkdaWorkspace(props: Props) {
   const [assessmentDrafts, setAssessmentDrafts] = useState<Record<string,AssessmentDraft>>({})
   const [findings, setFindings] = useState<Finding[]>([])
   const [linkedInitiatives, setLinkedInitiatives] = useState<LinkedInitiative[]>([])
+  const [evolutionRows, setEvolutionRows] = useState<EvolutionRow[]>([])
+  const [actionFollowup, setActionFollowup] = useState<ActionFollowup[]>([])
   const [openingForm, setOpeningForm] = useState({
     referenceYear:String(new Date().getFullYear()),
     startedOn:'',
@@ -312,6 +339,100 @@ export function SkdaWorkspace(props: Props) {
       }))
       .slice(0, 6)
   }, [questions, responses])
+
+  const evolutionByCycle = useMemo(() => {
+    const grouped = new Map<string, {
+      diagnosisId: string
+      diagnosisCode: string
+      referenceYear: number | null
+      diagnosisStatus: string
+      totalQuestions: number
+      answeredQuestions: number
+      validatedQuestions: number
+      validatedPractices: number
+      validatedEvidenceLinks: number
+      openGaps: number
+    }>()
+
+    evolutionRows.forEach((row) => {
+      const current = grouped.get(row.diagnosis_id) ?? {
+        diagnosisId:row.diagnosis_id,
+        diagnosisCode:row.diagnosis_code,
+        referenceYear:row.reference_year,
+        diagnosisStatus:row.diagnosis_status,
+        totalQuestions:0,
+        answeredQuestions:0,
+        validatedQuestions:0,
+        validatedPractices:0,
+        validatedEvidenceLinks:0,
+        openGaps:0,
+      }
+      current.totalQuestions += 1
+      if (row.response_id) current.answeredQuestions += 1
+      if (row.response_status === 'validated') current.validatedQuestions += 1
+      current.validatedPractices += Number(row.validated_practice_count) || 0
+      current.validatedEvidenceLinks += Number(row.validated_evidence_count) || 0
+      current.openGaps += Number(row.open_gap_count) || 0
+      grouped.set(row.diagnosis_id,current)
+    })
+
+    return [...grouped.values()]
+      .map((cycle) => ({
+        ...cycle,
+        validationCoverage:cycle.totalQuestions > 0
+          ? Math.round((cycle.validatedQuestions / cycle.totalQuestions) * 100)
+          : 0,
+      }))
+      .sort((a,b) =>
+        (a.referenceYear ?? 0) - (b.referenceYear ?? 0)
+        || a.diagnosisCode.localeCompare(b.diagnosisCode,'pt-BR'),
+      )
+  }, [evolutionRows])
+
+  const actionFollowupSummary = useMemo(() => {
+    const counts = {
+      total:actionFollowup.length,
+      completed:0,
+      inProgress:0,
+      overdue:0,
+      notStarted:0,
+      blocked:0,
+      awaitingConversion:0,
+    }
+    actionFollowup.forEach((item) => {
+      if (item.followup_state === 'completed') counts.completed += 1
+      else if (item.followup_state === 'in_progress') counts.inProgress += 1
+      else if (item.followup_state === 'overdue') counts.overdue += 1
+      else if (item.followup_state === 'not_started') counts.notStarted += 1
+      else if (item.followup_state === 'blocked') counts.blocked += 1
+      else if (item.followup_state === 'awaiting_conversion') counts.awaitingConversion += 1
+    })
+    return counts
+  }, [actionFollowup])
+
+  const evolutionMessage = useMemo(() => {
+    const current = evolutionByCycle.find((cycle) => cycle.diagnosisId === selectedId)
+    if (!current) return 'A trajetória será consolidada conforme os ciclos da organização forem avaliados.'
+    const prior = evolutionByCycle
+      .filter((cycle) => cycle.diagnosisId !== current.diagnosisId)
+      .filter((cycle) => (cycle.referenceYear ?? 0) <= (current.referenceYear ?? 0))
+      .at(-1)
+    if (!prior) {
+      return 'Este é o primeiro ciclo disponível para comparação longitudinal. Ele formará a linha de base da evolução da organização.'
+    }
+    const coverageDelta = current.validationCoverage - prior.validationCoverage
+    const gapDelta = current.openGaps - prior.openGaps
+    if (coverageDelta > 0 && gapDelta <= 0) {
+      return `A cobertura validada avançou ${coverageDelta} p.p. em relação ao ciclo anterior, sem aumento das lacunas abertas.`
+    }
+    if (gapDelta > 0) {
+      return `O ciclo atual possui ${gapDelta} lacuna(s) aberta(s) a mais que o ciclo anterior. O foco deve ser execução e institucionalização das melhorias prioritárias.`
+    }
+    if (coverageDelta < 0) {
+      return `A cobertura validada está ${Math.abs(coverageDelta)} p.p. abaixo do ciclo anterior. Verifique evidências, práticas e ações ainda não consolidadas.`
+    }
+    return 'A trajetória permanece estável no recorte disponível. O próximo avanço depende de ampliar evidências validadas e executar as ações prioritárias.'
+  }, [evolutionByCycle, selectedId])
 
   const radarPoints = useMemo(() => {
     const count = Math.max(maturityByAxis.length, 3)
@@ -575,6 +696,26 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [selectedId, findings, linkedInitiatives])
+
+  useEffect(() => {
+    const run = async () => {
+      const [evolutionResult, actionResult] = await Promise.all([
+        supabase
+          .from('skda_organization_evolution_matrix' as never)
+          .select('diagnosis_id,diagnosis_code,reference_year,diagnosis_status,question_id,response_id,response_status,validated_practice_count,validated_evidence_count,open_gap_count' as never)
+          .eq('organization_id', props.organizationId)
+          .order('reference_year', { ascending:true, nullsFirst:false }),
+        supabase
+          .from('skda_action_followup_longitudinal' as never)
+          .select('diagnosis_id,reference_year,finding_id,finding_title,cycle_number,initiative_id,initiative_name,initiative_status,initiative_progress,followup_state,execution_completed' as never)
+          .eq('organization_id', props.organizationId)
+          .order('reference_year', { ascending:true, nullsFirst:false }),
+      ])
+      setEvolutionRows((evolutionResult.data ?? []) as unknown as EvolutionRow[])
+      setActionFollowup((actionResult.data ?? []) as unknown as ActionFollowup[])
+    }
+    void run()
+  }, [props.organizationId, selectedId, responses, findings, actionPlanAllocations, linkedInitiatives])
 
   useEffect(() => {
     const run = async () => {
@@ -1333,6 +1474,62 @@ export function SkdaWorkspace(props: Props) {
           </div>
         </article>
       </div>
+
+      {isOverview && <section className="skda-evolution-overview">
+        <div className="skda-phase-workspace-head">
+          <div>
+            <span className="skda-eyebrow">Evolução contínua</span>
+            <h3>Trajetória da organização</h3>
+            <small>Comparação longitudinal dos ciclos com base em validações, práticas, evidências e lacunas efetivamente registradas.</small>
+          </div>
+          <span>{evolutionByCycle.length} ciclo(s) comparável(is)</span>
+        </div>
+        <div className="skda-evolution-message">{evolutionMessage}</div>
+        {evolutionByCycle.length === 0 ? (
+          <p className="skda-phase-empty">Ainda não há dados suficientes para compor a trajetória longitudinal.</p>
+        ) : (
+          <div className="skda-evolution-cycles">
+            {evolutionByCycle.map((cycle) => (
+              <article key={cycle.diagnosisId} className={cycle.diagnosisId === selectedId ? 'is-current' : ''}>
+                <div className="skda-evolution-cycle-head">
+                  <div>
+                    <span>{cycle.referenceYear ?? 'Ciclo'}</span>
+                    <strong>{cycle.diagnosisCode}</strong>
+                  </div>
+                  <b>{cycle.validationCoverage}%</b>
+                </div>
+                <div className="skda-evolution-bar" aria-label={`Cobertura validada de ${cycle.validationCoverage}%`}>
+                  <span style={{ width:`${Math.max(0,Math.min(100,cycle.validationCoverage))}%` }} />
+                </div>
+                <dl>
+                  <div><dt>Questões validadas</dt><dd>{cycle.validatedQuestions}/{cycle.totalQuestions}</dd></div>
+                  <div><dt>Práticas validadas</dt><dd>{cycle.validatedPractices}</dd></div>
+                  <div><dt>Vínculos de evidência validados</dt><dd>{cycle.validatedEvidenceLinks}</dd></div>
+                  <div><dt>Lacunas abertas</dt><dd>{cycle.openGaps}</dd></div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        )}
+        <div className="skda-followup-summary">
+          <div className="skda-executive-card-head">
+            <div><span>Follow-up entre ciclos</span><h3>Execução das ações priorizadas</h3></div>
+            <strong>{actionFollowupSummary.total}</strong>
+          </div>
+          {actionFollowupSummary.total === 0 ? (
+            <p>Nenhuma ação longitudinal registrada ainda. Quando recomendações forem priorizadas e convertidas em iniciativas, o acompanhamento permanecerá visível nos ciclos seguintes.</p>
+          ) : (
+            <div className="skda-followup-grid">
+              <div><span>Concluídas</span><strong>{actionFollowupSummary.completed}</strong></div>
+              <div><span>Em andamento</span><strong>{actionFollowupSummary.inProgress}</strong></div>
+              <div><span>Vencidas</span><strong>{actionFollowupSummary.overdue}</strong></div>
+              <div><span>Não iniciadas</span><strong>{actionFollowupSummary.notStarted}</strong></div>
+              <div><span>Bloqueadas</span><strong>{actionFollowupSummary.blocked}</strong></div>
+              <div><span>Aguardando conversão</span><strong>{actionFollowupSummary.awaitingConversion}</strong></div>
+            </div>
+          )}
+        </div>
+      </section>}
 
       {isOverview && <section className="skda-pdcl-overview">
         <div className="skda-phase-workspace-head">

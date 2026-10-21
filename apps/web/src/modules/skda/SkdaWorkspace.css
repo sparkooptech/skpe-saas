@@ -1797,3 +1797,164 @@
     width: 100%;
   }
 }
+
+.skda-evolution-overview {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--skda-primary) 3%, white);
+}
+
+.skda-evolution-message {
+  padding: .85rem 1rem;
+  border-left: 4px solid var(--skda-primary);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--skda-text);
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+.skda-evolution-cycles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: .75rem;
+}
+
+.skda-evolution-cycles > article {
+  min-width: 0;
+  padding: .9rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.skda-evolution-cycles > article.is-current {
+  border-color: var(--skda-primary);
+  box-shadow: 0 0 0 1px var(--skda-primary) inset;
+}
+
+.skda-evolution-cycle-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.skda-evolution-cycle-head > div {
+  display: grid;
+  gap: .15rem;
+}
+
+.skda-evolution-cycle-head span {
+  color: var(--skda-muted);
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.skda-evolution-cycle-head strong {
+  color: var(--skda-text);
+  font-size: .92rem;
+}
+
+.skda-evolution-cycle-head b {
+  color: var(--skda-primary);
+  font-size: 1.25rem;
+}
+
+.skda-evolution-bar {
+  height: 8px;
+  margin: .8rem 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e6eeeb;
+}
+
+.skda-evolution-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--skda-primary);
+}
+
+.skda-evolution-cycles dl {
+  display: grid;
+  gap: .42rem;
+  margin: 0;
+}
+
+.skda-evolution-cycles dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+}
+
+.skda-evolution-cycles dt {
+  color: var(--skda-muted);
+  font-size: .76rem;
+}
+
+.skda-evolution-cycles dd {
+  margin: 0;
+  color: var(--skda-text);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.skda-followup-summary {
+  padding: 1rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.skda-followup-summary > p {
+  margin: .8rem 0 0;
+  color: var(--skda-muted);
+  font-size: .85rem;
+  line-height: 1.5;
+}
+
+.skda-followup-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: .55rem;
+  margin-top: .9rem;
+}
+
+.skda-followup-grid > div {
+  display: grid;
+  gap: .25rem;
+  min-width: 0;
+  padding: .7rem;
+  border-radius: 9px;
+  background: #f4f7f6;
+}
+
+.skda-followup-grid span {
+  color: var(--skda-muted);
+  font-size: .7rem;
+  line-height: 1.25;
+}
+
+.skda-followup-grid strong {
+  color: var(--skda-text);
+  font-size: 1.15rem;
+}
+
+@media (max-width: 1100px) {
+  .skda-followup-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .skda-followup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
