@@ -20,6 +20,9 @@ type ApplicationShellProps = {
   brand: ReactNode
   contextItems: ApplicationShellContextItem[]
   userArea: ReactNode
+  pageTitle?: ReactNode
+  headerActions?: ReactNode
+  sidebarFooter?: ReactNode
   navigationItems: ApplicationShellNavigationItem[]
   navigationLabel?: string
   children: ReactNode
@@ -34,6 +37,9 @@ export function ApplicationShell({
   brand,
   contextItems,
   userArea,
+  pageTitle,
+  headerActions,
+  sidebarFooter,
   navigationItems,
   navigationLabel = 'Navegação principal',
   children,
@@ -53,8 +59,11 @@ export function ApplicationShell({
         .filter(Boolean)
         .join(' ')}
     >
-      <header className="application-shell-header">
-        <div className="application-shell-brand">{brand}</div>
+      <aside
+        className="application-shell-sidebar"
+        aria-label={navigationLabel}
+      >
+        <div className="application-shell-sidebar-brand">{brand}</div>
 
         <div
           className="application-shell-context"
@@ -69,37 +78,6 @@ export function ApplicationShell({
               <strong>{item.value}</strong>
             </div>
           ))}
-        </div>
-
-        <div className="application-shell-user">{userArea}</div>
-      </header>
-
-      <aside
-        className="application-shell-sidebar"
-        aria-label={navigationLabel}
-      >
-        <div className="application-shell-sidebar-header">
-          <strong>Menu</strong>
-
-          {onToggleCollapsed && (
-            <button
-              type="button"
-              className="application-shell-collapse-button"
-              onClick={onToggleCollapsed}
-              aria-label={
-                collapsed
-                  ? 'Expandir menu'
-                  : 'Recolher menu'
-              }
-              title={
-                collapsed
-                  ? 'Expandir menu'
-                  : 'Recolher menu'
-              }
-            >
-              {collapsed ? '→' : '←'}
-            </button>
-          )}
         </div>
 
         <nav className="application-shell-navigation">
@@ -136,7 +114,36 @@ export function ApplicationShell({
             </button>
           ))}
         </nav>
+
+        {sidebarFooter && (
+          <div className="application-shell-sidebar-footer">
+            {sidebarFooter}
+          </div>
+        )}
       </aside>
+
+      <header className="application-shell-header">
+        {onToggleCollapsed && (
+          <button
+            type="button"
+            className="application-shell-collapse-button"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? 'Expandir menu principal' : 'Recolher menu principal'}
+            title={collapsed ? 'Expandir menu principal' : 'Recolher menu principal'}
+          >
+            {collapsed ? '→' : '←'}
+          </button>
+        )}
+
+        <div className="application-shell-page-title">
+          {pageTitle ?? 'Visão Geral'}
+        </div>
+
+        <div className="application-shell-header-actions">
+          {headerActions}
+          <div className="application-shell-user">{userArea}</div>
+        </div>
+      </header>
 
       {mobileOpen && (
         <button

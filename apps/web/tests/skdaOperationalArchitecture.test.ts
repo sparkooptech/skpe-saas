@@ -17,6 +17,10 @@ const findingValidationMigration = readFileSync(
   new URL('../../../supabase/migrations/20261021002224_govern_skda_finding_validation.sql', import.meta.url),
   'utf8',
 )
+const journeyExecutionMigration = readFileSync(
+  new URL('../../../supabase/migrations/20261021132000_govern_skda_project_interviews_action_cycles.sql', import.meta.url),
+  'utf8',
+)
 
 test('SK-DA is wired as an operational module without replacing SK-PE', () => {
   assert.match(app, /import \{ SkdaWorkspace \}/)
@@ -32,12 +36,22 @@ test('SK-DA workspace uses the diagnosis domain on the shared platform', () => {
   assert.match(workspace, /\.from\('skda_findings'/)
 })
 
-test('DA-02 interview workspace uses the canonical interview domain', () => {
+test('DA-02 interview workspace uses the canonical interview domain and transversal Agenda', () => {
   assert.match(workspace, /\.from\('skda_interviews'/)
-  assert.match(workspace, /diagnosis_id:selected\.id/)
-  assert.match(workspace, /status:'planned'/)
+  assert.match(workspace, /create_skda_interview_with_event/)
+  assert.match(workspace, /get_skda_interview_event_management/)
+  assert.doesNotMatch(workspace, /\.from\('sparks_events'/)
+  assert.match(workspace, /JourneyEventManageDialog/)
+  assert.match(workspace, /AgendaSection/)
+  assert.match(workspace, /scheduled_start,scheduled_end,actual_start,actual_end,event_id/)
   assert.match(migration, /create table public\.skda_interviews/)
   assert.match(migration, /foreign key\(diagnosis_id,organization_id\) references public\.skda_diagnoses/)
+  assert.match(journeyExecutionMigration, /add column event_id uuid/)
+  assert.match(journeyExecutionMigration, /add column actual_start timestamptz/)
+  assert.match(journeyExecutionMigration, /add column actual_end timestamptz/)
+  assert.match(journeyExecutionMigration, /create or replace function public\.create_skda_interview_with_event/)
+  assert.match(journeyExecutionMigration, /source_entity_type[\s\S]*?'skda_interview'/)
+  assert.doesNotMatch(journeyExecutionMigration, /create table public\.skda_interview_participants/)
 })
 
 test('DA-01 reuses transversal evidence and stores only contextual correlation', () => {
@@ -125,8 +139,8 @@ test('DA-06 UI uses the atomic tactical conversion contract', () => {
   assert.match(workspace, /\.from\('sparks_initiative_origins'/)
   assert.match(workspace, /\.from\('sparks_initiatives'/)
   assert.match(workspace, /source_entity_type', 'skda_finding'/)
-  assert.match(workspace, /Iniciativa vinculada/)
-  assert.match(workspace, /Fato gerador rastreado/)
+  assert.match(workspace, /Iniciativa transversal já vinculada|Iniciativa transversal/)
+  assert.match(workspace, /Fato gerador rastreado|Origem: SK-DA/)
 })
 
 test('canonical SK-DA schema models diagnosis, not project', () => {
@@ -182,6 +196,71 @@ test('SK-DA modals follow the shell keyboard convention and close on Escape', ()
   assert.match(workspace, /setShowFindingCreate\(false\)/)
   assert.match(workspace, /setShowTacticalCreate\(false\)/)
   assert.match(workspace, /window\.addEventListener\('keydown', handleEscape\)/)
+})
+
+test('each DA journey is methodologically distinct from its transversal Project', () => {
+  assert.match(journeyExecutionMigration, /add column execution_initiative_id uuid/)
+  assert.match(journeyExecutionMigration, /create or replace function public\.ensure_skda_diagnosis_project/)
+  assert.match(journeyExecutionMigration, /create or replace function public\.create_skda_diagnosis_with_project/)
+  assert.match(journeyExecutionMigration, /'project'/)
+  assert.match(journeyExecutionMigration, /'transformation'/)
+  assert.match(journeyExecutionMigration, /'skda_diagnosis'/)
+  assert.match(journeyExecutionMigration, /'project_management'/)
+  assert.match(workspace, /create_skda_diagnosis_with_project/)
+  assert.match(workspace, /ensure_skda_diagnosis_project/)
+})
+
+test('DA interviews allow organization members without granting SK-DA access', () => {
+  assert.match(journeyExecutionMigration, /v_is_skda_interview/)
+  assert.match(journeyExecutionMigration, /membership\.organization_id=v_event\.organization_id/)
+  assert.match(journeyExecutionMigration, /or v_is_skda_interview/)
+  assert.match(journeyExecutionMigration, /not v_is_skda_interview[\s\S]*?organization_modules/)
+  assert.match(journeyExecutionMigration, /can_manage_sparks_event_source/)
+  assert.match(journeyExecutionMigration, /'interview\.edit'/)
+})
+
+test('DA-06 is a methodological Action Plan in three cycles over transversal initiatives', () => {
+  assert.match(workspace, /title:'Plano de Ação'/)
+  assert.match(workspace, /Ciclo 1 · Prioridades 80\/20 e sustentação/)
+  assert.match(workspace, /Ciclo 2 · Consolidação, expansão e transformação/)
+  assert.match(workspace, /Ciclo 3 · Excelência/)
+  assert.match(workspace, /set_skda_action_plan_cycle/)
+  assert.match(workspace, /Gestão Tática\/Operacional transversal/)
+  assert.match(journeyExecutionMigration, /create table public\.skda_action_plan_allocations/)
+  assert.match(journeyExecutionMigration, /cycle_number smallint not null/)
+  assert.match(journeyExecutionMigration, /references public\.sparks_initiatives/)
+  assert.doesNotMatch(journeyExecutionMigration, /create table public\.skda_(initiatives|projects)/)
+})
+
+test('SK-DA overview exposes PDCL and modules return is a sidebar action, not a methodology item', () => {
+  assert.match(workspace, /const PDCL_STAGES/)
+  assert.match(workspace, /title:'Planejar'/)
+  assert.match(workspace, /title:'Fazer'/)
+  assert.match(workspace, /title:'Verificar'/)
+  assert.match(workspace, /title:'Aprender'/)
+  assert.match(workspace, /label:'Visão Geral'/)
+  assert.match(workspace, /label:'Jornada DA'/)
+  assert.match(workspace, /label:'Plano de Ação'/)
+  assert.doesNotMatch(workspace, /\.\.\.PHASES\.map\(\(phase\) => \(\{/)
+  for (const [code, title] of [
+    ['MF0','Constituição e abertura'],
+    ['MF1','Intake e inventário'],
+    ['MF2','Canonização documental'],
+    ['MF3','Histórico e pré-diagnóstico'],
+    ['MF4','Entrevistas Governança'],
+    ['MF5','Entrevistas Gestão'],
+    ['MF6','Evidências, PDCL e maturidade'],
+    ['MF7','Diagnóstico integrado'],
+    ['MF8','Priorização 80/20'],
+    ['MF9','Plano por ciclos'],
+    ['MF10','Devolutiva e integração'],
+  ]) {
+    assert.match(workspace, new RegExp(`code:'${code}'[\\s\\S]*?title:'${title}'`))
+  }
+  assert.match(workspace, /current_megaphase_code/)
+  assert.match(journeyExecutionMigration, /add column current_megaphase_code text not null default 'MF0'/)
+  assert.match(workspace, /Voltar aos módulos/)
+  assert.doesNotMatch(workspace, /id:'modules',[\s\S]*?label:'Módulos'/)
 })
 
 test('technical runtime tenant is excluded from administrative module counts', () => {

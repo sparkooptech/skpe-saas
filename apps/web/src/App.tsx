@@ -1890,6 +1890,9 @@ function App() {
         organizationCode={selectedOrganization.organization_code}
         userRoleCode={openedModule.role_code}
         userRoleName={openedModule.role_name}
+        userDisplayName={userDisplayName || session?.user.email || 'Usuário'}
+        userEmail={session?.user.email ?? ''}
+        userAvatarUrl={userAvatarUrl}
         onReturnToModules={handleReturnToModules}
       />
     )

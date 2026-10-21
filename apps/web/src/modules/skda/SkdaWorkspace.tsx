@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { ApplicationShell } from '../../components/application-shell/ApplicationShell'
 import { TransversalWorkspace } from '../../components/application-shell/TransversalWorkspace'
 import { supabase } from '../../lib/supabase'
+import { AgendaSection } from '../skpe/features/agenda/AgendaSection'
+import { JourneyEventManageDialog } from '../skpe/features/journey/JourneyEventManageDialog'
 import './SkdaWorkspace.css'
 
 type Props = {
@@ -10,6 +12,9 @@ type Props = {
   organizationCode: string
   userRoleCode: string
   userRoleName: string
+  userDisplayName: string
+  userEmail: string
+  userAvatarUrl: string | null
   onReturnToModules: () => void
 }
 
@@ -23,10 +28,12 @@ type Diagnosis = {
   reference_year: number | null
   status: string
   current_phase_code: string
+  current_megaphase_code: string
   progress: number
   started_on: string | null
   planned_end_on: string | null
   lead_user_id: string | null
+  execution_initiative_id: string | null
   metadata: Record<string, unknown>
   created_at: string
 }
@@ -40,7 +47,9 @@ type OrganizationUser = {
 }
 type Metrics = { responses: number; interviews: number; evidence: number; findings: number }
 type Phase = { code: string; title: string; description: string; statusKey: string }
-type Interview = { id: string; code: string; title: string; interviewee_name: string | null; interviewee_role: string | null; status: string; channel: string; scheduled_start: string | null }
+type Interview = { id: string; code: string; title: string; interviewee_name: string | null; interviewee_role: string | null; status: string; channel: string; scheduled_start: string | null; scheduled_end: string | null; actual_start: string | null; actual_end: string | null; event_id: string | null }
+type ActionPlanAllocation = { id: string; finding_id: string; initiative_id: string | null; cycle_number: number; sequence_order: number; rationale: string | null }
+type ManagedInterviewEvent = { event_id: string; journey_item_code: string; journey_item_title: string; event_type: string; event_title: string; event_description: string | null; starts_at: string | null; ends_at: string | null; all_day: boolean; timezone_name: string; event_status: string; priority: string; location_text: string | null; meeting_reference: string | null; participant_count: number; accepted_count: number; attended_count: number }
 type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
@@ -60,8 +69,49 @@ const PHASES: Phase[] = [
   { code:'DA-03', title:'Avaliação por questão', description:'Classifica respostas, maturidade, confiança e validação por questão.', statusKey:'assessment' },
   { code:'DA-04', title:'Achados e lacunas', description:'Consolida forças, lacunas, oportunidades, riscos e observações.', statusKey:'assessment' },
   { code:'DA-05', title:'Recomendações e devolutiva', description:'Transforma achados em recomendações priorizadas e prepara a devolutiva.', statusKey:'validation' },
-  { code:'DA-06', title:'Gestão tática', description:'Converte recomendações aprovadas em iniciativas com fato gerador rastreável.', statusKey:'validation' },
+  { code:'DA-06', title:'Plano de Ação', description:'Prioriza recomendações aprovadas em ciclos e acompanha sua conversão em iniciativas com fato gerador rastreável.', statusKey:'validation' },
 ]
+
+const MEGAPHASES = [
+  { code:'MF0', title:'Constituição e abertura', workPattern:'Abertura governada, kickoff, escopo, papéis e critérios de aplicação.' },
+  { code:'MF1', title:'Intake e inventário', workPattern:'Coleta progressiva, inventário de fontes e registro explícito de lacunas.' },
+  { code:'MF2', title:'Canonização documental', workPattern:'Organizar fontes, versões, autoridade documental e relação questão–evidência.' },
+  { code:'MF3', title:'Histórico e pré-diagnóstico', workPattern:'Construir linha histórica, hipóteses, recorrências e pontos a aprofundar.' },
+  { code:'MF4', title:'Entrevistas Governança', workPattern:'Escuta orientada, confronto de hipóteses e coleta de evidências de Governança.' },
+  { code:'MF5', title:'Entrevistas Gestão', workPattern:'Escuta orientada, confronto de hipóteses e coleta de evidências de Gestão.' },
+  { code:'MF6', title:'Evidências, PDCL e maturidade', workPattern:'Avaliar suficiência das evidências, prática gerencial, PDCL e nível de maturidade.' },
+  { code:'MF7', title:'Diagnóstico integrado', workPattern:'Consolidar fatos, evidências, divergências, riscos, forças, oportunidades e lacunas.' },
+  { code:'MF8', title:'Priorização 80/20', workPattern:'Priorizar poucas ações de maior impacto sem impedir antecipações deliberadas.' },
+  { code:'MF9', title:'Plano por ciclos', workPattern:'Organizar ações aprovadas nos Ciclos 1, 2 e 3 com origem e decisão rastreáveis.' },
+  { code:'MF10', title:'Devolutiva e integração', workPattern:'Validar entendimento, pactuar evolução e integrar ações aos demais módulos SPARKs.' },
+] as const
+
+const PDCL_STAGES = [
+  {
+    code:'P',
+    title:'Planejar',
+    megaphases:['MF0','MF1','MF2','MF3'],
+    pattern:'Constituir a Jornada, organizar fontes, conhecer o histórico e planejar o aprofundamento.',
+  },
+  {
+    code:'D',
+    title:'Fazer',
+    megaphases:['MF4','MF5','MF6'],
+    pattern:'Executar entrevistas, ampliar evidências e avaliar a prática e a maturidade observadas.',
+  },
+  {
+    code:'C',
+    title:'Verificar',
+    megaphases:['MF7','MF8'],
+    pattern:'Integrar o diagnóstico, confrontar evidências e priorizar o que mais influencia a evolução.',
+  },
+  {
+    code:'L',
+    title:'Aprender',
+    megaphases:['MF9','MF10'],
+    pattern:'Transformar o aprendizado em Plano de Ação, devolutiva, integração e novo ciclo de evolução.',
+  },
+] as const
 
 const STATUS: Record<string,string> = {
   draft:'Rascunho', preparation:'Preparação', evidence:'Evidências',
@@ -146,8 +196,12 @@ export function SkdaWorkspace(props: Props) {
   const [validationFindingId, setValidationFindingId] = useState<string | null>(null)
   const [validationReason, setValidationReason] = useState('')
   const [showTacticalCreate, setShowTacticalCreate] = useState(false)
-  const [activePhaseCode, setActivePhaseCode] = useState('DA-00')
+  const [activePhaseCode, setActivePhaseCode] = useState('OVERVIEW')
   const [interviews, setInterviews] = useState<Interview[]>([])
+  const [actionPlanAllocations, setActionPlanAllocations] = useState<ActionPlanAllocation[]>([])
+  const [managedInterviewEvent, setManagedInterviewEvent] = useState<ManagedInterviewEvent | null>(null)
+  const [realizationInterviewId, setRealizationInterviewId] = useState<string | null>(null)
+  const [realizationForm, setRealizationForm] = useState({ actualStart:'', actualEnd:'', notes:'', changeReason:'Registro da realização da entrevista da Jornada DA.' })
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
@@ -166,7 +220,7 @@ export function SkdaWorkspace(props: Props) {
     scopeStatement:'',
     methodologyNotes:'',
   })
-  const [interviewForm, setInterviewForm] = useState({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
+  const [interviewForm, setInterviewForm] = useState({ code:'', title:'', channel:'teams', scheduledStart:'', scheduledEnd:'', meetingReference:'', changeReason:'Planejamento da entrevista na Jornada DA.' })
   const [findingForm, setFindingForm] = useState({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'', interviewId:'', ownerUserId:'', dueDate:'' })
   const [tacticalForm, setTacticalForm] = useState({
     findingId:'', initiativeClass:'project', categoryCode:'strategic', code:'', name:'', description:'',
@@ -179,6 +233,7 @@ export function SkdaWorkspace(props: Props) {
     description:'Jornada de Diagnóstico Assistido do ciclo de referência.',
     diagnosisType:'pdgc',
     referenceYear:String(new Date().getFullYear()),
+    changeReason:'Criação da Jornada DA e do projeto transversal correspondente.',
   })
 
   const selected = useMemo(
@@ -267,7 +322,7 @@ export function SkdaWorkspace(props: Props) {
     setError('')
     const { data, error: loadError } = await supabase
       .from('skda_diagnoses' as never)
-      .select('id,code,name,description,diagnosis_type,catalog_version_id,reference_year,status,current_phase_code,progress,started_on,planned_end_on,lead_user_id,metadata,created_at' as never)
+      .select('id,code,name,description,diagnosis_type,catalog_version_id,reference_year,status,current_phase_code,current_megaphase_code,progress,started_on,planned_end_on,lead_user_id,execution_initiative_id,metadata,created_at' as never)
       .eq('organization_id', props.organizationId)
       .is('archived_at', null)
       .order('created_at', { ascending:false })
@@ -464,13 +519,27 @@ export function SkdaWorkspace(props: Props) {
       if (!selectedId) { setInterviews([]); return }
       const { data } = await supabase
         .from('skda_interviews' as never)
-        .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start' as never)
+        .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start,scheduled_end,actual_start,actual_end,event_id' as never)
         .eq('diagnosis_id', selectedId)
         .order('scheduled_start', { ascending:true, nullsFirst:false })
       setInterviews((data ?? []) as unknown as Interview[])
     }
     void run()
   }, [selectedId])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selectedId) { setActionPlanAllocations([]); return }
+      const { data } = await supabase
+        .from('skda_action_plan_allocations' as never)
+        .select('id,finding_id,initiative_id,cycle_number,sequence_order,rationale' as never)
+        .eq('diagnosis_id', selectedId)
+        .order('cycle_number', { ascending:true })
+        .order('sequence_order', { ascending:true })
+      setActionPlanAllocations((data ?? []) as unknown as ActionPlanAllocation[])
+    }
+    void run()
+  }, [selectedId, findings, linkedInitiatives])
 
   useEffect(() => {
     const run = async () => {
@@ -810,36 +879,168 @@ export function SkdaWorkspace(props: Props) {
     setShowFindingCreate(false)
   }
 
+  const ensureDiagnosisProject = async () => {
+    if (!selected) return
+    setSaving(true)
+    setError('')
+    const { error: projectError } = await supabase.rpc(
+      'ensure_skda_diagnosis_project' as never,
+      {
+        target_diagnosis_id:selected.id,
+        change_reason:'Vinculação do Projeto transversal à Jornada DA existente.',
+      } as never,
+    )
+    setSaving(false)
+    if (projectError) {
+      setError(projectError.message)
+      return
+    }
+    await loadDiagnoses()
+  }
+
+  const openInterviewParticipants = async (interview: Interview) => {
+    if (!interview.event_id) {
+      setError('Esta entrevista ainda não possui evento transversal associado.')
+      return
+    }
+
+    setError('')
+    const { data, error: eventError } = await supabase.rpc(
+      'get_skda_interview_event_management' as never,
+      { target_interview_id:interview.id } as never,
+    )
+
+    if (eventError || !data) {
+      setError(eventError?.message ?? 'Evento da entrevista não encontrado.')
+      return
+    }
+
+    setManagedInterviewEvent(data as unknown as ManagedInterviewEvent)
+  }
+
+  const recordInterviewRealization = async () => {
+    if (!realizationInterviewId || !realizationForm.actualStart) {
+      setError('Informe a data e hora reais de início da entrevista.')
+      return
+    }
+
+    if (realizationForm.changeReason.trim().length < 10) {
+      setError('Informe uma justificativa para registrar a realização.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    const { error: realizationError } = await supabase.rpc(
+      'record_skda_interview_realization' as never,
+      {
+        target_interview_id:realizationInterviewId,
+        target_actual_start:new Date(realizationForm.actualStart).toISOString(),
+        target_actual_end:realizationForm.actualEnd ? new Date(realizationForm.actualEnd).toISOString() : null,
+        target_notes:realizationForm.notes.trim() || null,
+        change_reason:realizationForm.changeReason.trim(),
+      } as never,
+    )
+    setSaving(false)
+
+    if (realizationError) {
+      setError(realizationError.message)
+      return
+    }
+
+    setRealizationInterviewId(null)
+    setRealizationForm({
+      actualStart:'',
+      actualEnd:'',
+      notes:'',
+      changeReason:'Registro da realização da entrevista da Jornada DA.',
+    })
+
+    if (selected) {
+      const { data } = await supabase
+        .from('skda_interviews' as never)
+        .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start,scheduled_end,actual_start,actual_end,event_id' as never)
+        .eq('diagnosis_id', selected.id)
+        .order('scheduled_start', { ascending:true, nullsFirst:false })
+      setInterviews((data ?? []) as unknown as Interview[])
+    }
+  }
+
+  const assignActionCycle = async (findingId: string, cycleNumber: number) => {
+    setSaving(true)
+    setError('')
+    const { error: cycleError } = await supabase.rpc(
+      'set_skda_action_plan_cycle' as never,
+      {
+        target_finding_id:findingId,
+        target_cycle_number:cycleNumber,
+        target_rationale:cycleNumber === 1
+          ? 'Priorização no primeiro ciclo segundo foco 80×20 do Plano de Ação.'
+          : `Priorização deliberada para o Ciclo ${cycleNumber} do Plano de Ação.`,
+        change_reason:`Priorização da recomendação no Ciclo ${cycleNumber} do Plano de Ação DA.`,
+      } as never,
+    )
+    setSaving(false)
+
+    if (cycleError) {
+      setError(cycleError.message)
+      return
+    }
+
+    if (selected) {
+      const { data } = await supabase
+        .from('skda_action_plan_allocations' as never)
+        .select('id,finding_id,initiative_id,cycle_number,sequence_order,rationale' as never)
+        .eq('diagnosis_id', selected.id)
+        .order('cycle_number', { ascending:true })
+        .order('sequence_order', { ascending:true })
+      setActionPlanAllocations((data ?? []) as unknown as ActionPlanAllocation[])
+    }
+  }
+
   const createInterview = async () => {
     if (!selected || !interviewForm.code.trim() || !interviewForm.title.trim()) {
       setError('Informe código e título da entrevista.')
       return
     }
 
+    if (interviewForm.changeReason.trim().length < 10) {
+      setError('Informe uma justificativa para o agendamento da entrevista.')
+      return
+    }
+
     setSaving(true)
     setError('')
-    const { error: saveError } = await supabase
-      .from('skda_interviews' as never)
-      .insert({
-        organization_id:props.organizationId,
-        diagnosis_id:selected.id,
-        code:interviewForm.code.trim().toUpperCase(),
-        title:interviewForm.title.trim(),
-        interviewee_name:interviewForm.intervieweeName.trim() || null,
-        interviewee_role:interviewForm.intervieweeRole.trim() || null,
-        channel:interviewForm.channel,
-        scheduled_start:interviewForm.scheduledStart ? new Date(interviewForm.scheduledStart).toISOString() : null,
-        status:'planned',
-      } as never)
+    const { error: saveError } = await supabase.rpc(
+      'create_skda_interview_with_event' as never,
+      {
+        target_diagnosis_id:selected.id,
+        target_code:interviewForm.code.trim().toUpperCase(),
+        target_title:interviewForm.title.trim(),
+        target_channel:interviewForm.channel,
+        target_scheduled_start:interviewForm.scheduledStart ? new Date(interviewForm.scheduledStart).toISOString() : null,
+        target_scheduled_end:interviewForm.scheduledEnd ? new Date(interviewForm.scheduledEnd).toISOString() : null,
+        target_meeting_reference:interviewForm.meetingReference.trim() || null,
+        change_reason:interviewForm.changeReason.trim(),
+      } as never,
+    )
 
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
 
-    setInterviewForm({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
+    setInterviewForm({
+      code:'',
+      title:'',
+      channel:'teams',
+      scheduledStart:'',
+      scheduledEnd:'',
+      meetingReference:'',
+      changeReason:'Planejamento da entrevista na Jornada DA.',
+    })
     setShowInterviewCreate(false)
     const { data } = await supabase
       .from('skda_interviews' as never)
-      .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start' as never)
+      .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start,scheduled_end,actual_start,actual_end,event_id' as never)
       .eq('diagnosis_id', selected.id)
       .order('scheduled_start', { ascending:true, nullsFirst:false })
     setInterviews((data ?? []) as unknown as Interview[])
@@ -848,25 +1049,29 @@ export function SkdaWorkspace(props: Props) {
 
   const createDiagnosis = async () => {
     if (!form.code.trim() || !form.name.trim()) {
-      setError('Informe código e nome do diagnóstico.')
+      setError('Informe código e nome da Jornada DA.')
+      return
+    }
+
+    if (form.changeReason.trim().length < 10) {
+      setError('Informe uma justificativa para criar a Jornada DA.')
       return
     }
 
     setSaving(true)
     setError('')
-    const { data, error: saveError } = await supabase
-      .from('skda_diagnoses' as never)
-      .insert({
-        organization_id:props.organizationId,
-        code:form.code.trim().toUpperCase(),
-        name:form.name.trim(),
-        description:form.description.trim() || null,
-        diagnosis_type:form.diagnosisType,
-        reference_year:form.referenceYear ? Number(form.referenceYear) : null,
-        status:'preparation', current_phase_code:'DA-00', progress:0,
-      } as never)
-      .select('id' as never)
-      .single()
+    const { data, error: saveError } = await supabase.rpc(
+      'create_skda_diagnosis_with_project' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_code:form.code.trim().toUpperCase(),
+        target_name:form.name.trim(),
+        target_description:form.description.trim() || null,
+        target_diagnosis_type:form.diagnosisType,
+        target_reference_year:form.referenceYear ? Number(form.referenceYear) : null,
+        change_reason:form.changeReason.trim(),
+      } as never,
+    )
 
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
@@ -877,19 +1082,20 @@ export function SkdaWorkspace(props: Props) {
       description:'Jornada de Diagnóstico Assistido do ciclo de referência.',
       diagnosisType:'pdgc',
       referenceYear:String(new Date().getFullYear()),
+      changeReason:'Criação da Jornada DA e do projeto transversal correspondente.',
     })
     setShowCreate(false)
     await loadDiagnoses()
-    const created = data as unknown as { id?: string } | null
-    if (created?.id) setSelectedId(created.id)
+    const created = data as unknown as { diagnosis_id?: string } | null
+    if (created?.diagnosis_id) setSelectedId(created.diagnosis_id)
   }
 
   const header = (
-    <div className="skda-header">
+    <div className="skda-header skda-header-compact">
       <div>
-        <p className="skda-eyebrow">SK-DA · Diagnóstico Assistido</p>
-        <h1>Diagnóstico Assistido</h1>
-        <p>{props.organizationName} · {props.userRoleName}</p>
+        <p className="skda-eyebrow">Jornada de Diagnóstico Assistido</p>
+        <h2>{selected?.name ?? 'Selecione ou inicie uma Jornada DA'}</h2>
+        <p>{selected ? `${selected.code} · ${STATUS[selected.status] ?? selected.status}` : 'A metodologia, a Agenda e o Plano de Ação permanecem integrados ao contexto da organização.'}</p>
       </div>
       {canManage && <button type="button" className="skda-primary" onClick={() => setShowCreate(true)}>Nova Jornada DA</button>}
     </div>
@@ -915,9 +1121,12 @@ export function SkdaWorkspace(props: Props) {
     </div>
   )
 
-  const activePhase = PHASES.find((phase) => phase.code === activePhaseCode) ?? PHASES[0]
+  const activePhase = PHASES.find((phase) => phase.code === activePhaseCode) ?? null
+  const isOverview = activePhaseCode === 'OVERVIEW'
+  const isAgenda = activePhaseCode === 'AGENDA'
   const selectedCatalog = catalogs.find((catalog) => catalog.id === selected?.catalog_version_id) ?? null
   const catalogLocked = metrics.responses > 0
+  const currentMegaphaseCode = selected?.current_megaphase_code ?? 'MF0'
 
   const secondary = selected ? (
     <div className="skda-detail">
@@ -984,8 +1193,76 @@ export function SkdaWorkspace(props: Props) {
           </div>
         </article>
       </div>
-      <div className="skda-journey">
-        <div className="skda-journey-head"><div><span>Jornada operacional</span><h3>DA-00 → DA-06</h3></div><b>{Number(selected.progress).toFixed(0)}%</b></div>
+
+      {isOverview && <section className="skda-pdcl-overview">
+        <div className="skda-phase-workspace-head">
+          <div>
+            <span className="skda-eyebrow">Metodologia em ação</span>
+            <h3>PDCL da Jornada DA</h3>
+            <small>O diagnóstico não é uma sequência linear de telas: evidências, entrevistas, avaliação, checagem e aprendizado retroalimentam a própria compreensão da organização.</small>
+          </div>
+          <span>{selected.execution_initiative_id ? 'Projeto da Jornada vinculado' : 'Projeto da Jornada pendente'}</span>
+        </div>
+        <div className="skda-pdcl-cycle">
+          {PDCL_STAGES.map((stage) => (
+            <article key={stage.code}>
+              <div className="skda-pdcl-code">{stage.code}</div>
+              <div>
+                <strong>{stage.title}</strong>
+                <p>{stage.pattern}</p>
+                <div className="skda-pdcl-phases">
+                  {stage.megaphases.map((megaphaseCode) => {
+                    const megaphase = MEGAPHASES.find((item) => item.code === megaphaseCode)
+                    return megaphase ? <span key={megaphase.code}>{megaphase.code} · {megaphase.title}</span> : null
+                  })}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="skda-megaphases">
+          <div className="skda-phase-workspace-head">
+            <div>
+              <span className="skda-eyebrow">Processo metodológico</span>
+              <h3>MegaFases e Padrões de Trabalho</h3>
+              <small>A MegaFase em andamento permanece expandida. As demais preservam a visão completa da Jornada sem confundir processo metodológico com os workspaces DA-00 a DA-06.</small>
+            </div>
+            <span>{currentMegaphaseCode}</span>
+          </div>
+          <div className="skda-megaphase-list">
+            {MEGAPHASES.map((megaphase) => {
+              const isCurrent = megaphase.code === currentMegaphaseCode
+              return <details key={megaphase.code} open={isCurrent} className={isCurrent ? 'is-current' : ''}>
+                <summary>
+                  <span>{megaphase.code}</span>
+                  <strong>{megaphase.title}</strong>
+                  <small>{isCurrent ? 'Em andamento' : 'Metodologia'}</small>
+                </summary>
+                <div>
+                  <span>Padrão de Trabalho</span>
+                  <p>{megaphase.workPattern}</p>
+                  <small>Gate: fatos, evidências, hipóteses, lacunas, divergências, consensos, entregáveis e próximo passo.</small>
+                </div>
+              </details>
+            })}
+          </div>
+        </div>
+        <div className="skda-project-bridge">
+          <div>
+            <span>Execução da Jornada</span>
+            <strong>{selected.execution_initiative_id ? 'Projeto transversal associado' : 'A Jornada ainda precisa ser associada ao seu Projeto transversal'}</strong>
+            <small>O diagnóstico continua sendo o objeto metodológico do SK-DA; o Projeto organiza agenda, atividades, responsabilidades e execução sem duplicar o diagnóstico.</small>
+          </div>
+          {!selected.execution_initiative_id && canManage && <button type="button" className="skda-primary" disabled={saving} onClick={() => void ensureDiagnosisProject()}>{saving ? 'Vinculando...' : 'Criar Projeto da Jornada'}</button>}
+        </div>
+      </section>}
+
+      {isAgenda && <section className="skda-agenda-host">
+        <AgendaSection organizationId={props.organizationId} />
+      </section>}
+
+      {activePhase && <div className="skda-journey">
+        <div className="skda-journey-head"><div><span>Jornada metodológica</span><h3>DA-00 → DA-06</h3></div><b>{Number(selected.progress).toFixed(0)}%</b></div>
         <div className="skda-phase-nav" role="tablist" aria-label="Fases do Diagnóstico Assistido">
           {PHASES.map((phase) => (
             <button
@@ -1010,7 +1287,7 @@ export function SkdaWorkspace(props: Props) {
             {activePhase.code === 'DA-03' && <><span>Questões avaliadas</span><strong>{metrics.responses}</strong></>}
             {activePhase.code === 'DA-04' && <><span>Achados registrados</span><strong>{metrics.findings}</strong></>}
             {activePhase.code === 'DA-05' && <><span>Fonte metodológica</span><strong>Achados</strong></>}
-            {activePhase.code === 'DA-06' && <><span>Destino da execução</span><strong>Iniciativas</strong></>}
+            {activePhase.code === 'DA-06' && <><span>Plano de Ação</span><strong>Ciclos 1 · 2 · 3</strong></>}
             {activePhase.code === 'DA-00' && <><span>Estado</span><strong>{STATUS[selected.status] ?? selected.status}</strong></>}
           </div>
           {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
@@ -1043,11 +1320,32 @@ export function SkdaWorkspace(props: Props) {
             </div>}
           </div>}
           {activePhase.code === 'DA-02' && <div className="skda-phase-workspace">
-            <div className="skda-phase-workspace-head"><h4>Entrevistas do diagnóstico</h4>{canEditInterviews && <button type="button" className="skda-primary" onClick={() => setShowInterviewCreate(true)}>Nova entrevista</button>}</div>
+            <div className="skda-phase-workspace-head">
+              <div><h4>Entrevistas do diagnóstico</h4><small>Entrevistas são eventos da Agenda da Organização. Participantes planejados e presença efetiva são geridos pelo mesmo motor transversal do PE.</small></div>
+              {canEditInterviews && <button type="button" className="skda-primary" onClick={() => setShowInterviewCreate(true)}>Nova entrevista</button>}
+            </div>
+            <div className="skda-evidence-loop-note"><strong>Aprendizado contínuo</strong><span>Uma entrevista pode revelar evidências que não estavam disponíveis no levantamento inicial. Novas evidências podem ser incluídas no Core e correlacionadas ao DA, reabrindo a análise quando necessário.</span></div>
             {interviews.length === 0 ? <p className="skda-phase-empty">Nenhuma entrevista registrada.</p> : <div className="skda-interview-list">
               {interviews.map((interview) => <article key={interview.id}>
-                <div><small>{interview.code}</small><strong>{interview.title}</strong><span>{interview.interviewee_name || 'Entrevistado não informado'}{interview.interviewee_role ? ' · '+interview.interviewee_role : ''}</span></div>
-                <div><b>{interview.status === 'planned' ? 'Planejada' : interview.status}</b><span>{interview.scheduled_start ? new Date(interview.scheduled_start).toLocaleString('pt-BR') : 'Sem data'}</span></div>
+                <div>
+                  <small>{interview.code} · {interview.event_id ? 'Na Agenda' : 'Sem evento associado'}</small>
+                  <strong>{interview.title}</strong>
+                  <span>Prevista: {interview.scheduled_start ? new Date(interview.scheduled_start).toLocaleString('pt-BR') : 'não definida'}{interview.scheduled_end ? ' → '+new Date(interview.scheduled_end).toLocaleString('pt-BR') : ''}</span>
+                  <span>Realizada: {interview.actual_start ? new Date(interview.actual_start).toLocaleString('pt-BR') : 'não registrada'}{interview.actual_end ? ' → '+new Date(interview.actual_end).toLocaleString('pt-BR') : ''}</span>
+                </div>
+                <div className="skda-interview-actions">
+                  <b>{interview.status === 'planned' ? 'Planejada' : interview.status === 'in_progress' ? 'Em andamento' : interview.status === 'completed' ? 'Realizada' : interview.status}</b>
+                  {interview.event_id && <button type="button" onClick={() => void openInterviewParticipants(interview)}>Participantes</button>}
+                  {canEditInterviews && <button type="button" onClick={() => {
+                    setRealizationInterviewId(interview.id)
+                    setRealizationForm((current) => ({
+                      ...current,
+                      actualStart:interview.actual_start ? new Date(interview.actual_start).toISOString().slice(0,16) : '',
+                      actualEnd:interview.actual_end ? new Date(interview.actual_end).toISOString().slice(0,16) : '',
+                    }))
+                  }}>Registrar realização</button>}
+                  <button type="button" onClick={() => setActivePhaseCode('DA-01')}>Revisar evidências</button>
+                </div>
               </article>)}
             </div>}
           </div>}
@@ -1103,42 +1401,107 @@ export function SkdaWorkspace(props: Props) {
             </div>}
           </div>}
           {activePhase.code === 'DA-06' && <div className="skda-phase-workspace">
-            <div className="skda-phase-workspace-head"><h4>Gestão Tática</h4><span>Fatos geradores preservados</span></div>
-            {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação aceita está disponível para conversão tática.</p> : <div className="skda-finding-list">
-              {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').map((finding) => {
-                const initiative = linkedInitiatives.find((item) => item.sourceFindingId === finding.id)
-                return <article key={finding.id}>
-                  <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Impacto sugerido {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span>{initiative && <div className="skda-linked-initiative"><small>Iniciativa vinculada</small><strong>{initiative.code} · {initiative.name}</strong><span>{INITIATIVE_CLASSES[initiative.initiative_class] ?? initiative.initiative_class} · {initiative.status} · {Number(initiative.progress ?? 0).toFixed(0)}%</span></div>}</div>
-                  <div className="skda-finding-actions">
-                    <b>{finding.status === 'in_action' ? 'Em Gestão Tática' : 'Pronta para conversão'}</b>
-                    <span>Origem: SK-DA / achado</span>
-                    {initiative && <span>Fato gerador rastreado</span>}
-                    {finding.status === 'accepted' && canCreateTactical && <button type="button" className="skda-primary" onClick={() => openTacticalConversion(finding)}>Criar iniciativa</button>}
-                  </div>
-                </article>
-              })}
-            </div>}
+            <div className="skda-phase-workspace-head">
+              <div>
+                <h4>Plano de Ação</h4>
+                <small>Somente recomendações aprovadas originadas nesta Jornada DA. A execução integral pertence à Gestão Tática/Operacional transversal.</small>
+              </div>
+              <span>{actionPlanAllocations.length} ação(ões) priorizada(s)</span>
+            </div>
+            {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação aprovada está disponível para o Plano de Ação.</p> : <>
+              <div className="skda-action-plan-unallocated">
+                <div className="skda-phase-workspace-head"><h4>A priorizar</h4><span>Deliberação necessária</span></div>
+                {findings.filter((finding) => (finding.status === 'accepted' || finding.status === 'in_action') && !actionPlanAllocations.some((allocation) => allocation.finding_id === finding.id)).length === 0 ? <p className="skda-phase-empty">Todas as recomendações aprovadas já foram alocadas em ciclos.</p> : <div className="skda-finding-list">
+                  {findings.filter((finding) => (finding.status === 'accepted' || finding.status === 'in_action') && !actionPlanAllocations.some((allocation) => allocation.finding_id === finding.id)).map((finding) => {
+                    const initiative = linkedInitiatives.find((item) => item.sourceFindingId === finding.id)
+                    return <article key={finding.id}>
+                      <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span>{initiative && <div className="skda-linked-initiative"><small>Iniciativa transversal já vinculada</small><strong>{initiative.code} · {initiative.name}</strong></div>}</div>
+                      <div className="skda-cycle-actions">
+                        <span>Alocar em:</span>
+                        {[1,2,3].map((cycle) => <button type="button" key={cycle} disabled={saving} onClick={() => void assignActionCycle(finding.id,cycle)}>Ciclo {cycle}</button>)}
+                      </div>
+                    </article>
+                  })}
+                </div>}
+              </div>
+              <div className="skda-action-cycles">
+                {[1,2,3].map((cycle) => {
+                  const allocations = actionPlanAllocations.filter((allocation) => allocation.cycle_number === cycle)
+                  const title = cycle === 1
+                    ? 'Ciclo 1 · Prioridades 80/20 e sustentação'
+                    : cycle === 2
+                      ? 'Ciclo 2 · Consolidação, expansão e transformação'
+                      : 'Ciclo 3 · Excelência'
+                  const description = cycle === 1
+                    ? 'Prioriza as ações de maior impacto e sustentação. O 80/20 orienta a prioridade, mas não impede antecipar outras ações conforme a capacidade e o apetite da organização.'
+                    : cycle === 2
+                      ? 'Consolida o primeiro ciclo, amplia capacidades e conduz transformações adicionais com base nos aprendizados já obtidos.'
+                      : 'Eleva e institucionaliza capacidades para patamares de excelência, preservando aprendizado e evolução contínua.'
+                  return <section key={cycle} className="skda-action-cycle">
+                    <div className="skda-action-cycle-head"><div><strong>{title}</strong><small>{description}</small></div><b>{allocations.length}</b></div>
+                    {allocations.length === 0 ? <p>Nenhuma ação alocada.</p> : <div className="skda-action-cycle-list">
+                      {allocations.map((allocation) => {
+                        const finding = findings.find((item) => item.id === allocation.finding_id)
+                        const initiative = linkedInitiatives.find((item) => item.sourceFindingId === allocation.finding_id)
+                        if (!finding) return null
+                        return <article key={allocation.id}>
+                          <div><strong>{finding.title}</strong><span>{finding.recommendation}</span>{allocation.rationale && <small>{allocation.rationale}</small>}</div>
+                          <div className="skda-finding-actions">
+                            <b>{initiative ? 'Na Gestão Tática' : 'Ação DA aprovada'}</b>
+                            <span>Origem: SK-DA / {finding.title}</span>
+                            {initiative ? <span>{initiative.code} · {INITIATIVE_CLASSES[initiative.initiative_class] ?? initiative.initiative_class}</span> : finding.status === 'accepted' && canCreateTactical ? <button type="button" className="skda-primary" onClick={() => openTacticalConversion(finding)}>Criar iniciativa transversal</button> : null}
+                            <div className="skda-cycle-reassign">{[1,2,3].filter((target) => target !== cycle).map((target) => <button type="button" key={target} disabled={saving} onClick={() => void assignActionCycle(finding.id,target)}>Mover para Ciclo {target}</button>)}</div>
+                          </div>
+                        </article>
+                      })}
+                    </div>}
+                  </section>
+                })}
+              </div>
+            </>}
           </div>}
         </section>
-      </div>
+      </div>}
     </div>
   ) : undefined
 
   const shellNavigation = [
     {
-      id:'modules',
-      label:'Módulos',
-      active:false,
-      onActivate:props.onReturnToModules,
+      id:'overview',
+      label:'Visão Geral',
+      icon:<span aria-hidden="true">▦</span>,
+      active:activePhaseCode === 'OVERVIEW',
+      onActivate:() => setActivePhaseCode('OVERVIEW'),
     },
-    ...PHASES.map((phase) => ({
-      id:phase.code,
-      label:`${phase.code} · ${phase.title}`,
-      active:activePhaseCode === phase.code,
+    {
+      id:'journey',
+      label:'Jornada DA',
+      icon:<span aria-hidden="true">⌁</span>,
+      active:PHASES.some((phase) => phase.code === activePhaseCode) && activePhaseCode !== 'DA-06',
       disabled:!selected,
-      onActivate:() => setActivePhaseCode(phase.code),
-    })),
+      onActivate:() => setActivePhaseCode(
+        PHASES.some((phase) => phase.code === activePhaseCode) && activePhaseCode !== 'DA-06'
+          ? activePhaseCode
+          : 'DA-00',
+      ),
+    },
+    {
+      id:'action-plan',
+      label:'Plano de Ação',
+      icon:<span aria-hidden="true">✓</span>,
+      active:activePhaseCode === 'DA-06',
+      disabled:!selected,
+      onActivate:() => setActivePhaseCode('DA-06'),
+    },
   ]
+
+  const shellPageTitle = isOverview
+    ? 'Visão Geral'
+    : isAgenda
+      ? 'Agenda'
+      : activePhase
+        ? activePhase.title
+        : 'Diagnóstico Assistido'
 
   return <>
     <ApplicationShell
@@ -1154,9 +1517,29 @@ export function SkdaWorkspace(props: Props) {
       ]}
       userArea={
         <div className="skda-shell-user">
-          <strong>{props.userRoleName}</strong>
-          <span>{props.organizationCode}</span>
+          <div className="skda-shell-avatar" aria-hidden="true">
+            {props.userAvatarUrl ? <img src={props.userAvatarUrl} alt="" /> : props.userDisplayName.slice(0,2).toUpperCase()}
+          </div>
+          <div>
+            <strong>{props.userDisplayName}</strong>
+            <span>{props.userRoleName}</span>
+          </div>
         </div>
+      }
+      pageTitle={shellPageTitle}
+      headerActions={
+        <button type="button" onClick={() => setActivePhaseCode('AGENDA')} aria-label="Abrir Agenda transversal" title="Agenda">
+          <span aria-hidden="true">▣</span>
+        </button>
+      }
+      sidebarFooter={
+        <>
+          <div className="skda-product-signature">
+            <img src="/sparkoop-mascot.png" alt="Mascote SPARKs" />
+            <div><strong>SPARKs DA</strong><small>© SPARKOOP</small></div>
+          </div>
+          <button type="button" onClick={props.onReturnToModules}><span aria-hidden="true">←</span><span>Voltar aos módulos</span></button>
+        </>
       }
       navigationItems={shellNavigation}
       navigationLabel="Navegação do Diagnóstico Assistido"
@@ -1177,7 +1560,7 @@ export function SkdaWorkspace(props: Props) {
     {validationFindingId && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
         <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-05 · Validação</p><h2>Aceitar recomendação</h2></div><button type="button" onClick={() => setValidationFindingId(null)}>×</button></div>
-        <p>Registre a justificativa da validação executiva. A recomendação aceita ficará elegível para conversão em Gestão Tática.</p>
+        <p>Registre a justificativa da validação executiva. A recomendação aceita ficará elegível para priorização no Plano de Ação e, quando aplicável, conversão em iniciativa transversal.</p>
         <div className="skda-form-grid"><label className="wide"><span>Justificativa *</span><textarea rows={5} value={validationReason} onChange={(e)=>setValidationReason(e.target.value)}/></label></div>
         {error && <div className="skda-alert">{error}</div>}
         <div className="skda-modal-actions"><button type="button" onClick={() => setValidationFindingId(null)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void acceptRecommendation()}>{saving?'Validando...':'Aceitar recomendação'}</button></div>
@@ -1185,7 +1568,7 @@ export function SkdaWorkspace(props: Props) {
     </div>}
     {showTacticalCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-06 · Gestão Tática</p><h2>Converter recomendação em iniciativa</h2></div><button type="button" onClick={() => setShowTacticalCreate(false)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-06 · Plano de Ação</p><h2>Criar iniciativa transversal</h2></div><button type="button" onClick={() => setShowTacticalCreate(false)}>×</button></div>
         <div className="skda-form-grid">
           <label><span>Classe da iniciativa</span><select value={tacticalForm.initiativeClass} onChange={(e)=>changeTacticalClass(e.target.value)}>{Object.entries(INITIATIVE_CLASSES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>Modelo primário de execução</span><select value={tacticalForm.primaryModelCode} onChange={(e)=>setTacticalForm(v=>({...v,primaryModelCode:e.target.value}))}>{Object.entries(EXECUTION_MODELS).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
@@ -1225,19 +1608,43 @@ export function SkdaWorkspace(props: Props) {
     </div>}
     {showInterviewCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-02 · Entrevistas</p><h2>Registrar entrevista</h2></div><button type="button" onClick={() => setShowInterviewCreate(false)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-02 · Entrevistas</p><h2>Planejar entrevista</h2></div><button type="button" onClick={() => setShowInterviewCreate(false)}>×</button></div>
+        <p>A entrevista será criada também como evento da Agenda da Organização. Depois do agendamento, inclua participantes internos e externos pelo gerenciamento do evento.</p>
         <div className="skda-form-grid">
           <label><span>Código *</span><input value={interviewForm.code} onChange={(e)=>setInterviewForm(v=>({...v,code:e.target.value}))} placeholder="ENT-001"/></label>
           <label><span>Canal</span><select value={interviewForm.channel} onChange={(e)=>setInterviewForm(v=>({...v,channel:e.target.value}))}><option value="teams">Teams</option><option value="meet">Google Meet</option><option value="presential">Presencial</option><option value="other">Outro</option></select></label>
           <label className="wide"><span>Título *</span><input value={interviewForm.title} onChange={(e)=>setInterviewForm(v=>({...v,title:e.target.value}))} placeholder="Entrevista com a Diretoria"/></label>
-          <label><span>Entrevistado</span><input value={interviewForm.intervieweeName} onChange={(e)=>setInterviewForm(v=>({...v,intervieweeName:e.target.value}))}/></label>
-          <label><span>Cargo / papel</span><input value={interviewForm.intervieweeRole} onChange={(e)=>setInterviewForm(v=>({...v,intervieweeRole:e.target.value}))}/></label>
-          <label className="wide"><span>Data e hora previstas</span><input type="datetime-local" value={interviewForm.scheduledStart} onChange={(e)=>setInterviewForm(v=>({...v,scheduledStart:e.target.value}))}/></label>
+          <label><span>Início previsto</span><input type="datetime-local" value={interviewForm.scheduledStart} onChange={(e)=>setInterviewForm(v=>({...v,scheduledStart:e.target.value}))}/></label>
+          <label><span>Término previsto</span><input type="datetime-local" value={interviewForm.scheduledEnd} onChange={(e)=>setInterviewForm(v=>({...v,scheduledEnd:e.target.value}))}/></label>
+          <label className="wide"><span>Referência da reunião</span><input value={interviewForm.meetingReference} onChange={(e)=>setInterviewForm(v=>({...v,meetingReference:e.target.value}))} placeholder="Link Teams, Meet, sala ou outra referência"/></label>
+          <label className="wide"><span>Justificativa do agendamento *</span><textarea rows={3} value={interviewForm.changeReason} onChange={(e)=>setInterviewForm(v=>({...v,changeReason:e.target.value}))}/></label>
         </div>
         {error && <div className="skda-alert">{error}</div>}
-        <div className="skda-modal-actions"><button type="button" onClick={() => setShowInterviewCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createInterview()}>{saving?'Salvando...':'Registrar entrevista'}</button></div>
+        <div className="skda-modal-actions"><button type="button" onClick={() => setShowInterviewCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createInterview()}>{saving?'Salvando...':'Agendar entrevista'}</button></div>
       </section>
     </div>}
+    {managedInterviewEvent && <JourneyEventManageDialog
+      event={managedInterviewEvent}
+      onClose={() => setManagedInterviewEvent(null)}
+      onChanged={() => setManagedInterviewEvent(null)}
+      onParticipantChanged={() => undefined}
+    />}
+
+    {realizationInterviewId && <div className="skda-modal-backdrop">
+      <section className="skda-modal" role="dialog" aria-modal="true">
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-02 · Entrevistas</p><h2>Registrar realização</h2></div><button type="button" onClick={() => setRealizationInterviewId(null)}>×</button></div>
+        <p>Registre quando a entrevista realmente aconteceu. A previsão original permanece preservada na Agenda para comparação.</p>
+        <div className="skda-form-grid">
+          <label><span>Início realizado *</span><input type="datetime-local" value={realizationForm.actualStart} onChange={(e)=>setRealizationForm(v=>({...v,actualStart:e.target.value}))}/></label>
+          <label><span>Término realizado</span><input type="datetime-local" value={realizationForm.actualEnd} onChange={(e)=>setRealizationForm(v=>({...v,actualEnd:e.target.value}))}/></label>
+          <label className="wide"><span>Notas da realização</span><textarea rows={4} value={realizationForm.notes} onChange={(e)=>setRealizationForm(v=>({...v,notes:e.target.value}))} placeholder="Participantes adicionais, mudanças de contexto, evidências citadas ou observações relevantes."/></label>
+          <label className="wide"><span>Justificativa do registro *</span><textarea rows={3} value={realizationForm.changeReason} onChange={(e)=>setRealizationForm(v=>({...v,changeReason:e.target.value}))}/></label>
+        </div>
+        {error && <div className="skda-alert">{error}</div>}
+        <div className="skda-modal-actions"><button type="button" onClick={() => setRealizationInterviewId(null)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void recordInterviewRealization()}>{saving?'Salvando...':'Registrar realização'}</button></div>
+      </section>
+    </div>}
+
     {showCreate && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
         <div className="skda-modal-head"><div><p className="skda-eyebrow">Novo ciclo</p><h2>Iniciar Jornada de Diagnóstico Assistido</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div>
@@ -1247,6 +1654,7 @@ export function SkdaWorkspace(props: Props) {
           <label className="wide"><span>Nome da jornada *</span><input value={form.name} onChange={(e)=>setForm(v=>({...v,name:e.target.value}))} placeholder="Jornada DA 2026"/></label>
           <label><span>Tipo</span><select value={form.diagnosisType} onChange={(e)=>setForm(v=>({...v,diagnosisType:e.target.value}))}><option value="pdgc">PDGC / Avaliacoop</option><option value="maturity">Maturidade</option><option value="custom">Personalizado</option><option value="other">Outro</option></select></label>
           <label className="wide"><span>Descrição</span><textarea rows={4} value={form.description} onChange={(e)=>setForm(v=>({...v,description:e.target.value}))}/></label>
+          <label className="wide"><span>Justificativa de criação *</span><textarea rows={3} value={form.changeReason} onChange={(e)=>setForm(v=>({...v,changeReason:e.target.value}))}/></label>
         </div>
         {error && <div className="skda-alert">{error}</div>}
         <div className="skda-modal-actions"><button type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createDiagnosis()}>{saving?'Criando...':'Iniciar Jornada DA'}</button></div>

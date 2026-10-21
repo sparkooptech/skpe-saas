@@ -1,25 +1,22 @@
-﻿.application-shell {
-  --application-shell-header-height: 64px;
-  --application-shell-sidebar-width: 252px;
+.application-shell {
+  --application-shell-header-height: 68px;
+  --application-shell-sidebar-width: 218px;
   --application-shell-sidebar-collapsed-width: 72px;
-  --application-shell-footer-height: 38px;
-  --application-shell-bg: #f3f7f5;
+  --application-shell-footer-height: 34px;
+  --application-shell-bg: #eef4f2;
   --application-shell-surface: #ffffff;
-  --application-shell-border: #dbe6e1;
-  --application-shell-text: #17352c;
-  --application-shell-muted: #6c7d76;
-  --application-shell-accent: var(--organization-primary, var(--sparks-accent, #176b53));
+  --application-shell-sidebar: #123f35;
+  --application-shell-sidebar-strong: #0d352d;
+  --application-shell-border: #d9e4e0;
+  --application-shell-text: #192822;
+  --application-shell-muted: #66766f;
+  --application-shell-accent: var(--organization-primary, var(--sparks-accent, #0b8b6f));
 
   display: grid;
-  grid-template-columns:
-    var(--application-shell-sidebar-width)
-    minmax(0, 1fr);
-  grid-template-rows:
-    var(--application-shell-header-height)
-    minmax(0, 1fr)
-    var(--application-shell-footer-height);
+  grid-template-columns: var(--application-shell-sidebar-width) minmax(0, 1fr);
+  grid-template-rows: var(--application-shell-header-height) minmax(0, 1fr) var(--application-shell-footer-height);
   grid-template-areas:
-    'header header'
+    'sidebar header'
     'sidebar content'
     'sidebar footer';
   width: 100%;
@@ -27,108 +24,68 @@
   height: 100vh;
   overflow: hidden;
   background: var(--application-shell-bg);
+  color: var(--application-shell-text);
 }
 
 .application-shell-collapsed {
-  grid-template-columns:
-    var(--application-shell-sidebar-collapsed-width)
-    minmax(0, 1fr);
+  grid-template-columns: var(--application-shell-sidebar-collapsed-width) minmax(0, 1fr);
 }
 
-.application-shell-header {
+.application-shell-sidebar {
   position: relative;
-  z-index: 40;
-  grid-area: header;
+  z-index: 35;
+  grid-area: sidebar;
   display: grid;
-  grid-template-columns: minmax(220px, auto) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.9rem;
-  min-width: 0;
-  padding: 0.55rem 1.15rem;
-  border-bottom: 1px solid var(--application-shell-border);
-  background: var(--application-shell-surface);
-  box-shadow: 0 1px 10px rgba(20, 56, 45, 0.035);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--application-shell-sidebar);
+  color: #fff;
 }
 
-.application-shell-brand,
-.application-shell-user {
+.application-shell-sidebar-brand {
   min-width: 0;
+  padding: 1rem 1.15rem .75rem;
 }
 
 .application-shell-context {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  display: grid;
+  gap: .55rem;
+  padding: 0 1rem 1rem;
 }
 
 .application-shell-context-item {
   display: grid;
-  gap: 0.1rem;
+  gap: .08rem;
   min-width: 0;
-  padding: 0.4rem 0.62rem;
-  border: 1px solid color-mix(in srgb, var(--application-shell-accent) 16%, white);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--application-shell-accent) 4%, white);
+  padding: .52rem .62rem;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 9px;
+  background: rgba(255,255,255,.06);
 }
 
 .application-shell-context-item span {
-  color: var(--application-shell-muted);
-  font-size: 0.68rem;
-  font-weight: 750;
-  letter-spacing: 0.04em;
+  color: rgba(255,255,255,.66);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
 .application-shell-context-item strong {
   overflow: hidden;
-  color: var(--application-shell-text);
-  font-size: 0.82rem;
+  color: #fff;
+  font-size: .78rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.application-shell-sidebar {
-  position: relative;
-  z-index: 30;
-  grid-area: sidebar;
-  min-height: 0;
-  overflow: hidden;
-  border-right: 1px solid var(--application-shell-border);
-  background: var(--application-shell-surface);
-}
-
-.application-shell-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 50px;
-  padding: 0.55rem 0.8rem;
-  border-bottom: 1px solid rgba(31, 73, 59, 0.08);
-}
-
-.application-shell-collapse-button {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  min-width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 1px solid rgba(31, 73, 59, 0.14);
-  border-radius: 8px;
-  background: var(--application-shell-surface);
-  color: var(--application-shell-accent);
-  cursor: pointer;
-}
-
 .application-shell-navigation {
   display: grid;
-  gap: 0.3rem;
-  max-height: calc(100vh - var(--application-shell-header-height) - 50px);
-  padding: 0.6rem;
+  align-content: start;
+  gap: .35rem;
+  min-height: 0;
+  padding: .55rem .75rem;
   overflow-y: auto;
 }
 
@@ -136,62 +93,135 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.75rem;
-  min-height: 42px;
-  padding: 0.58rem 0.7rem;
-  border: 1px solid transparent;
-  border-radius: 9px;
+  gap: .65rem;
+  min-height: 46px;
+  padding: .62rem .7rem;
+  border: 0;
+  border-radius: 10px;
   background: transparent;
-  color: #33473f;
+  color: rgba(255,255,255,.9);
   cursor: pointer;
   font: inherit;
+  font-size: .82rem;
   font-weight: 720;
+  line-height: 1.25;
   text-align: left;
 }
 
 .application-shell-navigation-item:hover,
 .application-shell-navigation-item:focus-visible {
-  border-color: color-mix(in srgb, var(--application-shell-accent) 18%, white);
-  background: color-mix(in srgb, var(--application-shell-accent) 7%, white);
-  color: var(--application-shell-accent);
+  background: rgba(255,255,255,.09);
+  color: #fff;
 }
 
 .application-shell-navigation-item.active {
-  border-color: color-mix(in srgb, var(--application-shell-accent) 24%, white);
-  background: color-mix(in srgb, var(--application-shell-accent) 11%, white);
-  color: var(--application-shell-accent);
+  background: rgba(255,255,255,.14);
+  color: #fff;
 }
 
-.application-shell-navigation-item:focus-visible {
-  outline: 3px solid rgba(23, 122, 90, 0.2);
-  outline-offset: 2px;
+.application-shell-navigation-item:disabled {
+  cursor: not-allowed;
+  opacity: .5;
 }
 
 .application-shell-navigation-icon {
   display: grid;
   place-items: center;
-  width: 1.5rem;
-  min-width: 1.5rem;
+  width: 1.45rem;
+  min-width: 1.45rem;
 }
 
-.application-shell-collapsed
-  .application-shell-sidebar-header
-  strong,
-.application-shell-collapsed
-  .application-shell-navigation-label {
-  display: none;
+.application-shell-sidebar-footer {
+  display: grid;
+  gap: .65rem;
+  padding: .9rem 1rem 1rem;
+  border-top: 1px solid rgba(255,255,255,.12);
 }
 
-.application-shell-collapsed
-  .application-shell-sidebar-header {
-  justify-content: center;
+.application-shell-sidebar-footer button {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  width: 100%;
+  padding: .55rem 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 750;
+  text-align: left;
 }
 
-.application-shell-collapsed
-  .application-shell-navigation-item {
-  grid-template-columns: 1fr;
-  justify-items: center;
-  padding-inline: 0.5rem;
+.application-shell-header {
+  position: relative;
+  z-index: 30;
+  grid-area: header;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .8rem;
+  min-width: 0;
+  padding: .55rem 1.15rem;
+  border-bottom: 1px solid var(--application-shell-border);
+  background: var(--application-shell-surface);
+}
+
+.application-shell-collapse-button {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  min-width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--application-shell-text);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.application-shell-collapse-button:hover {
+  background: #eef4f2;
+}
+
+.application-shell-page-title {
+  min-width: 0;
+  color: var(--application-shell-text);
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.application-shell-header-actions {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.application-shell-header-actions > button {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--application-shell-text);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.application-shell-header-actions > button:hover {
+  background: #eef4f2;
+}
+
+.application-shell-user {
+  min-width: 0;
 }
 
 .application-shell-content {
@@ -210,15 +240,37 @@
   justify-content: space-between;
   gap: 1rem;
   min-width: 0;
-  padding: 0.55rem 1.25rem;
+  padding: .4rem 1rem;
   border-top: 1px solid var(--application-shell-border);
   background: var(--application-shell-surface);
   color: var(--application-shell-muted);
-  font-size: 0.72rem;
+  font-size: .68rem;
 }
 
 .application-shell-mobile-backdrop {
   display: none;
+}
+
+.application-shell-collapsed .application-shell-sidebar-brand span,
+.application-shell-collapsed .application-shell-context-item,
+.application-shell-collapsed .application-shell-navigation-label,
+.application-shell-collapsed .application-shell-sidebar-footer span {
+  display: none;
+}
+
+.application-shell-collapsed .application-shell-sidebar-brand {
+  padding-inline: .65rem;
+  text-align: center;
+}
+
+.application-shell-collapsed .application-shell-context {
+  padding-inline: .5rem;
+}
+
+.application-shell-collapsed .application-shell-navigation-item {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding-inline: .45rem;
 }
 
 @media (max-width: 960px) {
@@ -230,46 +282,27 @@
       'footer';
   }
 
-  .application-shell-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .application-shell-context {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    order: 3;
-  }
-
   .application-shell-sidebar {
     position: fixed;
-    top: var(--application-shell-header-height);
-    bottom: 0;
-    left: 0;
+    inset: 0 auto 0 0;
     z-index: 80;
     width: min(320px, 86vw);
     transform: translateX(-104%);
     transition: transform 180ms ease;
-    box-shadow: 18px 0 50px rgba(12, 28, 23, 0.2);
+    box-shadow: 18px 0 50px rgba(12,28,23,.24);
   }
 
-  .application-shell-mobile-open
-    .application-shell-sidebar {
+  .application-shell-mobile-open .application-shell-sidebar {
     transform: translateX(0);
   }
 
   .application-shell-mobile-backdrop {
     position: fixed;
-    inset: var(--application-shell-header-height) 0 0;
+    inset: 0;
     z-index: 70;
     display: block;
     border: 0;
-    background: rgba(12, 28, 23, 0.5);
-  }
-
-  .application-shell-footer {
-    flex-wrap: wrap;
-    justify-content: center;
-    text-align: center;
+    background: rgba(12,28,23,.5);
   }
 }
 
@@ -281,15 +314,18 @@
   }
 
   .application-shell-header {
-    gap: 0.65rem;
-    padding: 0.7rem 0.8rem;
+    grid-template-columns: auto minmax(0,1fr);
+    padding: .65rem .75rem;
   }
 
-  .application-shell-context-item {
-    min-width: max-content;
+  .application-shell-header-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
   }
 
   .application-shell-footer {
-    padding: 0.45rem 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
   }
 }
