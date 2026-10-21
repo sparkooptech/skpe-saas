@@ -59,6 +59,19 @@ validate_public_domain() {
   return 0
 }
 
+validate_business_rest_route() {
+  local rest_status
+  rest_status="$(curl \
+    --insecure \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    --resolve "${SPARKS_PUBLIC_HOST}:443:127.0.0.1" \
+    "https://${SPARKS_PUBLIC_HOST}/rest/v1/" || true)"
+
+  [ "${rest_status}" = "401" ]
+}
+
 wait_for_public_domain() {
   local max_attempts="${1:-24}"
   local sleep_seconds="${2:-5}"
@@ -219,6 +232,9 @@ run_preflight() {
   require_command grep
   require_command find
 
+  docker network inspect sparks-homol-backend-net >/dev/null 2>&1 || \
+    fail "Required backend network sparks-homol-backend-net does not exist"
+
   docker inspect "${PUBLIC_CONTAINER}" >/dev/null 2>&1 || fail "Current public container does not exist"
 
   CURRENT_RUNNING="$(docker inspect --format '{{.State.Running}}' "${PUBLIC_CONTAINER}" 2>/dev/null || true)"
@@ -269,6 +285,13 @@ build_preview_release() {
     exit 1
   fi
 
+  PREVIEW_REST_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' "http://${PREVIEW_BIND%:*}/rest/v1/" || true)"
+  if [ "${PREVIEW_REST_STATUS}" != "401" ]; then
+    log "PREVIEW FAIL: preview /rest/v1/ returned ${PREVIEW_REST_STATUS}, expected 401"
+    cleanup_failed_release
+    exit 1
+  fi
+
   log "PREVIEW PASS"
 }
 
@@ -306,6 +329,17 @@ cutover_release() {
 
   if ! wait_for_public_domain 24 5; then
     log "CUTOVER FAIL: public domain validation failed"
+    if perform_rollback; then
+      cleanup_failed_release
+      exit "${ROLLBACK_AFTER_DEPLOY_EXIT_CODE}"
+    fi
+
+    cleanup_failed_release
+    exit "${ROLLBACK_FAILURE_EXIT_CODE}"
+  fi
+
+  if ! validate_business_rest_route; then
+    log "CUTOVER FAIL: public /rest/v1 route did not reach the Hostinger gateway"
     if perform_rollback; then
       cleanup_failed_release
       exit "${ROLLBACK_AFTER_DEPLOY_EXIT_CODE}"
