@@ -1141,3 +1141,11 @@
     width: 100%;
   }
 }
+
+
+/* Modal actions must preserve primary action semantics. */
+.skda-modal-actions .skda-primary {
+  background: var(--sparks-accent, #1d6f5f);
+  color: #fff;
+  border: 0;
+}

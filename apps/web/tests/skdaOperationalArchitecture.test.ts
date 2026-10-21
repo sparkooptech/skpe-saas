@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const workspace = readFileSync(new URL('../src/modules/skda/SkdaWorkspace.tsx', import.meta.url), 'utf8')
+const workspaceCss = readFileSync(new URL('../src/modules/skda/SkdaWorkspace.css', import.meta.url), 'utf8')
 const migration = readFileSync(
   new URL('../../../supabase/migrations/20261020202549_create_skda_operational_mvp.sql', import.meta.url),
   'utf8',
@@ -149,6 +150,11 @@ test('SK-DA uses the transversal application shell and full-width executive dash
   assert.match(workspace, /Radar por eixo/)
   assert.match(workspace, /Jornadas de Diagnóstico Assistido/)
   assert.doesNotMatch(workspace, /primary=\{primary\} secondary=\{secondary\}/)
+})
+
+test('SK-DA modal primary actions remain visibly primary', () => {
+  assert.match(workspaceCss, /\.skda-modal-actions \.skda-primary[\s\S]*?background:/)
+  assert.match(workspaceCss, /\.skda-modal-actions \.skda-primary[\s\S]*?color:\s*#fff/)
 })
 
 test('SK-DA does not fabricate maturity values when no validated score exists', () => {
