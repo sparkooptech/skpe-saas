@@ -1893,6 +1893,8 @@ function App() {
         userDisplayName={userDisplayName || session?.user.email || 'Usuário'}
         userEmail={session?.user.email ?? ''}
         userAvatarUrl={userAvatarUrl}
+        isOrganizationAdmin={selectedOrganization.is_organization_admin}
+        isPlatformSuperAdmin={isPlatformSuperAdmin}
         onReturnToModules={handleReturnToModules}
       />
     )

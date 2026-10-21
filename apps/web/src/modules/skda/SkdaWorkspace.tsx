@@ -15,6 +15,8 @@ type Props = {
   userDisplayName: string
   userEmail: string
   userAvatarUrl: string | null
+  isOrganizationAdmin: boolean
+  isPlatformSuperAdmin: boolean
   onReturnToModules: () => void
 }
 
@@ -182,6 +184,16 @@ function tacticalDefaults(initiativeClass: string) {
   }
 }
 
+function CalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M7 3v4M17 3v4M3.5 10h17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function SkdaWorkspace(props: Props) {
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -293,14 +305,15 @@ export function SkdaWorkspace(props: Props) {
     }).join(' ')
   }, [maturityByAxis])
 
-  const canManage = ['administrator','coordinator'].includes(props.userRoleCode)
-  const canEditInterviews = ['administrator','coordinator','interviewer'].includes(props.userRoleCode)
-  const canLinkEvidence = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
-  const canEditAssessment = ['administrator','coordinator','diagnostician'].includes(props.userRoleCode)
-  const canValidateAssessment = ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
-  const canEditFindings = ['administrator','coordinator','diagnostician','reviewer'].includes(props.userRoleCode)
-  const canValidateFindings = ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
-  const canCreateTactical = ['administrator','coordinator'].includes(props.userRoleCode)
+  const hasAdministrativeOverride = props.isPlatformSuperAdmin || props.isOrganizationAdmin
+  const canManage = hasAdministrativeOverride || ['administrator','coordinator'].includes(props.userRoleCode)
+  const canEditInterviews = hasAdministrativeOverride || ['administrator','coordinator','interviewer'].includes(props.userRoleCode)
+  const canLinkEvidence = hasAdministrativeOverride || ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
+  const canEditAssessment = hasAdministrativeOverride || ['administrator','coordinator','diagnostician'].includes(props.userRoleCode)
+  const canValidateAssessment = hasAdministrativeOverride || ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
+  const canEditFindings = hasAdministrativeOverride || ['administrator','coordinator','diagnostician','reviewer'].includes(props.userRoleCode)
+  const canValidateFindings = hasAdministrativeOverride || ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
+  const canCreateTactical = hasAdministrativeOverride || ['administrator','coordinator'].includes(props.userRoleCode)
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -1529,7 +1542,7 @@ export function SkdaWorkspace(props: Props) {
       pageTitle={shellPageTitle}
       headerActions={
         <button type="button" onClick={() => setActivePhaseCode('AGENDA')} aria-label="Abrir Agenda transversal" title="Agenda">
-          <span aria-hidden="true">▣</span>
+          <CalendarIcon />
         </button>
       }
       sidebarFooter={

@@ -83,13 +83,13 @@ test('DA-00 and DA-03 govern catalog assignment and question assessment', () => 
   assert.match(workspace, /\.from\('skda_responses'/)
   assert.match(workspace, /onConflict:'diagnosis_id,question_id'/)
   assert.match(workspace, /catalogLocked = metrics\.responses > 0/)
-  assert.match(workspace, /canEditAssessment = \['administrator','coordinator','diagnostician'\]/)
-  assert.match(workspace, /canValidateAssessment = \['administrator','coordinator','reviewer'\]/)
+  assert.match(workspace, /canEditAssessment = hasAdministrativeOverride \|\| \['administrator','coordinator','diagnostician'\]\.includes/)
+  assert.match(workspace, /canValidateAssessment = hasAdministrativeOverride \|\| \['administrator','coordinator','reviewer'\]\.includes/)
   assert.match(workspace, /score < 0 \|\| score > 100/)
   assert.match(workspace, /response_status:'draft'/)
   assert.match(workspace, /response_status:'validated'/)
   assert.match(workspace, /A escala de maturidade não está publicada no catálogo atual/)
-  assert.match(workspace, /canEditInterviews = \['administrator','coordinator','interviewer'\]/)
+  assert.match(workspace, /canEditInterviews = hasAdministrativeOverride \|\| \['administrator','coordinator','interviewer'\]\.includes/)
   assert.match(migration, /unique\(diagnosis_id,question_id\)/)
   assert.match(migration, /score numeric\(6,2\) check \(score is null or score between 0 and 100\)/)
 })
@@ -101,7 +101,7 @@ test('DA-04 and DA-05 keep findings and recommendations in the DA domain', () =>
   assert.match(workspace, /interview_id:findingForm\.interviewId/)
   assert.match(workspace, /owner_user_id:findingForm\.ownerUserId/)
   assert.match(workspace, /due_date:findingForm\.dueDate/)
-  assert.match(workspace, /canEditFindings = \['administrator','coordinator','diagnostician','reviewer'\]/)
+  assert.match(workspace, /canEditFindings = hasAdministrativeOverride \|\| \['administrator','coordinator','diagnostician','reviewer'\]\.includes/)
   assert.match(migration, /finding_type text not null check \(finding_type in \('strength','gap','opportunity','risk','observation'\)\)/)
   assert.match(migration, /recommendation text/)
 })
@@ -125,7 +125,7 @@ test('DA-06 tactical conversion is atomic and preserves the generator fact', () 
 
 test('DA-05 validation separates recommendation approval from editing', () => {
   assert.match(workspace, /accept_skda_finding_recommendation/)
-  assert.match(workspace, /canValidateFindings = \['administrator','coordinator','reviewer'\]/)
+  assert.match(workspace, /canValidateFindings = hasAdministrativeOverride \|\| \['administrator','coordinator','reviewer'\]\.includes/)
   assert.match(findingValidationMigration, /'findings\.validate'/)
   assert.match(findingValidationMigration, /\('reviewer', 'findings\.validate'\)/)
   assert.match(findingValidationMigration, /trg_skda_findings_validation_transition/)
@@ -135,7 +135,7 @@ test('DA-05 validation separates recommendation approval from editing', () => {
 
 test('DA-06 UI uses the atomic tactical conversion contract', () => {
   assert.match(workspace, /create_skda_tactical_initiative/)
-  assert.match(workspace, /canCreateTactical = \['administrator','coordinator'\]/)
+  assert.match(workspace, /canCreateTactical = hasAdministrativeOverride \|\| \['administrator','coordinator'\]\.includes/)
   assert.match(workspace, /TACTICAL_CAPABILITIES/)
   assert.match(workspace, /tacticalDefaults/)
   assert.match(workspace, /target_contribution_weight:contributionWeight/)
@@ -200,6 +200,20 @@ test('SK-DA modals follow the shell keyboard convention and close on Escape', ()
   assert.match(workspace, /setShowFindingCreate\(false\)/)
   assert.match(workspace, /setShowTacticalCreate\(false\)/)
   assert.match(workspace, /window\.addEventListener\('keydown', handleEscape\)/)
+})
+
+test('platform and organization administrators inherit SK-DA administrative UI capabilities', () => {
+  assert.match(app, /isOrganizationAdmin=\{selectedOrganization\.is_organization_admin\}/)
+  assert.match(app, /isPlatformSuperAdmin=\{isPlatformSuperAdmin\}/)
+  assert.match(workspace, /const hasAdministrativeOverride = props\.isPlatformSuperAdmin \|\| props\.isOrganizationAdmin/)
+  assert.match(workspace, /const canEditInterviews = hasAdministrativeOverride \|\|/)
+  assert.match(workspace, /Nova entrevista/)
+})
+
+test('SK-DA header uses the canonical vector calendar icon', () => {
+  assert.match(workspace, /function CalendarIcon\(\)/)
+  assert.match(workspace, /<CalendarIcon \/>/)
+  assert.doesNotMatch(workspace, /<span aria-hidden="true">▣<\/span>/)
 })
 
 test('each DA journey is methodologically distinct from its transversal Project', () => {

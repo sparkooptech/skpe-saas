@@ -220,6 +220,11 @@
   background: #eef4f2;
 }
 
+.application-shell-header-actions > button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
 .application-shell-user {
   min-width: 0;
 }
