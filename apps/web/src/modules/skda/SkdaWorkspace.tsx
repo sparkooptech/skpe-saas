@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ApplicationShell } from '../../components/application-shell/ApplicationShell'
 import { TransversalWorkspace } from '../../components/application-shell/TransversalWorkspace'
 import { supabase } from '../../lib/supabase'
 import './SkdaWorkspace.css'
@@ -33,7 +34,7 @@ type EvidenceAsset = { id: string; title: string; evidence_type: string; validat
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; display_order: number }
-type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; confidence_level: string }
+type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; confidence_level: string; maturity_level: string | null; score: number | null }
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null }
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
@@ -115,6 +116,7 @@ export function SkdaWorkspace(props: Props) {
   const [metrics, setMetrics] = useState<Metrics>(EMPTY)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [shellCollapsed, setShellCollapsed] = useState(false)
   const [error, setError] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [showInterviewCreate, setShowInterviewCreate] = useState(false)
@@ -138,7 +140,10 @@ export function SkdaWorkspace(props: Props) {
     contributionWeight:'100', enabledCapabilities:['kanban','5w2w','risks'] as string[], changeReason:'',
   })
   const [form, setForm] = useState({
-    code:'', name:'', description:'', diagnosisType:'pdgc',
+    code:`DA-${new Date().getFullYear()}`,
+    name:`Jornada DA ${new Date().getFullYear()}`,
+    description:'Jornada de Diagnóstico Assistido do ciclo de referência.',
+    diagnosisType:'pdgc',
     referenceYear:String(new Date().getFullYear()),
   })
 
@@ -146,6 +151,58 @@ export function SkdaWorkspace(props: Props) {
     () => diagnoses.find((item) => item.id === selectedId) ?? null,
     [diagnoses, selectedId],
   )
+
+  const assessedResponses = useMemo(
+    () => responses.filter((item) => item.classification !== 'not_evaluated'),
+    [responses],
+  )
+
+  const assessmentCoverage = useMemo(
+    () => questions.length > 0
+      ? Math.round((assessedResponses.length / questions.length) * 100)
+      : 0,
+    [assessedResponses.length, questions.length],
+  )
+
+  const findingsByType = useMemo(() => {
+    const counts: Record<string, number> = {
+      strength:0, gap:0, opportunity:0, risk:0, observation:0,
+    }
+    findings.forEach((finding) => {
+      counts[finding.finding_type] = (counts[finding.finding_type] ?? 0) + 1
+    })
+    return counts
+  }, [findings])
+
+  const maturityByAxis = useMemo(() => {
+    const grouped = new Map<string, number[]>()
+    questions.forEach((question) => {
+      const response = responses.find((item) => item.question_id === question.id)
+      if (response?.score == null || !Number.isFinite(Number(response.score))) return
+      const axis = question.axis_name?.trim() || 'Sem eixo'
+      const values = grouped.get(axis) ?? []
+      values.push(Number(response.score))
+      grouped.set(axis, values)
+    })
+    return [...grouped.entries()]
+      .map(([axis, values]) => ({
+        axis,
+        score: Math.round(values.reduce((sum, value) => sum + value, 0) / values.length),
+      }))
+      .slice(0, 6)
+  }, [questions, responses])
+
+  const radarPoints = useMemo(() => {
+    const count = Math.max(maturityByAxis.length, 3)
+    const values = maturityByAxis.length > 0
+      ? maturityByAxis.map((item) => Math.max(0, Math.min(100, item.score)))
+      : Array.from({ length: count }, () => 0)
+    return values.map((value, index) => {
+      const angle = (-Math.PI / 2) + (index * 2 * Math.PI / values.length)
+      const radius = 72 * (value / 100)
+      return `${100 + Math.cos(angle) * radius},${100 + Math.sin(angle) * radius}`
+    }).join(' ')
+  }, [maturityByAxis])
 
   const canManage = ['administrator','coordinator'].includes(props.userRoleCode)
   const canEditInterviews = ['administrator','coordinator','interviewer'].includes(props.userRoleCode)
@@ -203,7 +260,7 @@ export function SkdaWorkspace(props: Props) {
           .order('display_order', { ascending:true }),
         supabase
           .from('skda_responses' as never)
-          .select('id,question_id,classification,response_status,answer_text,confidence_level' as never)
+          .select('id,question_id,classification,response_status,answer_text,confidence_level,maturity_level,score' as never)
           .eq('diagnosis_id', selected.id),
       ])
       setQuestions((questionsResult.data ?? []) as unknown as Question[])
@@ -308,7 +365,7 @@ export function SkdaWorkspace(props: Props) {
         classification,
         response_status:'draft',
       } as never, { onConflict:'diagnosis_id,question_id' })
-      .select('id,question_id,classification,response_status,answer_text,confidence_level' as never)
+      .select('id,question_id,classification,response_status,answer_text,confidence_level,maturity_level,score' as never)
       .single()
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
@@ -558,7 +615,13 @@ export function SkdaWorkspace(props: Props) {
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
 
-    setForm({ code:'', name:'', description:'', diagnosisType:'pdgc', referenceYear:String(new Date().getFullYear()) })
+    setForm({
+      code:`DA-${new Date().getFullYear()}`,
+      name:`Jornada DA ${new Date().getFullYear()}`,
+      description:'Jornada de Diagnóstico Assistido do ciclo de referência.',
+      diagnosisType:'pdgc',
+      referenceYear:String(new Date().getFullYear()),
+    })
     setShowCreate(false)
     await loadDiagnoses()
     const created = data as unknown as { id?: string } | null
@@ -568,24 +631,23 @@ export function SkdaWorkspace(props: Props) {
   const header = (
     <div className="skda-header">
       <div>
-        <button type="button" className="skda-back" onClick={props.onReturnToModules}>← Módulos</button>
         <p className="skda-eyebrow">SK-DA · Diagnóstico Assistido</p>
-        <h1>{props.organizationName}</h1>
-        <p>{props.organizationCode} · {props.userRoleName}</p>
+        <h1>Diagnóstico Assistido</h1>
+        <p>{props.organizationName} · {props.userRoleName}</p>
       </div>
-      {canManage && <button type="button" className="skda-primary" onClick={() => setShowCreate(true)}>Novo diagnóstico</button>}
+      {canManage && <button type="button" className="skda-primary" onClick={() => setShowCreate(true)}>Nova Jornada DA</button>}
     </div>
   )
 
   const primary = (
     <div>
       <div className="skda-section-title">
-        <div><span>Diagnósticos</span><h2>Jornada ativa da organização</h2></div>
+        <div><span>Jornadas</span><h2>Jornadas de Diagnóstico Assistido</h2></div>
         <strong>{diagnoses.length}</strong>
       </div>
       {error && <div className="skda-alert">{error}</div>}
-      {loading ? <div className="skda-empty">Carregando diagnósticos...</div> :
-       diagnoses.length === 0 ? <div className="skda-empty"><h3>Nenhum diagnóstico iniciado</h3><p>Crie a primeira instância para iniciar a Jornada do SK-DA.</p></div> :
+      {loading ? <div className="skda-empty">Carregando Jornadas DA...</div> :
+       diagnoses.length === 0 ? <div className="skda-empty"><h3>Nenhuma Jornada DA iniciada</h3><p>Inicie a Jornada DA {new Date().getFullYear()} para abrir o ciclo de diagnóstico da organização.</p>{canManage && <button type="button" className="skda-primary" onClick={() => setShowCreate(true)}>Iniciar Jornada DA {new Date().getFullYear()}</button>}</div> :
        <div className="skda-list">
         {diagnoses.map((item) => (
           <button type="button" key={item.id} className={item.id===selectedId?'skda-diagnosis active':'skda-diagnosis'} onClick={() => setSelectedId(item.id)}>
@@ -608,10 +670,63 @@ export function SkdaWorkspace(props: Props) {
       <p>{selected.description || 'Sem descrição informada.'}</p>
       <div className="skda-phase"><span>Fase atual</span><strong>{selected.current_phase_code}</strong><small>{STATUS[selected.status] ?? selected.status}</small></div>
       <div className="skda-metrics">
-        <article><span>Questões avaliadas</span><strong>{metrics.responses}</strong></article>
-        <article><span>Entrevistas</span><strong>{metrics.interviews}</strong></article>
-        <article><span>Evidências correlacionadas</span><strong>{metrics.evidence}</strong></article>
-        <article><span>Achados</span><strong>{metrics.findings}</strong></article>
+        <article><span>Questões avaliadas</span><strong>{metrics.responses}</strong><small>{assessmentCoverage}% da cobertura</small></article>
+        <article><span>Entrevistas</span><strong>{metrics.interviews}</strong><small>registradas na jornada</small></article>
+        <article><span>Evidências correlacionadas</span><strong>{metrics.evidence}</strong><small>ativos do Core vinculados</small></article>
+        <article><span>Achados</span><strong>{metrics.findings}</strong><small>forças, lacunas, riscos e oportunidades</small></article>
+      </div>
+      <div className="skda-executive-grid">
+        <article className="skda-executive-card">
+          <div className="skda-executive-card-head">
+            <div><span>Evolução da jornada</span><h3>Progresso do diagnóstico</h3></div>
+            <strong>{Number(selected.progress).toFixed(0)}%</strong>
+          </div>
+          <div className="skda-progress-track" aria-label="Progresso do diagnóstico">
+            <span style={{ width: `${Math.max(0, Math.min(100, Number(selected.progress) || 0))}%` }} />
+          </div>
+          <div className="skda-progress-meta">
+            <span>Fase atual</span><b>{selected.current_phase_code} · {STATUS[selected.status] ?? selected.status}</b>
+          </div>
+          <div className="skda-phase-strip" aria-label="Etapas da Jornada DA">
+            {PHASES.map((phase) => (
+              <span key={phase.code} className={phase.code === selected.current_phase_code ? 'active' : ''}>
+                {phase.code}
+              </span>
+            ))}
+          </div>
+        </article>
+        <article className="skda-executive-card">
+          <div className="skda-executive-card-head">
+            <div><span>Achados</span><h3>Distribuição atual</h3></div>
+            <strong>{metrics.findings}</strong>
+          </div>
+          <div className="skda-finding-bars">
+            {Object.entries(FINDING_TYPES).map(([type,label]) => {
+              const value = findingsByType[type] ?? 0
+              const width = metrics.findings > 0 ? Math.round((value / metrics.findings) * 100) : 0
+              return <div key={type}><span>{label}</span><div><i style={{ width: `${width}%` }} /></div><b>{value}</b></div>
+            })}
+          </div>
+        </article>
+        <article className="skda-executive-card skda-radar-card">
+          <div className="skda-executive-card-head">
+            <div><span>Maturidade</span><h3>Radar por eixo</h3></div>
+            <strong>{maturityByAxis.length > 0 ? maturityByAxis.length : '—'}</strong>
+          </div>
+          <div className="skda-radar-wrap">
+            <svg viewBox="0 0 200 200" role="img" aria-label="Radar de maturidade por eixo">
+              <circle cx="100" cy="100" r="72" className="skda-radar-grid" />
+              <circle cx="100" cy="100" r="48" className="skda-radar-grid" />
+              <circle cx="100" cy="100" r="24" className="skda-radar-grid" />
+              <polygon points={radarPoints} className="skda-radar-value" />
+            </svg>
+            {maturityByAxis.length === 0 ? (
+              <p>Nenhuma pontuação de maturidade validada ainda. O radar será preenchido a partir das avaliações reais.</p>
+            ) : (
+              <dl>{maturityByAxis.map((item) => <div key={item.axis}><dt>{item.axis}</dt><dd>{item.score}%</dd></div>)}</dl>
+            )}
+          </div>
+        </article>
       </div>
       <div className="skda-journey">
         <div className="skda-journey-head"><div><span>Jornada operacional</span><h3>DA-00 → DA-06</h3></div><b>{Number(selected.progress).toFixed(0)}%</b></div>
@@ -720,8 +835,56 @@ export function SkdaWorkspace(props: Props) {
     </div>
   ) : undefined
 
+  const shellNavigation = [
+    {
+      id:'modules',
+      label:'Módulos',
+      active:false,
+      onActivate:props.onReturnToModules,
+    },
+    ...PHASES.map((phase) => ({
+      id:phase.code,
+      label:`${phase.code} · ${phase.title}`,
+      active:activePhaseCode === phase.code,
+      disabled:!selected,
+      onActivate:() => setActivePhaseCode(phase.code),
+    })),
+  ]
+
   return <>
-    <TransversalWorkspace className="skda-workspace" header={header} primary={primary} secondary={secondary} />
+    <ApplicationShell
+      brand={
+        <div className="skda-shell-brand">
+          <strong>SPARKs</strong>
+          <span>Diagnóstico Assistido</span>
+        </div>
+      }
+      contextItems={[
+        { label:'Organização', value:props.organizationName },
+        { label:'Módulo', value:'SK-DA' },
+      ]}
+      userArea={
+        <div className="skda-shell-user">
+          <strong>{props.userRoleName}</strong>
+          <span>{props.organizationCode}</span>
+        </div>
+      }
+      navigationItems={shellNavigation}
+      navigationLabel="Navegação do Diagnóstico Assistido"
+      collapsed={shellCollapsed}
+      onToggleCollapsed={() => setShellCollapsed((current) => !current)}
+    >
+      <TransversalWorkspace
+        className="skda-workspace"
+        header={header}
+        primary={
+          <div className="skda-dashboard-page">
+            <section className="skda-diagnosis-switcher">{primary}</section>
+            {secondary}
+          </div>
+        }
+      />
+    </ApplicationShell>
     {validationFindingId && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
         <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-05 · Validação</p><h2>Aceitar recomendação</h2></div><button type="button" onClick={() => setValidationFindingId(null)}>×</button></div>
@@ -785,16 +948,16 @@ export function SkdaWorkspace(props: Props) {
     </div>}
     {showCreate && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">Nova instância</p><h2>Criar Diagnóstico Assistido</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Novo ciclo</p><h2>Iniciar Jornada de Diagnóstico Assistido</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div>
         <div className="skda-form-grid">
-          <label><span>Código *</span><input value={form.code} onChange={(e)=>setForm(v=>({...v,code:e.target.value}))} placeholder="DA-2026-001"/></label>
-          <label><span>Ano</span><input type="number" min="2000" max="2100" value={form.referenceYear} onChange={(e)=>setForm(v=>({...v,referenceYear:e.target.value}))}/></label>
-          <label className="wide"><span>Nome *</span><input value={form.name} onChange={(e)=>setForm(v=>({...v,name:e.target.value}))} placeholder="Diagnóstico PDGC 2027"/></label>
+          <label><span>Código da jornada *</span><input value={form.code} onChange={(e)=>setForm(v=>({...v,code:e.target.value}))} placeholder="DA-2026"/></label>
+          <label><span>Ano de referência</span><input type="number" min="2000" max="2100" value={form.referenceYear} onChange={(e)=>setForm(v=>({...v,referenceYear:e.target.value}))}/></label>
+          <label className="wide"><span>Nome da jornada *</span><input value={form.name} onChange={(e)=>setForm(v=>({...v,name:e.target.value}))} placeholder="Jornada DA 2026"/></label>
           <label><span>Tipo</span><select value={form.diagnosisType} onChange={(e)=>setForm(v=>({...v,diagnosisType:e.target.value}))}><option value="pdgc">PDGC / Avaliacoop</option><option value="maturity">Maturidade</option><option value="custom">Personalizado</option><option value="other">Outro</option></select></label>
           <label className="wide"><span>Descrição</span><textarea rows={4} value={form.description} onChange={(e)=>setForm(v=>({...v,description:e.target.value}))}/></label>
         </div>
         {error && <div className="skda-alert">{error}</div>}
-        <div className="skda-modal-actions"><button type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createDiagnosis()}>{saving?'Criando...':'Criar diagnóstico'}</button></div>
+        <div className="skda-modal-actions"><button type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createDiagnosis()}>{saving?'Criando...':'Iniciar Jornada DA'}</button></div>
       </section>
     </div>}
   </>

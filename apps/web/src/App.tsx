@@ -581,9 +581,6 @@ function App() {
     const term = organizationSearch.trim().toLocaleLowerCase('pt-BR')
     return [...organizations]
       .filter((organization) => {
-        // O tenant técnico pertence exclusivamente à homologação runtime/E2E.
-        // Ele permanece preservado no banco, mas não integra o portal operacional.
-        if (organization.organization_code === 'SKPE-V1-RUNTIME') return false
         if (!term) return true
         const identity =
           organizationIdentityById[organization.organization_id]
@@ -1103,9 +1100,6 @@ function App() {
 
           setOrganizations([])
         } else {
-          // Preserve o tenant técnico na coleção interna para permitir
-          // roteamento direto governado durante homologação/E2E.
-          // A exclusão da homepage permanece concentrada em visibleOrganizations.
           setOrganizations((organizationsResponse.data ?? []) as Organization[])
         }
 
@@ -1118,9 +1112,7 @@ function App() {
           setOrganizationHierarchy([])
         } else {
           setOrganizationHierarchy(
-            ((hierarchyResponse.data ?? []) as OrganizationHierarchyNode[]).filter(
-              (node) => node.organization_id !== '112e3bb0-82f3-4185-9f4d-7ac117c63f97',
-            ),
+            (hierarchyResponse.data ?? []) as OrganizationHierarchyNode[],
           )
         }
 

@@ -130,6 +130,21 @@ test('evidence asset stays transversal while DA owns its correlation', () => {
   assert.match(migration, /reliability_score/)
 })
 
+test('SK-DA uses the transversal application shell and full-width executive dashboard', () => {
+  assert.match(workspace, /import \{ ApplicationShell \}/)
+  assert.match(workspace, /<ApplicationShell/)
+  assert.match(workspace, /skda-dashboard-page/)
+  assert.match(workspace, /skda-executive-grid/)
+  assert.match(workspace, /Radar por eixo/)
+  assert.match(workspace, /Jornadas de Diagnóstico Assistido/)
+  assert.doesNotMatch(workspace, /primary=\{primary\} secondary=\{secondary\}/)
+})
+
+test('SK-DA does not fabricate maturity values when no validated score exists', () => {
+  assert.match(workspace, /response\?\.score == null/)
+  assert.match(workspace, /Nenhuma pontuação de maturidade validada ainda/)
+})
+
 test('technical runtime tenant is excluded from administrative module counts', () => {
   assert.match(migration, /o\.code <> 'SKPE-V1-RUNTIME'/)
 })
