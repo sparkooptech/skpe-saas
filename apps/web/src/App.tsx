@@ -2743,7 +2743,7 @@ function App() {
 
                 <div className="network-table-wrap" id="network-organization-details">
                   <table className="network-table">
-                    <thead><tr><th>Organização</th><th>Nível</th><th>Módulo</th><th>Projetos</th><th>Progresso</th><th>Iniciativas</th><th>Atenção</th></tr></thead>
+                    <thead><tr><th>Organização</th><th>Nível</th><th>SK-PE</th><th>Projetos</th><th>Progresso</th><th>Iniciativas</th><th>Atenção</th></tr></thead>
                     <tbody>
                       {organizationNetwork.map((row) => {
                         const accessibleOrganization = organizations.find((organization) => organization.organization_id === row.organization_id)

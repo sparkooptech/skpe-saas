@@ -247,6 +247,21 @@ export function SkdaWorkspace(props: Props) {
   const canValidateFindings = ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
   const canCreateTactical = ['administrator','coordinator'].includes(props.userRoleCode)
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || saving) return
+
+      setShowCreate(false)
+      setShowInterviewCreate(false)
+      setShowFindingCreate(false)
+      setShowTacticalCreate(false)
+      setValidationFindingId(null)
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [saving])
+
   const loadDiagnoses = async () => {
     setLoading(true)
     setError('')

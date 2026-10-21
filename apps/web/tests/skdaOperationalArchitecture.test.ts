@@ -176,6 +176,14 @@ test('SK-DA does not fabricate maturity values when no validated score exists', 
   assert.match(workspace, /Nenhuma pontuação de maturidade validada ainda/)
 })
 
+test('SK-DA modals follow the shell keyboard convention and close on Escape', () => {
+  assert.match(workspace, /event\.key !== 'Escape'/)
+  assert.match(workspace, /setShowInterviewCreate\(false\)/)
+  assert.match(workspace, /setShowFindingCreate\(false\)/)
+  assert.match(workspace, /setShowTacticalCreate\(false\)/)
+  assert.match(workspace, /window\.addEventListener\('keydown', handleEscape\)/)
+})
+
 test('technical runtime tenant is excluded from administrative module counts', () => {
   assert.match(migration, /o\.code <> 'SKPE-V1-RUNTIME'/)
 })

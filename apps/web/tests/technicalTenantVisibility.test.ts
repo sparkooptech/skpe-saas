@@ -18,3 +18,10 @@ test('module routes wait for the module list of the routed organization', () => 
     /loadingModules \|\|[\s\S]*?modulesOrganizationId !== routeOrganization\.organization_id/,
   )
 })
+
+
+test('strategic network dashboard labels its module flag explicitly as SK-PE', () => {
+  assert.match(app, /target_module_code:\s*'SK-PE'/)
+  assert.match(app, /<th>SK-PE<\/th>/)
+  assert.doesNotMatch(app, /<th>Módulo<\/th><th>Projetos<\/th>/)
+})
