@@ -12,6 +12,15 @@ test('technical E2E organization stays routable but hidden from operational orga
   )
 })
 
+test('module routes wait for the module list of the routed organization', () => {
+  assert.ok(app.includes('const [modulesOrganizationId, setModulesOrganizationId]'))
+  assert.ok(app.includes('setModulesOrganizationId(organization.organization_id)'))
+  assert.match(
+    app,
+    /loadingModules \|\|[\s\S]*?modulesOrganizationId !== routeOrganization\.organization_id/,
+  )
+})
+
 test('technical E2E organization is excluded from operational hierarchy', () => {
   assert.match(
     app,

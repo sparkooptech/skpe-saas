@@ -766,6 +766,9 @@ function App() {
   const [modules, setModules] =
     useState<PlatformModule[]>([])
 
+  const [modulesOrganizationId, setModulesOrganizationId] =
+    useState<string | null>(null)
+
   const [
     selectedOrganizationJobTitle,
     setSelectedOrganizationJobTitle,
@@ -1158,6 +1161,7 @@ function App() {
     setSelectedOrganization(organization)
     setOpenedModule(null)
     setModules([])
+    setModulesOrganizationId(null)
     setOrganizationNetwork([])
     setLoadingModules(true)
     setLoadingOrganizationNetwork(true)
@@ -1189,6 +1193,7 @@ function App() {
       setModules([])
     } else {
       setModules((modulesResponse.data ?? []) as PlatformModule[])
+      setModulesOrganizationId(organization.organization_id)
     }
 
     if (networkResponse.error) {
@@ -1295,6 +1300,7 @@ function App() {
     setPlatformAdminOpen(false)
     setOrganizationAdminOpen(false)
     setSelectedOrganization(organization)
+    setModulesOrganizationId(null)
     setLoadingModules(true)
     clearMessage()
 
@@ -1304,6 +1310,7 @@ function App() {
 
     const nextModules = error ? [] : ((data ?? []) as PlatformModule[])
     setModules(nextModules)
+    if (!error) setModulesOrganizationId(organization.organization_id)
     setLoadingModules(false)
 
     if (error) {
@@ -1785,7 +1792,10 @@ function App() {
 
     setOrganizationAdminOpen(false)
 
-    if (loadingModules) {
+    if (
+      loadingModules ||
+      modulesOrganizationId !== routeOrganization.organization_id
+    ) {
       return
     }
 
@@ -1821,6 +1831,7 @@ function App() {
     loading,
     loadingModules,
     modules,
+    modulesOrganizationId,
     navigate,
     openedModule,
     organizationAdminOpen,
