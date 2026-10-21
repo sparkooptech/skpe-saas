@@ -24,9 +24,20 @@ type Diagnosis = {
   status: string
   current_phase_code: string
   progress: number
+  started_on: string | null
+  planned_end_on: string | null
+  lead_user_id: string | null
+  metadata: Record<string, unknown>
   created_at: string
 }
 
+type OrganizationUser = {
+  user_id: string
+  user_email: string
+  user_display_name: string | null
+  membership_status: string
+  job_title: string | null
+}
 type Metrics = { responses: number; interviews: number; evidence: number; findings: number }
 type Phase = { code: string; title: string; description: string; statusKey: string }
 type Interview = { id: string; code: string; title: string; interviewee_name: string | null; interviewee_role: string | null; status: string; channel: string; scheduled_start: string | null }
@@ -129,9 +140,19 @@ export function SkdaWorkspace(props: Props) {
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
+  const [organizationUsers, setOrganizationUsers] = useState<OrganizationUser[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [responses, setResponses] = useState<Response[]>([])
   const [findings, setFindings] = useState<Finding[]>([])
+  const [openingForm, setOpeningForm] = useState({
+    referenceYear:String(new Date().getFullYear()),
+    startedOn:'',
+    plannedEndOn:'',
+    diagnosisType:'pdgc',
+    leadUserId:'',
+    scopeStatement:'',
+    methodologyNotes:'',
+  })
   const [interviewForm, setInterviewForm] = useState({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
   const [findingForm, setFindingForm] = useState({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'' })
   const [tacticalForm, setTacticalForm] = useState({
@@ -217,7 +238,7 @@ export function SkdaWorkspace(props: Props) {
     setError('')
     const { data, error: loadError } = await supabase
       .from('skda_diagnoses' as never)
-      .select('id,code,name,description,diagnosis_type,catalog_version_id,reference_year,status,current_phase_code,progress,created_at' as never)
+      .select('id,code,name,description,diagnosis_type,catalog_version_id,reference_year,status,current_phase_code,progress,started_on,planned_end_on,lead_user_id,metadata,created_at' as never)
       .eq('organization_id', props.organizationId)
       .is('archived_at', null)
       .order('created_at', { ascending:false })
@@ -236,6 +257,45 @@ export function SkdaWorkspace(props: Props) {
   }
 
   useEffect(() => { void loadDiagnoses() }, [props.organizationId])
+
+  useEffect(() => {
+    const run = async () => {
+      const { data, error: usersError } = await supabase.rpc(
+        'get_organization_user_access' as never,
+        { target_organization_id:props.organizationId } as never,
+      )
+      if (usersError) {
+        setOrganizationUsers([])
+        return
+      }
+      const unique = new Map<string, OrganizationUser>()
+      for (const row of (data ?? []) as unknown as OrganizationUser[]) {
+        if (row.membership_status !== 'active') continue
+        if (!unique.has(row.user_id)) unique.set(row.user_id, row)
+      }
+      setOrganizationUsers([...unique.values()].sort((a,b) =>
+        (a.user_display_name ?? a.user_email).localeCompare(
+          b.user_display_name ?? b.user_email,
+          'pt-BR',
+        ),
+      ))
+    }
+    void run()
+  }, [props.organizationId])
+
+  useEffect(() => {
+    if (!selected) return
+    const metadata = selected.metadata ?? {}
+    setOpeningForm({
+      referenceYear:selected.reference_year ? String(selected.reference_year) : '',
+      startedOn:selected.started_on ?? '',
+      plannedEndOn:selected.planned_end_on ?? '',
+      diagnosisType:selected.diagnosis_type,
+      leadUserId:selected.lead_user_id ?? '',
+      scopeStatement:typeof metadata.scope_statement === 'string' ? metadata.scope_statement : '',
+      methodologyNotes:typeof metadata.methodology_notes === 'string' ? metadata.methodology_notes : '',
+    })
+  }, [selected?.id])
 
   useEffect(() => {
     const run = async () => {
@@ -348,6 +408,41 @@ export function SkdaWorkspace(props: Props) {
       .eq('organization_id', props.organizationId)
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
+    await loadDiagnoses()
+  }
+
+  const saveOpeningConfiguration = async () => {
+    if (!selected || !canManage) return
+    if (openingForm.startedOn && openingForm.plannedEndOn && openingForm.plannedEndOn < openingForm.startedOn) {
+      setError('A data prevista de conclusão não pode ser anterior à data de início.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    const nextMetadata = {
+      ...(selected.metadata ?? {}),
+      scope_statement:openingForm.scopeStatement.trim() || null,
+      methodology_notes:openingForm.methodologyNotes.trim() || null,
+    }
+    const { error: saveError } = await supabase
+      .from('skda_diagnoses' as never)
+      .update({
+        reference_year:openingForm.referenceYear ? Number(openingForm.referenceYear) : null,
+        started_on:openingForm.startedOn || null,
+        planned_end_on:openingForm.plannedEndOn || null,
+        diagnosis_type:openingForm.diagnosisType,
+        lead_user_id:openingForm.leadUserId || null,
+        metadata:nextMetadata,
+      } as never)
+      .eq('id', selected.id)
+      .eq('organization_id', props.organizationId)
+
+    setSaving(false)
+    if (saveError) {
+      setError(saveError.message)
+      return
+    }
     await loadDiagnoses()
   }
 
@@ -758,8 +853,21 @@ export function SkdaWorkspace(props: Props) {
             {activePhase.code === 'DA-00' && <><span>Estado</span><strong>{STATUS[selected.status] ?? selected.status}</strong></>}
           </div>
           {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
-            <div className="skda-phase-workspace-head"><h4>Catálogo metodológico</h4><span>{selectedCatalog ? selectedCatalog.framework_code : 'Não definido'}</span></div>
-            {catalogs.length === 0 ? <p className="skda-phase-empty">Nenhum catálogo publicado está disponível. O diagnóstico pode ser aberto, mas a avaliação por questão depende de um catálogo publicado.</p> : <label className="skda-inline-field"><span>Versão do catálogo</span><select value={selected.catalog_version_id ?? ''} disabled={!canManage || saving || catalogLocked} onChange={(e) => void assignCatalog(e.target.value)}><option value="">Selecione...</option>{catalogs.map((catalog) => <option key={catalog.id} value={catalog.id}>{catalog.name} · {catalog.version_code}</option>)}</select>{catalogLocked && <small>Catálogo bloqueado após o início da avaliação para preservar a rastreabilidade das respostas.</small>}</label>}
+            <div className="skda-phase-workspace-head"><div><h4>Configuração da Jornada DA</h4><small>Defina o ciclo, escopo, metodologia, responsável e catálogo da jornada.</small></div><span>{selectedCatalog ? selectedCatalog.framework_code : 'Não definido'}</span></div>
+            <div className="skda-opening-grid">
+              <label className="skda-inline-field"><span>Ano de referência</span><input type="number" min="2000" max="2100" value={openingForm.referenceYear} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,referenceYear:e.target.value}))}/></label>
+              <label className="skda-inline-field"><span>Tipo de diagnóstico</span><select value={openingForm.diagnosisType} disabled={!canManage || saving || catalogLocked} onChange={(e)=>setOpeningForm(v=>({...v,diagnosisType:e.target.value}))}>{Object.entries(TYPES).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+              <label className="skda-inline-field"><span>Início da jornada</span><input type="date" value={openingForm.startedOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,startedOn:e.target.value}))}/></label>
+              <label className="skda-inline-field"><span>Conclusão prevista</span><input type="date" value={openingForm.plannedEndOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,plannedEndOn:e.target.value}))}/></label>
+              <label className="skda-inline-field skda-opening-wide"><span>Responsável pela jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving || organizationUsers.length === 0} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Não definido</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.job_title ? ' · '+user.job_title : ''}</option>)}</select>{organizationUsers.length === 0 && <small>A lista de usuários não está disponível para este perfil. O responsável pode ser definido posteriormente.</small>}</label>
+              <label className="skda-inline-field skda-opening-wide"><span>Escopo da jornada</span><textarea rows={4} value={openingForm.scopeStatement} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,scopeStatement:e.target.value}))} placeholder="Unidades, temas, processos, públicos e limites que serão considerados no diagnóstico."/></label>
+              <label className="skda-inline-field skda-opening-wide"><span>Orientações metodológicas</span><textarea rows={4} value={openingForm.methodologyNotes} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,methodologyNotes:e.target.value}))} placeholder="Premissas, critérios de aplicação, adaptações e observações metodológicas específicas desta jornada."/></label>
+            </div>
+            <div className="skda-catalog-block">
+              <div className="skda-phase-workspace-head"><h4>Catálogo metodológico</h4><span>{selectedCatalog ? selectedCatalog.name : 'Não selecionado'}</span></div>
+              {catalogs.length === 0 ? <p className="skda-phase-empty">Nenhum catálogo publicado está disponível. A jornada pode ser aberta, mas a avaliação por questão depende de um catálogo publicado.</p> : <label className="skda-inline-field"><span>Versão do catálogo</span><select value={selected.catalog_version_id ?? ''} disabled={!canManage || saving || catalogLocked} onChange={(e) => void assignCatalog(e.target.value)}><option value="">Selecione...</option>{catalogs.map((catalog) => <option key={catalog.id} value={catalog.id}>{catalog.name} · {catalog.version_code}</option>)}</select>{catalogLocked && <small>Catálogo bloqueado após o início da avaliação para preservar a rastreabilidade das respostas.</small>}</label>}
+            </div>
+            {canManage && <div className="skda-opening-actions"><button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveOpeningConfiguration()}>{saving?'Salvando...':'Salvar abertura da jornada'}</button></div>}
           </div>}
           {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Evidências disponíveis no Core</h4><span>{evidenceAssets.length} ativo(s)</span></div>

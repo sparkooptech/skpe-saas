@@ -47,6 +47,17 @@ test('DA-01 reuses transversal evidence and stores only contextual correlation',
   assert.doesNotMatch(workspace, /insert\([\s\S]*?sparks_evidence_assets/)
 })
 
+test('DA-00 configures the journey with canonical fields and transversal organization users', () => {
+  assert.match(workspace, /get_organization_user_access/)
+  assert.match(workspace, /reference_year:openingForm\.referenceYear/)
+  assert.match(workspace, /started_on:openingForm\.startedOn/)
+  assert.match(workspace, /planned_end_on:openingForm\.plannedEndOn/)
+  assert.match(workspace, /lead_user_id:openingForm\.leadUserId/)
+  assert.match(workspace, /scope_statement:openingForm\.scopeStatement/)
+  assert.match(workspace, /methodology_notes:openingForm\.methodologyNotes/)
+  assert.match(workspace, /Salvar abertura da jornada/)
+})
+
 test('DA-00 and DA-03 govern catalog assignment and question assessment', () => {
   assert.match(workspace, /\.from\('skda_catalog_versions'/)
   assert.match(workspace, /\.from\('skda_questions'/)

@@ -1066,3 +1066,78 @@
     padding: .7rem;
   }
 }
+
+
+/* DA-00 — abertura e configuracao da Jornada DA */
+.skda-opening-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .85rem;
+}
+
+.skda-opening-wide {
+  grid-column: 1 / -1;
+}
+
+.skda-inline-field input,
+.skda-inline-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(127,127,127,.32);
+  border-radius: 9px;
+  padding: 10px 11px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.skda-inline-field textarea {
+  resize: vertical;
+  min-height: 92px;
+  line-height: 1.45;
+}
+
+.skda-inline-field input:disabled,
+.skda-inline-field textarea:disabled,
+.skda-inline-field select:disabled {
+  opacity: .68;
+  cursor: not-allowed;
+}
+
+.skda-phase-workspace-head > div {
+  min-width: 0;
+}
+
+.skda-phase-workspace-head > div > small {
+  display: block;
+  margin-top: .25rem;
+  color: var(--skda-muted, #607069);
+  line-height: 1.4;
+}
+
+.skda-catalog-block {
+  display: grid;
+  gap: .7rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--skda-border, #dce5e1);
+}
+
+.skda-opening-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: .25rem;
+}
+
+@media (max-width: 760px) {
+  .skda-opening-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skda-opening-wide {
+    grid-column: auto;
+  }
+
+  .skda-opening-actions .skda-primary {
+    width: 100%;
+  }
+}
