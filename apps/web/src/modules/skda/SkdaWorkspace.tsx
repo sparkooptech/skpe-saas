@@ -71,9 +71,24 @@ type EvolutionRow = {
   question_id: string
   response_id: string | null
   response_status: string | null
+  score: number | null
   validated_practice_count: number
   validated_evidence_count: number
   open_gap_count: number
+}
+type JourneyExecutionAction = {
+  id: string
+  code: string
+  name: string
+  status: string
+  progress: number
+  baseline_start_date: string | null
+  baseline_due_date: string | null
+  planned_start_date: string | null
+  planned_due_date: string | null
+  started_at: string | null
+  completed_at: string | null
+  metadata: Record<string, unknown>
 }
 type ActionFollowup = {
   diagnosis_id: string
@@ -274,6 +289,7 @@ export function SkdaWorkspace(props: Props) {
   const [linkedInitiatives, setLinkedInitiatives] = useState<LinkedInitiative[]>([])
   const [evolutionRows, setEvolutionRows] = useState<EvolutionRow[]>([])
   const [actionFollowup, setActionFollowup] = useState<ActionFollowup[]>([])
+  const [journeyEap, setJourneyEap] = useState<JourneyExecutionAction[]>([])
   const [openingForm, setOpeningForm] = useState({
     referenceYear:String(new Date().getFullYear()),
     startedOn:'',
@@ -304,6 +320,13 @@ export function SkdaWorkspace(props: Props) {
     [diagnoses, selectedId],
   )
 
+  const activeDiagnosis = useMemo(
+    () => diagnoses.find((item) => !['completed','archived'].includes(item.status)) ?? null,
+    [diagnoses],
+  )
+
+  const hasActiveJourney = Boolean(activeDiagnosis)
+
   const formatDiagnosisBusinessTitle = (diagnosis: Diagnosis) => {
     const metadata = diagnosis.metadata ?? {}
     const maturityCode = typeof metadata.maturity_level_code === 'string' ? metadata.maturity_level_code.trim() : ''
@@ -314,15 +337,6 @@ export function SkdaWorkspace(props: Props) {
     if (modelCode && year) return `DA - ${modelCode} - ${year}`
     if (year) return `DA - Em configuração - ${year}`
     return 'DA - Em configuração'
-  }
-
-  const openInitiativeWorkspace = (initiativeId: string | null) => {
-    if (!initiativeId) return
-    const target = new URL(window.location.href)
-    target.searchParams.set('section', 'initiatives')
-    target.searchParams.set('initiativeTab', 'kanban')
-    target.searchParams.set('initiativeId', initiativeId)
-    window.location.assign(target.toString())
   }
 
   const assessedResponses = useMemo(
@@ -414,6 +428,53 @@ export function SkdaWorkspace(props: Props) {
       )
   }, [evolutionRows])
 
+  const evolutionChartSeries = useMemo(() => {
+    return [...diagnoses]
+      .sort((a,b) => (a.reference_year ?? 0) - (b.reference_year ?? 0) || a.created_at.localeCompare(b.created_at))
+      .map((diagnosis) => {
+        const metadata = diagnosis.metadata ?? {}
+        const aaValues = [metadata.governance_index,metadata.management_index]
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value))
+        const aaScore = aaValues.length > 0
+          ? aaValues.reduce((sum,value) => sum + value,0) / aaValues.length
+          : null
+        const validatedScores = evolutionRows
+          .filter((row) => row.diagnosis_id === diagnosis.id && row.response_status === 'validated' && row.score != null)
+          .map((row) => Number(row.score))
+          .filter((value) => Number.isFinite(value))
+        const daScore = validatedScores.length > 0
+          ? validatedScores.reduce((sum,value) => sum + value,0) / validatedScores.length
+          : null
+        return {
+          diagnosisId:diagnosis.id,
+          label:diagnosis.reference_year ? String(diagnosis.reference_year) : diagnosis.code,
+          aaScore,
+          daScore,
+          current:diagnosis.id === selectedId,
+        }
+      })
+  }, [diagnoses,evolutionRows,selectedId])
+
+  const evolutionChartPoint = (index: number, score: number | null) => {
+    const count = Math.max(1,evolutionChartSeries.length)
+    const x = count === 1 ? 50 : 8 + (index * 84 / (count - 1))
+    const y = score == null ? null : 92 - (Math.max(0,Math.min(100,score)) * .78)
+    return { x, y }
+  }
+
+  const evolutionAaPolyline = evolutionChartSeries
+    .map((item,index) => ({ ...evolutionChartPoint(index,item.aaScore), score:item.aaScore }))
+    .filter((item): item is { x:number; y:number; score:number } => item.y != null && item.score != null)
+    .map((item) => `${item.x},${item.y}`)
+    .join(' ')
+
+  const evolutionDaPolyline = evolutionChartSeries
+    .map((item,index) => ({ ...evolutionChartPoint(index,item.daScore), score:item.daScore }))
+    .filter((item): item is { x:number; y:number; score:number } => item.y != null && item.score != null)
+    .map((item) => `${item.x},${item.y}`)
+    .join(' ')
+
   const actionFollowupSummary = useMemo(() => {
     const counts = {
       total:actionFollowup.length,
@@ -437,7 +498,11 @@ export function SkdaWorkspace(props: Props) {
 
   const evolutionMessage = useMemo(() => {
     const current = evolutionByCycle.find((cycle) => cycle.diagnosisId === selectedId)
-    if (!current) return 'A trajetória será consolidada conforme os ciclos da organização forem avaliados.'
+    if (!current) {
+      const baseline = evolutionChartSeries.find((cycle) => cycle.diagnosisId === selectedId)
+      if (baseline?.aaScore != null) return 'A Autoavaliação foi absorvida como linha de base. O Diagnóstico Assistido será sobreposto à medida que as avaliações forem validadas.'
+      return 'A trajetória será consolidada conforme os ciclos da organização forem avaliados.'
+    }
     const prior = evolutionByCycle
       .filter((cycle) => cycle.diagnosisId !== current.diagnosisId)
       .filter((cycle) => (cycle.referenceYear ?? 0) <= (current.referenceYear ?? 0))
@@ -457,7 +522,7 @@ export function SkdaWorkspace(props: Props) {
       return `A cobertura validada está ${Math.abs(coverageDelta)} p.p. abaixo do ciclo anterior. Verifique evidências, práticas e ações ainda não consolidadas.`
     }
     return 'A trajetória permanece estável no recorte disponível. O próximo avanço depende de ampliar evidências validadas e executar as ações prioritárias.'
-  }, [evolutionByCycle, selectedId])
+  }, [evolutionByCycle, evolutionChartSeries, selectedId])
 
   const selfAssessmentRadar = useMemo(() => {
     const raw = selected?.metadata?.self_assessment_radar
@@ -764,7 +829,7 @@ export function SkdaWorkspace(props: Props) {
       const [evolutionResult, actionResult] = await Promise.all([
         supabase
           .from('skda_organization_evolution_matrix' as never)
-          .select('diagnosis_id,diagnosis_code,reference_year,diagnosis_status,question_id,response_id,response_status,validated_practice_count,validated_evidence_count,open_gap_count' as never)
+          .select('diagnosis_id,diagnosis_code,reference_year,diagnosis_status,question_id,response_id,response_status,score,validated_practice_count,validated_evidence_count,open_gap_count' as never)
           .eq('organization_id', props.organizationId)
           .order('reference_year', { ascending:true, nullsFirst:false }),
         supabase
@@ -778,6 +843,21 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [props.organizationId, selectedId, responses, findings, actionPlanAllocations, linkedInitiatives])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selected?.execution_initiative_id) { setJourneyEap([]); return }
+      const { data } = await supabase
+        .from('sparks_initiative_actions' as never)
+        .select('id,code,name,status,progress,baseline_start_date,baseline_due_date,planned_start_date,planned_due_date,started_at,completed_at,metadata' as never)
+        .eq('organization_id', props.organizationId)
+        .eq('initiative_id', selected.execution_initiative_id)
+        .eq('source_module_code', 'SK-DA')
+        .order('code', { ascending:true })
+      setJourneyEap((data ?? []) as unknown as JourneyExecutionAction[])
+    }
+    void run()
+  }, [props.organizationId, selected?.id, selected?.execution_initiative_id, selected?.started_on, selected?.planned_end_on, selected?.lead_user_id])
 
   useEffect(() => {
     const run = async () => {
@@ -1222,25 +1302,6 @@ export function SkdaWorkspace(props: Props) {
     setShowFindingCreate(false)
   }
 
-  const ensureDiagnosisProject = async () => {
-    if (!selected) return
-    setSaving(true)
-    setError('')
-    const { error: projectError } = await supabase.rpc(
-      'ensure_skda_diagnosis_project' as never,
-      {
-        target_diagnosis_id:selected.id,
-        change_reason:'Vinculação do Projeto transversal à Jornada DA existente.',
-      } as never,
-    )
-    setSaving(false)
-    if (projectError) {
-      setError(projectError.message)
-      return
-    }
-    await loadDiagnoses()
-  }
-
   const openInterviewParticipants = async (interview: Interview) => {
     if (!interview.event_id) {
       setError('Esta entrevista ainda não possui evento transversal associado.')
@@ -1391,6 +1452,10 @@ export function SkdaWorkspace(props: Props) {
   }
 
   const createDiagnosis = async () => {
+    if (hasActiveJourney) {
+      setError('Existe uma Jornada DA em andamento. Conclua ou encerre o ciclo atual antes de iniciar uma nova Jornada.')
+      return
+    }
     if (!form.code.trim() || !form.name.trim()) {
       setError('Informe código e nome da Jornada DA.')
       return
@@ -1443,7 +1508,7 @@ export function SkdaWorkspace(props: Props) {
         </div>
         <div className="skda-section-title-actions">
           <strong>{diagnoses.length}</strong>
-          {canManage && <button type="button" className="skda-primary" onClick={() => setShowCreate(true)}>Nova Jornada DA</button>}
+          {canManage && <button type="button" className="skda-primary" disabled={hasActiveJourney} title={hasActiveJourney ? 'Existe uma Jornada em andamento. Conclua ou encerre o ciclo atual antes de iniciar uma nova.' : 'Iniciar nova Jornada DA'} onClick={() => setShowCreate(true)}>{hasActiveJourney ? 'Jornada em andamento' : 'Nova Jornada DA'}</button>}
         </div>
       </div>
       {error && <div className="skda-alert">{error}</div>}
@@ -1543,55 +1608,46 @@ export function SkdaWorkspace(props: Props) {
           <div>
             <span className="skda-eyebrow">Evolução contínua</span>
             <h3>Trajetória da organização</h3>
-            <small>Comparação longitudinal dos ciclos com base em validações, práticas, evidências e lacunas efetivamente registradas.</small>
+            <small>Leitura gráfica da evolução entre a Autoavaliação de entrada e o Diagnóstico Assistido validado ao longo dos ciclos.</small>
           </div>
-          <span>{evolutionByCycle.length} ciclo(s) comparável(is)</span>
+          <span>{evolutionChartSeries.length} ciclo(s)</span>
         </div>
-        <div className="skda-evolution-message">{evolutionMessage}</div>
-        {evolutionByCycle.length === 0 ? (
-          <p className="skda-phase-empty">Ainda não há dados suficientes para compor a trajetória longitudinal.</p>
+        {evolutionChartSeries.length === 0 ? (
+          <p className="skda-phase-empty">A trajetória será exibida assim que existir ao menos um ciclo de Diagnóstico Assistido.</p>
         ) : (
-          <div className="skda-evolution-cycles">
-            {evolutionByCycle.map((cycle) => (
-              <article key={cycle.diagnosisId} className={cycle.diagnosisId === selectedId ? 'is-current' : ''}>
-                <div className="skda-evolution-cycle-head">
-                  <div>
-                    <span>{cycle.referenceYear ?? 'Ciclo'}</span>
-                    <strong>{cycle.diagnosisCode}</strong>
-                  </div>
-                  <b>{cycle.validationCoverage}%</b>
-                </div>
-                <div className="skda-evolution-bar" aria-label={`Cobertura validada de ${cycle.validationCoverage}%`}>
-                  <span style={{ width:`${Math.max(0,Math.min(100,cycle.validationCoverage))}%` }} />
-                </div>
-                <dl>
-                  <div><dt>Questões validadas</dt><dd>{cycle.validatedQuestions}/{cycle.totalQuestions}</dd></div>
-                  <div><dt>Práticas validadas</dt><dd>{cycle.validatedPractices}</dd></div>
-                  <div><dt>Vínculos de evidência validados</dt><dd>{cycle.validatedEvidenceLinks}</dd></div>
-                  <div><dt>Lacunas abertas</dt><dd>{cycle.openGaps}</dd></div>
-                </dl>
-              </article>
-            ))}
-          </div>
-        )}
-        <div className="skda-followup-summary">
-          <div className="skda-executive-card-head">
-            <div><span>Follow-up entre ciclos</span><h3>Execução das ações priorizadas</h3></div>
-            <strong>{actionFollowupSummary.total}</strong>
-          </div>
-          {actionFollowupSummary.total === 0 ? (
-            <p>Nenhuma ação longitudinal registrada ainda. Quando recomendações forem priorizadas e convertidas em iniciativas, o acompanhamento permanecerá visível nos ciclos seguintes.</p>
-          ) : (
-            <div className="skda-followup-grid">
-              <div><span>Concluídas</span><strong>{actionFollowupSummary.completed}</strong></div>
-              <div><span>Em andamento</span><strong>{actionFollowupSummary.inProgress}</strong></div>
-              <div><span>Vencidas</span><strong>{actionFollowupSummary.overdue}</strong></div>
-              <div><span>Não iniciadas</span><strong>{actionFollowupSummary.notStarted}</strong></div>
-              <div><span>Bloqueadas</span><strong>{actionFollowupSummary.blocked}</strong></div>
-              <div><span>Aguardando conversão</span><strong>{actionFollowupSummary.awaitingConversion}</strong></div>
+          <>
+            <div className="skda-evolution-chart">
+              <div className="skda-evolution-axis">
+                <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+              </div>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Evolução da Autoavaliação e do Diagnóstico Assistido por ciclo">
+                {[14,33.5,53,72.5,92].map((y) => <line key={y} x1="5" x2="95" y1={y} y2={y} className="skda-evolution-gridline" />)}
+                {evolutionAaPolyline && <polyline points={evolutionAaPolyline} className="skda-evolution-line-aa" />}
+                {evolutionDaPolyline && <polyline points={evolutionDaPolyline} className="skda-evolution-line-da" />}
+                {evolutionChartSeries.map((item,index) => {
+                  const aa = evolutionChartPoint(index,item.aaScore)
+                  const da = evolutionChartPoint(index,item.daScore)
+                  return <g key={item.diagnosisId}>
+                    {aa.y != null && <circle cx={aa.x} cy={aa.y} r={item.current ? 2.4 : 1.9} className="skda-evolution-dot-aa" />}
+                    {da.y != null && <circle cx={da.x} cy={da.y} r={item.current ? 2.4 : 1.9} className="skda-evolution-dot-da" />}
+                  </g>
+                })}
+              </svg>
+              <div className="skda-evolution-labels">
+                {evolutionChartSeries.map((item) => <div key={item.diagnosisId} className={item.current ? 'is-current' : ''}>
+                  <strong>{item.label}</strong>
+                  <span>AA {item.aaScore == null ? '—' : item.aaScore.toFixed(1)+'%'}</span>
+                  <span>DA {item.daScore == null ? '—' : item.daScore.toFixed(1)+'%'}</span>
+                </div>)}
+              </div>
             </div>
-          )}
-        </div>
+            <div className="skda-evolution-legend">
+              <span><i className="aa" />Autoavaliação</span>
+              <span><i className="da" />Diagnóstico Assistido validado</span>
+            </div>
+            <small className="skda-evolution-message">{evolutionMessage}</small>
+          </>
+        )}
       </section>}
 
       {isOverview && <section className="skda-pdcl-overview">
@@ -1601,7 +1657,7 @@ export function SkdaWorkspace(props: Props) {
             <h3>PDCL da Jornada DA</h3>
             <small>O diagnóstico não é uma sequência linear de telas: evidências, entrevistas, avaliação, checagem e aprendizado retroalimentam a própria compreensão da organização.</small>
           </div>
-          <span>{selected.execution_initiative_id ? 'Projeto de execução disponível' : 'Projeto de execução ainda não criado'}</span>
+          <span>Projeto e EAP automáticos</span>
         </div>
         <div className="skda-pdcl-cycle">
           {PDCL_STAGES.map((stage) => (
@@ -1625,38 +1681,61 @@ export function SkdaWorkspace(props: Props) {
             <div>
               <span className="skda-eyebrow">Processo metodológico</span>
               <h3>MegaFases e Padrões de Trabalho</h3>
-              <small>A MegaFase em andamento permanece expandida. As demais preservam a visão completa da Jornada sem confundir processo metodológico com os workspaces DA-00 a DA-06.</small>
+              <small>Mesmo padrão gerencial do PE: linha de base, plano vigente, realizado, responsável, entregas e situação. A LB0 será originada pela OS autorizadora e poderá ser replanejada sem perder o histórico.</small>
             </div>
             <span>{currentMegaphaseCode}</span>
           </div>
-          <div className="skda-megaphase-list">
+          <div className="skda-megaphase-execution">
+            <div className="skda-megaphase-execution-head">
+              <span>MegaFase</span><span>LB0</span><span>Plano vigente</span><span>Realizado</span><span>Responsável</span><span>Entregas</span><span>Situação</span>
+            </div>
             {MEGAPHASES.map((megaphase) => {
-              const isCurrent = megaphase.code === currentMegaphaseCode
-              return <details key={megaphase.code} open={isCurrent} className={isCurrent ? 'is-current' : ''}>
-                <summary>
-                  <span>{megaphase.code}</span>
-                  <strong>{megaphase.title}</strong>
-                  <small>{isCurrent ? 'Em andamento' : 'Metodologia'}</small>
-                </summary>
-                <div>
-                  <span>Padrão de Trabalho</span>
-                  <p>{megaphase.workPattern}</p>
-                  <small>Gate: fatos, evidências, hipóteses, lacunas, divergências, consensos, entregáveis e próximo passo.</small>
-                </div>
-              </details>
+              const action = journeyEap.find((item) => item.code === megaphase.code)
+              const ownerId = typeof action?.metadata?.responsible_user_id === 'string' ? action.metadata.responsible_user_id : selected.lead_user_id
+              const owner = organizationUsers.find((user) => user.user_id === ownerId)
+              const deliverables = Array.isArray(action?.metadata?.expected_deliverables)
+                ? action?.metadata?.expected_deliverables.filter((item): item is string => typeof item === 'string')
+                : []
+              const formatRange = (start: string | null | undefined, end: string | null | undefined) => start || end
+                ? `${start ? new Date(start+'T00:00:00').toLocaleDateString('pt-BR') : '—'} → ${end ? new Date(end+'T00:00:00').toLocaleDateString('pt-BR') : '—'}`
+                : 'Pendente'
+              const actualEnd = action?.completed_at ? action.completed_at.slice(0,10) : null
+              const actualStart = action?.started_at ? action.started_at.slice(0,10) : null
+              const statusLabel = action?.status === 'in_progress' ? 'Em andamento' : action?.status === 'completed' ? 'Concluída' : action?.status === 'blocked' ? 'Bloqueada' : action?.status === 'on_hold' ? 'Em espera' : 'Planejada'
+              return <article key={megaphase.code} className={megaphase.code === currentMegaphaseCode ? 'is-current' : ''}>
+                <div><small>{megaphase.code}</small><strong>{megaphase.title}</strong><span>{megaphase.workPattern}</span></div>
+                <div><small>Linha de base</small><strong>{formatRange(action?.baseline_start_date,action?.baseline_due_date)}</strong><span>{action?.metadata?.lb0_source === 'service_order' ? 'OS autorizada' : 'Aguardando OS'}</span></div>
+                <div><small>Plano vigente</small><strong>{formatRange(action?.planned_start_date,action?.planned_due_date)}</strong><span>Replanejável com o cliente</span></div>
+                <div><small>Realizado</small><strong>{formatRange(actualStart,actualEnd)}</strong><span>{action?.progress ?? 0}% executado</span></div>
+                <div><small>Responsável</small><strong>{owner?.user_display_name || owner?.user_email || 'A definir'}</strong></div>
+                <div><small>Entregas</small><strong>{deliverables.length}</strong><span>{deliverables.slice(0,2).join(' · ') || 'A estruturar'}</span></div>
+                <div><small>Situação</small><strong>{statusLabel}</strong></div>
+              </article>
             })}
           </div>
-        </div>
-        <div className="skda-project-bridge">
-          <div>
-            <span>Projeto de execução da Jornada</span>
-            <strong>{selected.execution_initiative_id ? 'Agenda, responsabilidades, entregas e execução operacional da Jornada' : 'Crie o Projeto para operacionalizar a Jornada'}</strong>
-            <small>O Diagnóstico Assistido permanece como objeto metodológico. O Projeto organiza datas, responsáveis, entregas, atividades e acompanhamento da execução.</small>
+          <div className="skda-project-automation-note">
+            O Projeto da Jornada e sua EAP são criados automaticamente. A OS autorizadora deve originar a LB0; replanejamentos posteriores preservam a linha de base e o histórico das mudanças pactuadas com o cliente.
           </div>
-          {selected.execution_initiative_id
-            ? <button type="button" className="skda-primary" onClick={() => openInitiativeWorkspace(selected.execution_initiative_id)}>Abrir projeto da Jornada</button>
-            : canManage && <button type="button" className="skda-primary" disabled={saving} onClick={() => void ensureDiagnosisProject()}>{saving ? 'Criando...' : 'Criar projeto da Jornada'}</button>}
         </div>
+      </section>}
+
+      {isOverview && <section className="skda-followup-summary skda-followup-at-end">
+        <div className="skda-executive-card-head">
+          <div><span>Follow-up entre ciclos</span><h3>Execução das ações priorizadas</h3></div>
+          <strong>{actionFollowupSummary.total}</strong>
+        </div>
+        {actionFollowupSummary.total === 0 ? (
+          <p>Nenhuma ação longitudinal registrada ainda. O acompanhamento será ativado quando recomendações validadas forem priorizadas e acompanhadas nos ciclos seguintes.</p>
+        ) : (
+          <div className="skda-followup-grid">
+            <div><span>Concluídas</span><strong>{actionFollowupSummary.completed}</strong></div>
+            <div><span>Em andamento</span><strong>{actionFollowupSummary.inProgress}</strong></div>
+            <div><span>Vencidas</span><strong>{actionFollowupSummary.overdue}</strong></div>
+            <div><span>Não iniciadas</span><strong>{actionFollowupSummary.notStarted}</strong></div>
+            <div><span>Bloqueadas</span><strong>{actionFollowupSummary.blocked}</strong></div>
+            <div><span>Aguardando conversão</span><strong>{actionFollowupSummary.awaitingConversion}</strong></div>
+          </div>
+        )}
       </section>}
 
       {isAgenda && <section className="skda-agenda-host">
