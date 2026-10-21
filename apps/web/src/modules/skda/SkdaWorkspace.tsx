@@ -45,7 +45,8 @@ type EvidenceAsset = { id: string; title: string; evidence_type: string; validat
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; display_order: number }
-type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; confidence_level: string; maturity_level: string | null; score: number | null }
+type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; evaluated_at: string | null; validated_at: string | null }
+type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; score: string }
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null }
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
@@ -87,6 +88,14 @@ const RELIABILITY: Record<string,string> = {
 
 const CLASSIFICATION: Record<string,string> = {
   confirmed:'Confirmada', reported:'Relatada', gap:'Lacuna', not_applicable:'Não aplicável', not_evaluated:'Não avaliada',
+}
+
+const CONFIDENCE_LEVELS: Record<string,string> = {
+  not_assessed:'Não avaliada', low:'Baixa', moderate:'Moderada', high:'Alta', very_high:'Muito alta',
+}
+
+const RESPONSE_STATUS: Record<string,string> = {
+  draft:'Rascunho', review:'Em revisão', validated:'Validada',
 }
 
 const FINDING_TYPES: Record<string,string> = {
@@ -143,6 +152,7 @@ export function SkdaWorkspace(props: Props) {
   const [organizationUsers, setOrganizationUsers] = useState<OrganizationUser[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [responses, setResponses] = useState<Response[]>([])
+  const [assessmentDrafts, setAssessmentDrafts] = useState<Record<string,AssessmentDraft>>({})
   const [findings, setFindings] = useState<Finding[]>([])
   const [openingForm, setOpeningForm] = useState({
     referenceYear:String(new Date().getFullYear()),
@@ -229,6 +239,7 @@ export function SkdaWorkspace(props: Props) {
   const canEditInterviews = ['administrator','coordinator','interviewer'].includes(props.userRoleCode)
   const canLinkEvidence = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
   const canEditAssessment = ['administrator','coordinator','diagnostician'].includes(props.userRoleCode)
+  const canValidateAssessment = ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
   const canEditFindings = ['administrator','coordinator','diagnostician','reviewer'].includes(props.userRoleCode)
   const canValidateFindings = ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
   const canCreateTactical = ['administrator','coordinator'].includes(props.userRoleCode)
@@ -320,7 +331,7 @@ export function SkdaWorkspace(props: Props) {
           .order('display_order', { ascending:true }),
         supabase
           .from('skda_responses' as never)
-          .select('id,question_id,classification,response_status,answer_text,confidence_level,maturity_level,score' as never)
+          .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,evaluated_at,validated_at' as never)
           .eq('diagnosis_id', selected.id),
       ])
       setQuestions((questionsResult.data ?? []) as unknown as Question[])
@@ -332,6 +343,21 @@ export function SkdaWorkspace(props: Props) {
   useEffect(() => {
     setActivePhaseCode(selected?.current_phase_code ?? 'DA-00')
   }, [selected?.id, selected?.current_phase_code])
+
+  useEffect(() => {
+    const next: Record<string,AssessmentDraft> = {}
+    questions.forEach((question) => {
+      const response = responses.find((item) => item.question_id === question.id)
+      next[question.id] = {
+        classification:response?.classification ?? 'not_evaluated',
+        answerText:response?.answer_text ?? '',
+        rationale:response?.rationale ?? '',
+        confidenceLevel:response?.confidence_level ?? 'not_assessed',
+        score:response?.score == null ? '' : String(response.score),
+      }
+    })
+    setAssessmentDrafts(next)
+  }, [questions, responses])
 
   useEffect(() => {
     const run = async () => {
@@ -446,27 +472,92 @@ export function SkdaWorkspace(props: Props) {
     await loadDiagnoses()
   }
 
-  const saveClassification = async (question: Question, classification: string) => {
+  const updateAssessmentDraft = (questionId: string, patch: Partial<AssessmentDraft>) => {
+    setAssessmentDrafts((current) => ({
+      ...current,
+      [questionId]: {
+        classification:'not_evaluated',
+        answerText:'',
+        rationale:'',
+        confidenceLevel:'not_assessed',
+        score:'',
+        ...(current[questionId] ?? {}),
+        ...patch,
+      },
+    }))
+  }
+
+  const saveAssessment = async (question: Question) => {
     if (!selected || !canEditAssessment) return
+    const draft = assessmentDrafts[question.id]
+    if (!draft) return
+    const score = draft.score.trim() === '' ? null : Number(draft.score)
+    if (score != null && (!Number.isFinite(score) || score < 0 || score > 100)) {
+      setError('A nota da avaliação deve estar entre 0 e 100.')
+      return
+    }
+
     setSaving(true)
     setError('')
     const hadResponse = responses.some((item) => item.question_id === question.id)
+    const { data: authData } = await supabase.auth.getUser()
+    const userId = authData.user?.id ?? null
     const { data, error: saveError } = await supabase
       .from('skda_responses' as never)
       .upsert({
         organization_id:props.organizationId,
         diagnosis_id:selected.id,
         question_id:question.id,
-        classification,
+        classification:draft.classification,
+        answer_text:draft.answerText.trim() || null,
+        rationale:draft.rationale.trim() || null,
+        score,
+        confidence_level:draft.confidenceLevel,
         response_status:'draft',
+        evaluated_at:new Date().toISOString(),
+        evaluated_by:userId,
+        validated_at:null,
+        validated_by:null,
       } as never, { onConflict:'diagnosis_id,question_id' })
-      .select('id,question_id,classification,response_status,answer_text,confidence_level,maturity_level,score' as never)
+      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,evaluated_at,validated_at' as never)
       .single()
+
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
     const saved = data as unknown as Response
     setResponses((current) => [...current.filter((item) => item.question_id !== question.id), saved])
     setMetrics((current) => ({ ...current, responses:hadResponse ? current.responses : current.responses + 1 }))
+  }
+
+  const validateAssessment = async (question: Question) => {
+    if (!selected || !canValidateAssessment) return
+    const response = responses.find((item) => item.question_id === question.id)
+    if (!response) {
+      setError('Registre a avaliação antes de validá-la.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    const { data: authData } = await supabase.auth.getUser()
+    const userId = authData.user?.id ?? null
+    const { data, error: saveError } = await supabase
+      .from('skda_responses' as never)
+      .update({
+        response_status:'validated',
+        validated_at:new Date().toISOString(),
+        validated_by:userId,
+      } as never)
+      .eq('id', response.id)
+      .eq('diagnosis_id', selected.id)
+      .eq('organization_id', props.organizationId)
+      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,evaluated_at,validated_at' as never)
+      .single()
+
+    setSaving(false)
+    if (saveError) { setError(saveError.message); return }
+    const saved = data as unknown as Response
+    setResponses((current) => [...current.filter((item) => item.question_id !== question.id), saved])
   }
 
   const linkEvidence = async (asset: EvidenceAsset) => {
@@ -891,13 +982,26 @@ export function SkdaWorkspace(props: Props) {
             </div>}
           </div>}
           {activePhase.code === 'DA-03' && <div className="skda-phase-workspace">
-            <div className="skda-phase-workspace-head"><h4>Avaliação por questão</h4><span>{selectedCatalog ? selectedCatalog.name : 'Catálogo não definido'}</span></div>
-            {!selected.catalog_version_id ? <p className="skda-phase-empty">Defina o catálogo na fase DA-00 antes de iniciar a avaliação.</p> : questions.length === 0 ? <p className="skda-phase-empty">O catálogo selecionado ainda não possui questões disponíveis.</p> : <div className="skda-question-list">
+            <div className="skda-phase-workspace-head"><div><h4>Avaliação por questão</h4><small>Registre a constatação, classifique, atribua nota e confiança e submeta à validação conforme o papel.</small></div><span>{selectedCatalog ? selectedCatalog.name : 'Catálogo não definido'}</span></div>
+            <div className="skda-assessment-method-note"><strong>Maturidade</strong><span>A escala de maturidade não está publicada no catálogo atual. O campo não será preenchido artificialmente; quando a escala metodológica estiver no catálogo, a avaliação passará a derivá-la daqui.</span></div>
+            {!selected.catalog_version_id ? <p className="skda-phase-empty">Defina o catálogo na fase DA-00 antes de iniciar a avaliação.</p> : questions.length === 0 ? <p className="skda-phase-empty">O catálogo selecionado ainda não possui questões disponíveis.</p> : <div className="skda-question-list skda-assessment-list">
               {questions.map((question) => {
                 const response = responses.find((item) => item.question_id === question.id)
-                return <article key={question.id}>
+                const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', score:'' }
+                return <article key={question.id} className="skda-assessment-card">
                   <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
-                  <label><span>Classificação</span><select value={response?.classification ?? 'not_evaluated'} disabled={!canEditAssessment || saving} onChange={(e) => void saveClassification(question, e.target.value)}>{Object.entries(CLASSIFICATION).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                  <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>
+                  <div className="skda-assessment-fields">
+                    <label className="wide"><span>Constatação / resposta</span><textarea rows={3} value={draft.answerText} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{answerText:e.target.value})}/></label>
+                    <label><span>Classificação</span><select value={draft.classification} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{classification:e.target.value})}>{Object.entries(CLASSIFICATION).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                    <label><span>Nota (0–100)</span><input type="number" min="0" max="100" step="0.01" value={draft.score} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{score:e.target.value})}/></label>
+                    <label><span>Confiança</span><select value={draft.confidenceLevel} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{confidenceLevel:e.target.value})}>{Object.entries(CONFIDENCE_LEVELS).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                    <label className="wide"><span>Fundamentação</span><textarea rows={2} value={draft.rationale} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{rationale:e.target.value})}/></label>
+                  </div>
+                  <div className="skda-assessment-actions">
+                    {canEditAssessment && <button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveAssessment(question)}>{saving?'Salvando...':response?.response_status === 'validated' ? 'Salvar e reabrir avaliação' : 'Salvar avaliação'}</button>}
+                    {canValidateAssessment && response && response.response_status !== 'validated' && <button type="button" className="skda-secondary-action" disabled={saving} onClick={()=>void validateAssessment(question)}>Validar avaliação</button>}
+                  </div>
                 </article>
               })}
             </div>}

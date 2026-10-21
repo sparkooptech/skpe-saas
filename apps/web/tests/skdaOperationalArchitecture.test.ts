@@ -66,8 +66,14 @@ test('DA-00 and DA-03 govern catalog assignment and question assessment', () => 
   assert.match(workspace, /onConflict:'diagnosis_id,question_id'/)
   assert.match(workspace, /catalogLocked = metrics\.responses > 0/)
   assert.match(workspace, /canEditAssessment = \['administrator','coordinator','diagnostician'\]/)
+  assert.match(workspace, /canValidateAssessment = \['administrator','coordinator','reviewer'\]/)
+  assert.match(workspace, /score < 0 \|\| score > 100/)
+  assert.match(workspace, /response_status:'draft'/)
+  assert.match(workspace, /response_status:'validated'/)
+  assert.match(workspace, /A escala de maturidade não está publicada no catálogo atual/)
   assert.match(workspace, /canEditInterviews = \['administrator','coordinator','interviewer'\]/)
   assert.match(migration, /unique\(diagnosis_id,question_id\)/)
+  assert.match(migration, /score numeric\(6,2\) check \(score is null or score between 0 and 100\)/)
 })
 
 test('DA-04 and DA-05 keep findings and recommendations in the DA domain', () => {
