@@ -81,4 +81,8 @@ test('deployment refuses a release when the REST gateway route is broken', () =>
     deployScript,
     /https:\/\/\$\{SPARKS_PUBLIC_HOST}\/rest\/v1\//,
   )
+  assert.match(
+    deployScript,
+    /cutover_release\(\)[\s\S]*?remove_preview_container[\s\S]*?docker compose -f docker-compose\.yml up/,
+  )
 })

@@ -299,6 +299,10 @@ cutover_release() {
   BACKUP_CONTAINER="${PUBLIC_CONTAINER}-old-${DEPLOY_TIMESTAMP}"
   write_cleanup_metadata
 
+  # O preview já validou a imagem e o proxy /rest/v1. Removê-lo antes do
+  # cutover libera seu IPv4 na rede backend restrita para o container público.
+  remove_preview_container
+
   if docker ps -a --format '{{.Names}}' | grep -qx "${PUBLIC_CONTAINER}"; then
     log "CUTOVER START"
     docker stop "${PUBLIC_CONTAINER}" >/dev/null 2>&1 || true
