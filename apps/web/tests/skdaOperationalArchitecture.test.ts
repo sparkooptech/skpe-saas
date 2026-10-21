@@ -21,6 +21,10 @@ const journeyExecutionMigration = readFileSync(
   new URL('../../../supabase/migrations/20261021132000_govern_skda_project_interviews_action_cycles.sql', import.meta.url),
   'utf8',
 )
+const externalParticipantFixMigration = readFileSync(
+  new URL('../../../supabase/migrations/20261021141000_fix_sparks_external_event_participant_uuid_aggregate.sql', import.meta.url),
+  'utf8',
+)
 
 test('SK-DA is wired as an operational module without replacing SK-PE', () => {
   assert.match(app, /import \{ SkdaWorkspace \}/)
@@ -217,6 +221,12 @@ test('DA interviews allow organization members without granting SK-DA access', (
   assert.match(journeyExecutionMigration, /not v_is_skda_interview[\s\S]*?organization_modules/)
   assert.match(journeyExecutionMigration, /can_manage_sparks_event_source/)
   assert.match(journeyExecutionMigration, /'interview\.edit'/)
+})
+
+test('transversal external participants resolve UUIDs without unsupported UUID aggregation', () => {
+  assert.match(externalParticipantFixMigration, /create or replace function public\.set_sparks_external_event_participant/)
+  assert.match(externalParticipantFixMigration, /min\(person\.id::text\)::uuid/)
+  assert.doesNotMatch(externalParticipantFixMigration, /min\(person\.id\)(?!::text)/)
 })
 
 test('DA-06 is a methodological Action Plan in three cycles over transversal initiatives', () => {
