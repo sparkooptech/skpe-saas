@@ -245,6 +245,7 @@ export function SkdaWorkspace(props: Props) {
   const [validationReason, setValidationReason] = useState('')
   const [showTacticalCreate, setShowTacticalCreate] = useState(false)
   const [activePhaseCode, setActivePhaseCode] = useState('OVERVIEW')
+  const [radarBlock, setRadarBlock] = useState<'GOVERNANCA' | 'GESTAO'>('GOVERNANCA')
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [actionPlanAllocations, setActionPlanAllocations] = useState<ActionPlanAllocation[]>([])
   const [managedInterviewEvent, setManagedInterviewEvent] = useState<ManagedInterviewEvent | null>(null)
@@ -458,17 +459,48 @@ export function SkdaWorkspace(props: Props) {
     return 'A trajetória permanece estável no recorte disponível. O próximo avanço depende de ampliar evidências validadas e executar as ações prioritárias.'
   }, [evolutionByCycle, selectedId])
 
-  const radarPoints = useMemo(() => {
-    const count = Math.max(maturityByAxis.length, 3)
-    const values = maturityByAxis.length > 0
-      ? maturityByAxis.map((item) => Math.max(0, Math.min(100, item.score)))
-      : Array.from({ length: count }, () => 0)
-    return values.map((value, index) => {
+  const selfAssessmentRadar = useMemo(() => {
+    const raw = selected?.metadata?.self_assessment_radar
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { GOVERNANCA:[], GESTAO:[] } as Record<'GOVERNANCA' | 'GESTAO', Array<{ axis:string; score:number }>>
+
+    const normalize = (value: unknown) => Array.isArray(value)
+      ? value.flatMap((item) => {
+          if (!item || typeof item !== 'object' || Array.isArray(item)) return []
+          const axis = typeof (item as { axis?: unknown }).axis === 'string' ? (item as { axis:string }).axis.trim() : ''
+          const score = Number((item as { score?: unknown }).score)
+          return axis && Number.isFinite(score) ? [{ axis, score:Math.max(0, Math.min(100, score)) }] : []
+        })
+      : []
+
+    const source = raw as Record<string, unknown>
+    return {
+      GOVERNANCA:normalize(source.GOVERNANCA),
+      GESTAO:normalize(source.GESTAO),
+    }
+  }, [selected?.metadata])
+
+  const activeRadarBaseline = selfAssessmentRadar[radarBlock]
+  const activeRadarDa = useMemo(() => {
+    const byAxis = new Map(maturityByAxis.map((item) => [item.axis.toLocaleLowerCase('pt-BR'), item.score]))
+    return activeRadarBaseline.map((item) => ({
+      axis:item.axis,
+      score:byAxis.get(item.axis.toLocaleLowerCase('pt-BR')) ?? null,
+    }))
+  }, [activeRadarBaseline, maturityByAxis])
+
+  const radarPolygon = (values: Array<number | null>) => {
+    if (values.length < 3) return ''
+    return values.map((rawValue, index) => {
+      const value = rawValue == null ? 0 : Math.max(0, Math.min(100, rawValue))
       const angle = (-Math.PI / 2) + (index * 2 * Math.PI / values.length)
       const radius = 72 * (value / 100)
       return `${100 + Math.cos(angle) * radius},${100 + Math.sin(angle) * radius}`
     }).join(' ')
-  }, [maturityByAxis])
+  }
+
+  const aaRadarPoints = radarPolygon(activeRadarBaseline.map((item) => item.score))
+  const daRadarPoints = radarPolygon(activeRadarDa.map((item) => item.score))
+  const daRadarAvailable = activeRadarDa.some((item) => item.score != null)
 
   const hasAdministrativeOverride = props.isPlatformSuperAdmin || props.isOrganizationAdmin
   const canManage = hasAdministrativeOverride || ['administrator','coordinator'].includes(props.userRoleCode)
@@ -1479,22 +1511,29 @@ export function SkdaWorkspace(props: Props) {
         </article>
         <article className="skda-executive-card skda-radar-card">
           <div className="skda-executive-card-head">
-            <div><span>Maturidade</span><h3>Radar por eixo</h3></div>
-            <strong>{maturityByAxis.length > 0 ? maturityByAxis.length : '—'}</strong>
+            <div><span>Maturidade</span><h3>Autoavaliação × Diagnóstico Assistido</h3></div>
+            <strong>{activeRadarBaseline.length > 0 ? 'AA absorvida' : '—'}</strong>
           </div>
-          <div className="skda-radar-wrap">
-            <svg viewBox="0 0 200 200" role="img" aria-label="Radar de maturidade por eixo">
+          <div className="skda-radar-tabs" role="tablist" aria-label="Bloco do radar">
+            <button type="button" className={radarBlock === 'GOVERNANCA' ? 'active' : ''} onClick={() => setRadarBlock('GOVERNANCA')}>Governança</button>
+            <button type="button" className={radarBlock === 'GESTAO' ? 'active' : ''} onClick={() => setRadarBlock('GESTAO')}>Gestão</button>
+          </div>
+          {activeRadarBaseline.length === 0 ? (
+            <p className="skda-radar-empty">Autoavaliação ainda não estruturada para este bloco.</p>
+          ) : <div className="skda-radar-wrap">
+            <svg viewBox="0 0 200 200" role="img" aria-label="Comparação entre Autoavaliação e Diagnóstico Assistido">
               <circle cx="100" cy="100" r="72" className="skda-radar-grid" />
               <circle cx="100" cy="100" r="48" className="skda-radar-grid" />
               <circle cx="100" cy="100" r="24" className="skda-radar-grid" />
-              <polygon points={radarPoints} className="skda-radar-value" />
+              <polygon points={aaRadarPoints} className="skda-radar-value-aa" />
+              {daRadarAvailable && <polygon points={daRadarPoints} className="skda-radar-value-da" />}
             </svg>
-            {maturityByAxis.length === 0 ? (
-              <p>Nenhuma pontuação de maturidade validada ainda. O radar será preenchido a partir das avaliações reais.</p>
-            ) : (
-              <dl>{maturityByAxis.map((item) => <div key={item.axis}><dt>{item.axis}</dt><dd>{item.score}%</dd></div>)}</dl>
-            )}
-          </div>
+            <div className="skda-radar-detail">
+              <div className="skda-radar-legend"><span><i className="aa" />Autoavaliação</span><span><i className="da" />Diagnóstico Assistido</span></div>
+              <dl>{activeRadarBaseline.map((item, index) => <div key={item.axis}><dt>{item.axis}</dt><dd><b>{item.score.toFixed(0)}%</b><span>{activeRadarDa[index]?.score == null ? 'DA —' : 'DA ' + activeRadarDa[index]?.score + '%'}</span></dd></div>)}</dl>
+              {!daRadarAvailable && <p>O diagnóstico ainda não possui pontuação validada. A linha da AA permanece como baseline e o DA será sobreposto à medida que as questões forem validadas.</p>}
+            </div>
+          </div>}
         </article>
       </div>
       </>}
