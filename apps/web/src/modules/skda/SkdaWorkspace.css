@@ -426,6 +426,23 @@
   font-size: 12px;
 }
 
+.skda-finding-actions button {
+  border: 1px solid rgba(127,127,127,.28);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.skda-finding-actions .skda-primary {
+  border: 0;
+  color: white;
+}
+
 .skda-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -445,6 +462,60 @@
   background: var(--sparks-surface, #fff);
   color: inherit;
   box-shadow: 0 24px 80px rgba(0,0,0,.28);
+}
+
+.skda-modal-wide {
+  width: min(940px,100%);
+}
+
+.skda-modal > p {
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.skda-capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin: 0;
+  border: 1px solid rgba(127,127,127,.24);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.skda-capabilities legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.skda-capabilities label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.skda-form-grid .skda-capabilities input {
+  width: auto;
+  margin: 0;
+}
+
+.skda-tactical-note {
+  display: grid;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(127,127,127,.22);
+  border-radius: 10px;
+}
+
+.skda-tactical-note strong {
+  font-size: 12px;
+}
+
+.skda-tactical-note span {
+  font-size: 11px;
+  opacity: .72;
 }
 
 .skda-modal-head {

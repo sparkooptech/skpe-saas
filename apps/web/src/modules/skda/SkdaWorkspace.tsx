@@ -83,6 +83,32 @@ const FINDING_TYPES: Record<string,string> = {
 
 const PRIORITIES: Record<string,string> = { low:'Baixa', medium:'Média', high:'Alta', critical:'Crítica' }
 
+const INITIATIVE_CLASSES: Record<string,string> = {
+  initiative:'Iniciativa', program:'Programa', project:'Projeto', structuring_action:'Ação estruturante',
+  process:'Processo', sprint:'Sprint', task:'Tarefa', work:'Trabalho',
+}
+
+const EXECUTION_MODELS: Record<string,string> = {
+  project_management:'Gestão de Projetos', sipoc:'SIPOC', sprint:'Sprint', task:'Tarefas', custom:'Personalizado',
+}
+
+const TACTICAL_CAPABILITIES: Record<string,string> = {
+  kanban:'Kanban', pdca:'PDCA', '5w2w':'5W2W', risks:'Riscos',
+}
+
+function tacticalDefaults(initiativeClass: string) {
+  switch (initiativeClass) {
+    case 'program': return { categoryCode:'strategic', primaryModelCode:'project_management', capabilities:['kanban','5w2w','risks'] }
+    case 'project': return { categoryCode:'strategic', primaryModelCode:'project_management', capabilities:['kanban','5w2w','risks'] }
+    case 'structuring_action': return { categoryCode:'strategic', primaryModelCode:'task', capabilities:['kanban','pdca','5w2w'] }
+    case 'process': return { categoryCode:'process', primaryModelCode:'sipoc', capabilities:['pdca','5w2w','risks'] }
+    case 'sprint': return { categoryCode:'operational', primaryModelCode:'sprint', capabilities:['kanban','pdca','risks'] }
+    case 'task': return { categoryCode:'operational', primaryModelCode:'task', capabilities:['kanban','5w2w'] }
+    case 'work': return { categoryCode:'operational', primaryModelCode:'task', capabilities:['kanban','5w2w'] }
+    default: return { categoryCode:'operational', primaryModelCode:'task', capabilities:['kanban','5w2w'] }
+  }
+}
+
 export function SkdaWorkspace(props: Props) {
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -93,6 +119,9 @@ export function SkdaWorkspace(props: Props) {
   const [showCreate, setShowCreate] = useState(false)
   const [showInterviewCreate, setShowInterviewCreate] = useState(false)
   const [showFindingCreate, setShowFindingCreate] = useState(false)
+  const [validationFindingId, setValidationFindingId] = useState<string | null>(null)
+  const [validationReason, setValidationReason] = useState('')
+  const [showTacticalCreate, setShowTacticalCreate] = useState(false)
   const [activePhaseCode, setActivePhaseCode] = useState('DA-00')
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
@@ -103,6 +132,11 @@ export function SkdaWorkspace(props: Props) {
   const [findings, setFindings] = useState<Finding[]>([])
   const [interviewForm, setInterviewForm] = useState({ code:'', title:'', intervieweeName:'', intervieweeRole:'', channel:'teams', scheduledStart:'' })
   const [findingForm, setFindingForm] = useState({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'' })
+  const [tacticalForm, setTacticalForm] = useState({
+    findingId:'', initiativeClass:'project', categoryCode:'strategic', code:'', name:'', description:'',
+    priority:'medium', criticality:'medium', primaryModelCode:'project_management', impactLevel:'medium',
+    contributionWeight:'100', enabledCapabilities:['kanban','5w2w','risks'] as string[], changeReason:'',
+  })
   const [form, setForm] = useState({
     code:'', name:'', description:'', diagnosisType:'pdgc',
     referenceYear:String(new Date().getFullYear()),
@@ -118,6 +152,8 @@ export function SkdaWorkspace(props: Props) {
   const canLinkEvidence = ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
   const canEditAssessment = ['administrator','coordinator','diagnostician'].includes(props.userRoleCode)
   const canEditFindings = ['administrator','coordinator','diagnostician','reviewer'].includes(props.userRoleCode)
+  const canValidateFindings = ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
+  const canCreateTactical = ['administrator','coordinator'].includes(props.userRoleCode)
 
   const loadDiagnoses = async () => {
     setLoading(true)
@@ -308,6 +344,123 @@ export function SkdaWorkspace(props: Props) {
     const created = data as unknown as EvidenceCorrelation
     setEvidenceCorrelations((current) => [...current, created])
     setMetrics((current) => ({ ...current, evidence:current.evidence + 1 }))
+  }
+
+  const openValidation = (finding: Finding) => {
+    setValidationFindingId(finding.id)
+    setValidationReason(`Validação da recomendação do achado ${finding.title}.`)
+    setError('')
+  }
+
+  const acceptRecommendation = async () => {
+    if (!validationFindingId || validationReason.trim().length < 10) {
+      setError('Informe uma justificativa de validação com pelo menos 10 caracteres.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    const { error: saveError } = await supabase.rpc(
+      'accept_skda_finding_recommendation' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_finding_id:validationFindingId,
+        validation_reason:validationReason.trim(),
+      } as never,
+    )
+    setSaving(false)
+    if (saveError) { setError(saveError.message); return }
+
+    setFindings((current) => current.map((finding) => finding.id === validationFindingId ? { ...finding, status:'accepted' } : finding))
+    setValidationFindingId(null)
+    setValidationReason('')
+  }
+
+  const openTacticalConversion = (finding: Finding) => {
+    const defaults = tacticalDefaults('project')
+    setTacticalForm({
+      findingId:finding.id,
+      initiativeClass:'project',
+      categoryCode:defaults.categoryCode,
+      code:`TAC-${selected?.code ?? 'DA'}-${finding.id.slice(0,6).toUpperCase()}`,
+      name:finding.title,
+      description:finding.recommendation ?? finding.description,
+      priority:finding.priority,
+      criticality:finding.priority,
+      primaryModelCode:defaults.primaryModelCode,
+      impactLevel:finding.priority,
+      contributionWeight:'100',
+      enabledCapabilities:defaults.capabilities,
+      changeReason:`Conversão da recomendação validada do achado ${finding.title}.`,
+    })
+    setShowTacticalCreate(true)
+    setError('')
+  }
+
+  const changeTacticalClass = (initiativeClass: string) => {
+    const defaults = tacticalDefaults(initiativeClass)
+    setTacticalForm((current) => ({
+      ...current,
+      initiativeClass,
+      categoryCode:defaults.categoryCode,
+      primaryModelCode:defaults.primaryModelCode,
+      enabledCapabilities:defaults.capabilities,
+    }))
+  }
+
+  const toggleTacticalCapability = (capability: string) => {
+    setTacticalForm((current) => ({
+      ...current,
+      enabledCapabilities:current.enabledCapabilities.includes(capability)
+        ? current.enabledCapabilities.filter((item) => item !== capability)
+        : [...current.enabledCapabilities, capability],
+    }))
+  }
+
+  const createTacticalInitiative = async () => {
+    if (!selected || !tacticalForm.findingId || !tacticalForm.code.trim() || !tacticalForm.name.trim()) {
+      setError('Informe código e nome da iniciativa.')
+      return
+    }
+    if (tacticalForm.changeReason.trim().length < 10) {
+      setError('Informe uma justificativa com pelo menos 10 caracteres.')
+      return
+    }
+
+    const contributionWeight = Number(tacticalForm.contributionWeight)
+    if (!Number.isFinite(contributionWeight) || contributionWeight < 0 || contributionWeight > 100) {
+      setError('O peso de contribuição deve estar entre 0 e 100.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    const { data, error: saveError } = await supabase.rpc(
+      'create_skda_tactical_initiative' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_finding_id:tacticalForm.findingId,
+        target_initiative_class:tacticalForm.initiativeClass,
+        target_category_code:tacticalForm.categoryCode,
+        target_code:tacticalForm.code.trim().toUpperCase(),
+        target_name:tacticalForm.name.trim(),
+        target_description:tacticalForm.description.trim() || null,
+        target_priority:tacticalForm.priority,
+        target_criticality:tacticalForm.criticality,
+        target_primary_model_code:tacticalForm.primaryModelCode,
+        target_impact_level:tacticalForm.impactLevel,
+        target_contribution_weight:contributionWeight,
+        target_enabled_capabilities:tacticalForm.enabledCapabilities,
+        target_change_reason:tacticalForm.changeReason.trim(),
+      } as never,
+    )
+    setSaving(false)
+    if (saveError) { setError(saveError.message); return }
+    if (typeof data !== 'string' || !data) { setError('A conversão não retornou uma iniciativa válida.'); return }
+
+    setFindings((current) => current.map((finding) => finding.id === tacticalForm.findingId ? { ...finding, status:'in_action' } : finding))
+    setShowTacticalCreate(false)
+    setTacticalForm((current) => ({ ...current, findingId:'' }))
   }
 
   const createFinding = async () => {
@@ -540,7 +693,25 @@ export function SkdaWorkspace(props: Props) {
             {findings.filter((finding) => Boolean(finding.recommendation)).length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação registrada nos achados.</p> : <div className="skda-finding-list">
               {findings.filter((finding) => Boolean(finding.recommendation)).map((finding) => <article key={finding.id}>
                 <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span></div>
-                <div><b>Recomendação</b><span>Origem rastreável no achado</span></div>
+                <div className="skda-finding-actions">
+                  <b>{finding.status === 'accepted' ? 'Aceita' : finding.status === 'in_action' ? 'Em ação' : 'Recomendação'}</b>
+                  <span>Origem rastreável no achado</span>
+                  {finding.status === 'open' && canValidateFindings && <button type="button" onClick={() => openValidation(finding)}>Aceitar recomendação</button>}
+                  {finding.status === 'accepted' && canCreateTactical && <button type="button" className="skda-primary" onClick={() => openTacticalConversion(finding)}>Converter em iniciativa</button>}
+                </div>
+              </article>)}
+            </div>}
+          </div>}
+          {activePhase.code === 'DA-06' && <div className="skda-phase-workspace">
+            <div className="skda-phase-workspace-head"><h4>Gestão Tática</h4><span>Fatos geradores preservados</span></div>
+            {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação aceita está disponível para conversão tática.</p> : <div className="skda-finding-list">
+              {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').map((finding) => <article key={finding.id}>
+                <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Impacto sugerido {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span></div>
+                <div className="skda-finding-actions">
+                  <b>{finding.status === 'in_action' ? 'Em Gestão Tática' : 'Pronta para conversão'}</b>
+                  <span>Origem: SK-DA / achado</span>
+                  {finding.status === 'accepted' && canCreateTactical && <button type="button" className="skda-primary" onClick={() => openTacticalConversion(finding)}>Criar iniciativa</button>}
+                </div>
               </article>)}
             </div>}
           </div>}
@@ -551,6 +722,37 @@ export function SkdaWorkspace(props: Props) {
 
   return <>
     <TransversalWorkspace className="skda-workspace" header={header} primary={primary} secondary={secondary} />
+    {validationFindingId && <div className="skda-modal-backdrop">
+      <section className="skda-modal" role="dialog" aria-modal="true">
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-05 · Validação</p><h2>Aceitar recomendação</h2></div><button type="button" onClick={() => setValidationFindingId(null)}>×</button></div>
+        <p>Registre a justificativa da validação executiva. A recomendação aceita ficará elegível para conversão em Gestão Tática.</p>
+        <div className="skda-form-grid"><label className="wide"><span>Justificativa *</span><textarea rows={5} value={validationReason} onChange={(e)=>setValidationReason(e.target.value)}/></label></div>
+        {error && <div className="skda-alert">{error}</div>}
+        <div className="skda-modal-actions"><button type="button" onClick={() => setValidationFindingId(null)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void acceptRecommendation()}>{saving?'Validando...':'Aceitar recomendação'}</button></div>
+      </section>
+    </div>}
+    {showTacticalCreate && selected && <div className="skda-modal-backdrop">
+      <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-06 · Gestão Tática</p><h2>Converter recomendação em iniciativa</h2></div><button type="button" onClick={() => setShowTacticalCreate(false)}>×</button></div>
+        <div className="skda-form-grid">
+          <label><span>Classe da iniciativa</span><select value={tacticalForm.initiativeClass} onChange={(e)=>changeTacticalClass(e.target.value)}>{Object.entries(INITIATIVE_CLASSES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Modelo primário de execução</span><select value={tacticalForm.primaryModelCode} onChange={(e)=>setTacticalForm(v=>({...v,primaryModelCode:e.target.value}))}>{Object.entries(EXECUTION_MODELS).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Código *</span><input value={tacticalForm.code} onChange={(e)=>setTacticalForm(v=>({...v,code:e.target.value}))}/></label>
+          <label><span>Categoria</span><input value={tacticalForm.categoryCode === 'strategic' ? 'Estratégica' : tacticalForm.categoryCode === 'process' ? 'Processo' : 'Operacional'} disabled/></label>
+          <label className="wide"><span>Nome *</span><input value={tacticalForm.name} onChange={(e)=>setTacticalForm(v=>({...v,name:e.target.value}))}/></label>
+          <label className="wide"><span>Descrição</span><textarea rows={3} value={tacticalForm.description} onChange={(e)=>setTacticalForm(v=>({...v,description:e.target.value}))}/></label>
+          <label><span>Prioridade</span><select value={tacticalForm.priority} onChange={(e)=>setTacticalForm(v=>({...v,priority:e.target.value}))}>{Object.entries(PRIORITIES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Criticidade</span><select value={tacticalForm.criticality} onChange={(e)=>setTacticalForm(v=>({...v,criticality:e.target.value}))}>{Object.entries(PRIORITIES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Impacto do fato gerador</span><select value={tacticalForm.impactLevel} onChange={(e)=>setTacticalForm(v=>({...v,impactLevel:e.target.value}))}><option value="not_assessed">Não avaliado</option>{Object.entries(PRIORITIES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Peso de contribuição (%)</span><input type="number" min="0" max="100" value={tacticalForm.contributionWeight} onChange={(e)=>setTacticalForm(v=>({...v,contributionWeight:e.target.value}))}/></label>
+          <fieldset className="wide skda-capabilities"><legend>Capacidades habilitadas</legend>{Object.entries(TACTICAL_CAPABILITIES).map(([value,label]) => <label key={value}><input type="checkbox" checked={tacticalForm.enabledCapabilities.includes(value)} onChange={() => toggleTacticalCapability(value)}/><span>{label}</span></label>)}</fieldset>
+          <label className="wide"><span>Justificativa da conversão *</span><textarea rows={3} value={tacticalForm.changeReason} onChange={(e)=>setTacticalForm(v=>({...v,changeReason:e.target.value}))}/></label>
+        </div>
+        <div className="skda-tactical-note"><strong>Rastreabilidade preservada</strong><span>A iniciativa será criada junto com o fato gerador SK-DA e o perfil de execução na mesma transação.</span></div>
+        {error && <div className="skda-alert">{error}</div>}
+        <div className="skda-modal-actions"><button type="button" onClick={() => setShowTacticalCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createTacticalInitiative()}>{saving?'Convertendo...':'Criar iniciativa'}</button></div>
+      </section>
+    </div>}
     {showFindingCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
         <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-04 · Achados e lacunas</p><h2>Registrar achado</h2></div><button type="button" onClick={() => setShowFindingCreate(false)}>×</button></div>
