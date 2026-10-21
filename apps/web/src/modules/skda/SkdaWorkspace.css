@@ -1771,3 +1771,29 @@
     flex-direction: column;
   }
 }
+
+
+.skda-phase-workspace-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .65rem;
+  flex-wrap: wrap;
+}
+
+.skda-phase-workspace-actions > span {
+  color: var(--skda-muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+@media (max-width: 760px) {
+  .skda-phase-workspace-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .skda-phase-workspace-actions .skda-primary {
+    width: 100%;
+  }
+}

@@ -136,6 +136,15 @@ const EVIDENCE_STATUS: Record<string,string> = {
   pending:'Pendente', under_review:'Em revisão', validated:'Validada', rejected:'Rejeitada', outdated:'Desatualizada', superseded:'Substituída',
 }
 
+const EVIDENCE_SOURCE_TYPES: Record<string,string> = {
+  internal:'Interna', external:'Externa', public:'Pública', market:'Mercado', benchmark:'Benchmark',
+  regulatory:'Regulatória', partner:'Parceiro', other:'Outra',
+}
+
+const EVIDENCE_CONFIDENTIALITY: Record<string,string> = {
+  public:'Pública', internal:'Interna', restricted:'Restrita', confidential:'Confidencial',
+}
+
 const RELIABILITY: Record<string,string> = {
   not_assessed:'Não avaliada', very_low:'Muito baixa', low:'Baixa', moderate:'Moderada', high:'Alta', very_high:'Muito alta',
 }
@@ -214,6 +223,17 @@ export function SkdaWorkspace(props: Props) {
   const [managedInterviewEvent, setManagedInterviewEvent] = useState<ManagedInterviewEvent | null>(null)
   const [realizationInterviewId, setRealizationInterviewId] = useState<string | null>(null)
   const [realizationForm, setRealizationForm] = useState({ actualStart:'', actualEnd:'', notes:'', changeReason:'Registro da realização da entrevista da Jornada DA.' })
+  const [showEvidenceCreate, setShowEvidenceCreate] = useState(false)
+  const [evidenceForm, setEvidenceForm] = useState({
+    title:'',
+    description:'',
+    evidenceType:'document',
+    sourceType:'internal',
+    confidentialityLevel:'internal',
+    referenceDate:'',
+    interviewId:'',
+    changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
+  })
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
@@ -309,6 +329,7 @@ export function SkdaWorkspace(props: Props) {
   const canManage = hasAdministrativeOverride || ['administrator','coordinator'].includes(props.userRoleCode)
   const canEditInterviews = hasAdministrativeOverride || ['administrator','coordinator','interviewer'].includes(props.userRoleCode)
   const canLinkEvidence = hasAdministrativeOverride || ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
+  const canRegisterEvidence = hasAdministrativeOverride || ['administrator','coordinator','diagnostician','interviewer'].includes(props.userRoleCode)
   const canEditAssessment = hasAdministrativeOverride || ['administrator','coordinator','diagnostician'].includes(props.userRoleCode)
   const canValidateAssessment = hasAdministrativeOverride || ['administrator','coordinator','reviewer'].includes(props.userRoleCode)
   const canEditFindings = hasAdministrativeOverride || ['administrator','coordinator','diagnostician','reviewer'].includes(props.userRoleCode)
@@ -321,6 +342,7 @@ export function SkdaWorkspace(props: Props) {
 
       setShowCreate(false)
       setShowInterviewCreate(false)
+      setShowEvidenceCreate(false)
       setShowFindingCreate(false)
       setShowTacticalCreate(false)
       setValidationFindingId(null)
@@ -736,6 +758,111 @@ export function SkdaWorkspace(props: Props) {
     const created = data as unknown as EvidenceCorrelation
     setEvidenceCorrelations((current) => [...current, created])
     setMetrics((current) => ({ ...current, evidence:current.evidence + 1 }))
+  }
+
+  const createAndLinkEvidence = async () => {
+    if (!selected || !canRegisterEvidence) return
+    if (!evidenceForm.title.trim()) {
+      setError('Informe o título da evidência.')
+      return
+    }
+    if (evidenceForm.changeReason.trim().length < 10) {
+      setError('Informe uma justificativa com pelo menos 10 caracteres.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+
+    const { data: assetId, error: registerError } = await supabase.rpc(
+      'register_sparks_evidence_asset' as never,
+      {
+        target_organization_id:props.organizationId,
+        evidence_title:evidenceForm.title.trim(),
+        evidence_description:evidenceForm.description.trim() || null,
+        target_evidence_type:evidenceForm.evidenceType,
+        target_source_type:evidenceForm.sourceType,
+        target_origin_module_code:'SK-DA',
+        target_reference_date:evidenceForm.referenceDate || null,
+        target_validity_date:null,
+        target_confidentiality_level:evidenceForm.confidentialityLevel,
+        target_content_hash:null,
+        target_file_name:null,
+        target_mime_type:null,
+        target_file_size_bytes:null,
+        target_storage_bucket:null,
+        target_storage_path:null,
+        change_reason:evidenceForm.changeReason.trim(),
+      } as never,
+    )
+
+    if (registerError || !assetId) {
+      setSaving(false)
+      setError(registerError?.message ?? 'Não foi possível registrar a evidência no Core.')
+      return
+    }
+
+    const { data: assetData, error: assetError } = await supabase
+      .from('sparks_evidence_assets' as never)
+      .select('id,title,evidence_type,validation_status,reliability_level,reference_date' as never)
+      .eq('id', assetId as never)
+      .eq('organization_id', props.organizationId)
+      .single()
+
+    if (assetError || !assetData) {
+      setSaving(false)
+      setError(assetError?.message ?? 'A evidência foi registrada, mas não pôde ser recarregada.')
+      return
+    }
+
+    const targetInterview = evidenceForm.interviewId
+      ? interviews.find((item) => item.id === evidenceForm.interviewId)
+      : null
+
+    const { data: correlationData, error: correlationError } = await supabase
+      .from('skda_evidence_correlations' as never)
+      .insert({
+        organization_id:props.organizationId,
+        diagnosis_id:selected.id,
+        evidence_asset_id:assetId,
+        target_type:targetInterview ? 'interview' : 'diagnosis',
+        target_id:targetInterview?.id ?? selected.id,
+        usage_type:targetInterview ? 'context' : 'support',
+        relevance_level:'important',
+        analyst_interpretation:targetInterview
+          ? `Evidência identificada ou confirmada durante a entrevista ${targetInterview.code} · ${targetInterview.title}.`
+          : 'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
+        validation_status:'pending',
+        metadata:targetInterview
+          ? { source:'interview', interview_id:targetInterview.id, interview_code:targetInterview.code }
+          : { source:'diagnosis' },
+      } as never)
+      .select('id,evidence_asset_id,usage_type,validation_status' as never)
+      .single()
+
+    setSaving(false)
+
+    if (correlationError || !correlationData) {
+      setError(correlationError?.message ?? 'A evidência foi registrada no Core, mas a correlação com o DA não foi concluída.')
+      return
+    }
+
+    const asset = assetData as unknown as EvidenceAsset
+    const correlation = correlationData as unknown as EvidenceCorrelation
+    setEvidenceAssets((current) => [asset, ...current.filter((item) => item.id !== asset.id)])
+    setEvidenceCorrelations((current) => [...current, correlation])
+    setMetrics((current) => ({ ...current, evidence:current.evidence + 1 }))
+    setEvidenceForm({
+      title:'',
+      description:'',
+      evidenceType:'document',
+      sourceType:'internal',
+      confidentialityLevel:'internal',
+      referenceDate:'',
+      interviewId:'',
+      changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
+    })
+    setShowEvidenceCreate(false)
   }
 
   const openValidation = (finding: Finding) => {
@@ -1321,7 +1448,13 @@ export function SkdaWorkspace(props: Props) {
             {canManage && <div className="skda-opening-actions"><button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveOpeningConfiguration()}>{saving?'Salvando...':'Salvar abertura da jornada'}</button></div>}
           </div>}
           {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
-            <div className="skda-phase-workspace-head"><h4>Evidências disponíveis no Core</h4><span>{evidenceAssets.length} ativo(s)</span></div>
+            <div className="skda-phase-workspace-head">
+              <div><h4>Evidências disponíveis no Core</h4><small>Registre novas evidências no Core ou correlacione ativos já existentes com esta Jornada DA.</small></div>
+              <div className="skda-phase-workspace-actions">
+                <span>{evidenceAssets.length} ativo(s)</span>
+                {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => setShowEvidenceCreate(true)}>Registrar nova evidência</button>}
+              </div>
+            </div>
             {evidenceAssets.length === 0 ? <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p> : <div className="skda-evidence-list">
               {evidenceAssets.map((asset) => {
                 const correlation = evidenceCorrelations.find((item) => item.evidence_asset_id === asset.id)
@@ -1617,6 +1750,25 @@ export function SkdaWorkspace(props: Props) {
         </div>
         {error && <div className="skda-alert">{error}</div>}
         <div className="skda-modal-actions"><button type="button" onClick={() => setShowFindingCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createFinding()}>{saving?'Salvando...':'Registrar achado'}</button></div>
+      </section>
+    </div>}
+    {showEvidenceCreate && selected && <div className="skda-modal-backdrop">
+      <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-01 · Evidências</p><h2>Registrar nova evidência no Core</h2></div><button type="button" onClick={() => setShowEvidenceCreate(false)}>×</button></div>
+        <p>O ativo será registrado no Core transversal de Evidências e correlacionado a esta Jornada DA. Se a evidência surgiu em uma entrevista, selecione-a para preservar a origem metodológica.</p>
+        <div className="skda-form-grid">
+          <label className="wide"><span>Título *</span><input value={evidenceForm.title} onChange={(e)=>setEvidenceForm(v=>({...v,title:e.target.value}))} placeholder="Ata, relatório, indicador, registro ou evidência identificada"/></label>
+          <label><span>Tipo</span><select value={evidenceForm.evidenceType} onChange={(e)=>setEvidenceForm(v=>({...v,evidenceType:e.target.value}))}>{Object.entries(EVIDENCE_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Origem</span><select value={evidenceForm.sourceType} onChange={(e)=>setEvidenceForm(v=>({...v,sourceType:e.target.value}))}>{Object.entries(EVIDENCE_SOURCE_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Confidencialidade</span><select value={evidenceForm.confidentialityLevel} onChange={(e)=>setEvidenceForm(v=>({...v,confidentialityLevel:e.target.value}))}>{Object.entries(EVIDENCE_CONFIDENTIALITY).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Data de referência</span><input type="date" value={evidenceForm.referenceDate} onChange={(e)=>setEvidenceForm(v=>({...v,referenceDate:e.target.value}))}/></label>
+          <label className="wide"><span>Entrevista de origem</span><select value={evidenceForm.interviewId} onChange={(e)=>setEvidenceForm(v=>({...v,interviewId:e.target.value}))}><option value="">Não surgiu de entrevista específica</option>{interviews.map((interview)=><option key={interview.id} value={interview.id}>{interview.code} · {interview.title}</option>)}</select></label>
+          <label className="wide"><span>Descrição / contexto</span><textarea rows={4} value={evidenceForm.description} onChange={(e)=>setEvidenceForm(v=>({...v,description:e.target.value}))} placeholder="O que esta evidência demonstra, como surgiu e por que é relevante para o diagnóstico."/></label>
+          <label className="wide"><span>Justificativa do registro *</span><textarea rows={3} value={evidenceForm.changeReason} onChange={(e)=>setEvidenceForm(v=>({...v,changeReason:e.target.value}))}/></label>
+        </div>
+        <div className="skda-tactical-note"><strong>Core + contexto metodológico</strong><span>O documento/ativo não será duplicado no SK-DA. O módulo guarda apenas a correlação e a interpretação contextual da Jornada.</span></div>
+        {error && <div className="skda-alert">{error}</div>}
+        <div className="skda-modal-actions"><button type="button" onClick={() => setShowEvidenceCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createAndLinkEvidence()}>{saving?'Registrando...':'Registrar e vincular'}</button></div>
       </section>
     </div>}
     {showInterviewCreate && selected && <div className="skda-modal-backdrop">

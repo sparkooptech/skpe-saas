@@ -25,6 +25,10 @@ const externalParticipantFixMigration = readFileSync(
   new URL('../../../supabase/migrations/20261021141000_fix_sparks_external_event_participant_uuid_aggregate.sql', import.meta.url),
   'utf8',
 )
+const evidenceRegistrationMigration = readFileSync(
+  new URL('../../../supabase/migrations/20261021153000_govern_transversal_evidence_registration.sql', import.meta.url),
+  'utf8',
+)
 
 test('SK-DA is wired as an operational module without replacing SK-PE', () => {
   assert.match(app, /import \{ SkdaWorkspace \}/)
@@ -63,7 +67,30 @@ test('DA-01 reuses transversal evidence and stores only contextual correlation',
   assert.match(workspace, /\.from\('skda_evidence_correlations'/)
   assert.match(workspace, /target_type:'diagnosis'/)
   assert.match(workspace, /evidence_asset_id:asset\.id/)
-  assert.doesNotMatch(workspace, /insert\([\s\S]*?sparks_evidence_assets/)
+  assert.doesNotMatch(workspace, /\.from\('sparks_evidence_assets' as never\)\s*\.insert\(/)
+})
+
+test('DA-01 can register new Core evidence discovered during an interview without duplicating the asset in SK-DA', () => {
+  assert.match(workspace, /register_sparks_evidence_asset/)
+  assert.match(workspace, /target_origin_module_code:'SK-DA'/)
+  assert.match(workspace, /target_type:targetInterview \? 'interview' : 'diagnosis'/)
+  assert.match(workspace, /usage_type:targetInterview \? 'context' : 'support'/)
+  assert.match(workspace, /interview_id:targetInterview\.id/)
+  assert.match(workspace, /Registrar nova evidência/)
+  assert.match(workspace, /Registrar e vincular/)
+})
+
+test('transversal Core separates evidence registration from full evidence management', () => {
+  assert.match(evidenceRegistrationMigration, /'evidence\.register'/)
+  assert.match(evidenceRegistrationMigration, /create or replace function public\.can_register_sparks_evidence/)
+  assert.match(evidenceRegistrationMigration, /permission\.code in \('evidence\.register','evidence\.manage'\)/)
+  assert.match(evidenceRegistrationMigration, /if not public\.can_register_sparks_evidence\(target_organization_id\)/)
+  for (const role of ['administrator','coordinator','diagnostician','interviewer']) {
+    assert.ok(evidenceRegistrationMigration.includes(`('${role}')`))
+  }
+  assert.doesNotMatch(evidenceRegistrationMigration, /\('diagnostician','evidence\.manage'\)/)
+  assert.doesNotMatch(evidenceRegistrationMigration, /\('interviewer','evidence\.manage'\)/)
+  assert.match(workspace, /const canRegisterEvidence = hasAdministrativeOverride \|\| \['administrator','coordinator','diagnostician','interviewer'\]\.includes/)
 })
 
 test('DA-00 configures the journey with canonical fields and transversal organization users', () => {
