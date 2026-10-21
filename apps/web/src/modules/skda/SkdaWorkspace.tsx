@@ -55,6 +55,7 @@ type ActionPlanAllocation = { id: string; finding_id: string; initiative_id: str
 type ManagedInterviewEvent = { event_id: string; journey_item_code: string; journey_item_title: string; event_type: string; event_title: string; event_description: string | null; starts_at: string | null; ends_at: string | null; all_day: boolean; timezone_name: string; event_status: string; priority: string; location_text: string | null; meeting_reference: string | null; participant_count: number; accepted_count: number; attended_count: number }
 type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
+type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_date: string | null; content_hash: string | null; metadata: Record<string, unknown> }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; display_order: number }
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; evaluated_at: string | null; validated_at: string | null }
@@ -91,8 +92,8 @@ type ActionFollowup = {
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
 const PHASES: Phase[] = [
-  { code:'DA-00', title:'Abertura e configuração', description:'Define ciclo, escopo, metodologia, responsáveis e catálogo de questões.', statusKey:'preparation' },
-  { code:'DA-01', title:'Evidências', description:'Correlaciona evidências transversais ao diagnóstico sem duplicar documentos.', statusKey:'evidence' },
+  { code:'DA-00', title:'Preparação e abertura', description:'Define ciclo, escopo, metodologia, responsáveis, catálogo e inventário inicial de evidências e Autoavaliações.', statusKey:'preparation' },
+  { code:'DA-01', title:'Análise de evidências', description:'Correlaciona evidências, avalia suficiência e confiabilidade e confronta o que foi declarado com o que é efetivamente sustentado.', statusKey:'evidence' },
   { code:'DA-02', title:'Entrevistas', description:'Planeja, registra e valida entrevistas e falas relevantes.', statusKey:'interviews' },
   { code:'DA-03', title:'Avaliação por questão', description:'Classifica respostas, maturidade, confiança e validação por questão.', statusKey:'assessment' },
   { code:'DA-04', title:'Achados e lacunas', description:'Consolida forças, lacunas, oportunidades, riscos e observações.', statusKey:'assessment' },
@@ -262,6 +263,7 @@ export function SkdaWorkspace(props: Props) {
   })
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
+  const [selfAssessmentSnapshots, setSelfAssessmentSnapshots] = useState<SelfAssessmentSnapshot[]>([])
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
   const [organizationUsers, setOrganizationUsers] = useState<OrganizationUser[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
@@ -611,8 +613,8 @@ export function SkdaWorkspace(props: Props) {
 
   useEffect(() => {
     const run = async () => {
-      if (!selectedId) { setEvidenceAssets([]); setEvidenceCorrelations([]); return }
-      const [assetsResult, correlationsResult] = await Promise.all([
+      if (!selectedId) { setEvidenceAssets([]); setEvidenceCorrelations([]); setSelfAssessmentSnapshots([]); return }
+      const [assetsResult, correlationsResult, snapshotsResult] = await Promise.all([
         supabase
           .from('sparks_evidence_assets' as never)
           .select('id,title,evidence_type,validation_status,reliability_level,reference_date' as never)
@@ -623,9 +625,15 @@ export function SkdaWorkspace(props: Props) {
           .from('skda_evidence_correlations' as never)
           .select('id,evidence_asset_id,usage_type,validation_status' as never)
           .eq('diagnosis_id', selectedId),
+        supabase
+          .from('skda_self_assessment_snapshots' as never)
+          .select('id,source_label,source_date,content_hash,metadata' as never)
+          .eq('diagnosis_id', selectedId)
+          .order('source_date', { ascending:true, nullsFirst:false }),
       ])
       setEvidenceAssets((assetsResult.data ?? []) as unknown as EvidenceAsset[])
       setEvidenceCorrelations((correlationsResult.data ?? []) as unknown as EvidenceCorrelation[])
+      setSelfAssessmentSnapshots((snapshotsResult.data ?? []) as unknown as SelfAssessmentSnapshot[])
     }
     void run()
   }, [selectedId, props.organizationId])
@@ -1658,6 +1666,34 @@ export function SkdaWorkspace(props: Props) {
             <div className="skda-catalog-block">
               <div className="skda-phase-workspace-head"><h4>Catálogo metodológico</h4><span>{selectedCatalog ? selectedCatalog.name : 'Não selecionado'}</span></div>
               {catalogs.length === 0 ? <p className="skda-phase-empty">Nenhum catálogo publicado está disponível. A jornada pode ser aberta, mas a avaliação por questão depende de um catálogo publicado.</p> : <label className="skda-inline-field"><span>Versão do catálogo</span><select value={selected.catalog_version_id ?? ''} disabled={!canManage || saving || catalogLocked} onChange={(e) => void assignCatalog(e.target.value)}><option value="">Selecione...</option>{catalogs.map((catalog) => <option key={catalog.id} value={catalog.id}>{catalog.name} · {catalog.version_code}</option>)}</select>{catalogLocked && <small>Catálogo bloqueado após o início da avaliação para preservar a rastreabilidade das respostas.</small>}</label>}
+            </div>
+            <div className="skda-intake-evidence">
+              <div className="skda-phase-workspace-head">
+                <div>
+                  <h4>Evidências de entrada e Autoavaliações</h4>
+                  <small>A Fase 0 inventaria o que foi recebido antes de qualquer conclusão do diagnóstico. Autoavaliações são preservadas como declaração histórica da organização, não como validação automática.</small>
+                </div>
+                <span>{selfAssessmentSnapshots.length} snapshot(s)</span>
+              </div>
+              <div className="skda-evidence-loop-note"><strong>Regra de evidência</strong><span>O que a organização declarou, o que as evidências efetivamente sustentam e o que o DA valida permanecem separados e rastreáveis.</span></div>
+              {selfAssessmentSnapshots.length === 0 ? <p className="skda-phase-empty">Nenhuma Autoavaliação foi importada para este ciclo. A preparação pode continuar com inventário documental, entrevistas iniciais e outras fontes disponíveis.</p> : <div className="skda-intake-snapshots">
+                {selfAssessmentSnapshots.map((snapshot) => {
+                  const block = typeof snapshot.metadata?.block === 'string' ? snapshot.metadata.block : 'AUTOAVALIAÇÃO'
+                  const normalizationStatus = typeof snapshot.metadata?.normalization_status === 'string' ? snapshot.metadata.normalization_status : 'preserved'
+                  return <article key={snapshot.id}>
+                    <div>
+                      <small>{block === 'GOVERNANCA' ? 'Governança Cooperativa' : block === 'GESTAO' ? 'Gestão' : 'Autoavaliação'}</small>
+                      <strong>{snapshot.source_label || 'Autoavaliação importada'}</strong>
+                      <span>{snapshot.source_date ? new Date(snapshot.source_date+'T00:00:00').toLocaleDateString('pt-BR') : 'Data não informada'} · Snapshot imutável</span>
+                    </div>
+                    <div className="skda-intake-status">
+                      <b>Declaração preservada</b>
+                      <span>{normalizationStatus === 'staging' ? 'Estruturação em andamento' : 'Estruturada'}</span>
+                    </div>
+                  </article>
+                })}
+              </div>}
+              <div className="skda-opening-actions"><button type="button" onClick={() => setActivePhaseCode('DA-01')}>Analisar e correlacionar evidências</button></div>
             </div>
             {canManage && <div className="skda-opening-actions"><button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveOpeningConfiguration()}>{saving?'Salvando...':'Salvar abertura da jornada'}</button></div>}
           </div>}
