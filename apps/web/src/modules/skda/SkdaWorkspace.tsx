@@ -315,7 +315,8 @@ export function SkdaWorkspace(props: Props) {
     return 'DA - Em configuração'
   }
 
-  const openInitiativeWorkspace = (initiativeId: string) => {
+  const openInitiativeWorkspace = (initiativeId: string | null) => {
+    if (!initiativeId) return
     const target = new URL(window.location.href)
     target.searchParams.set('section', 'initiatives')
     target.searchParams.set('initiativeTab', 'kanban')
