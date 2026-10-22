@@ -2615,3 +2615,151 @@
 .skda-metrics .sparks-metric-card__helper {
   text-align: center !important;
 }
+
+/* SK-DA | jornada consolidada e dois radares */
+.skda-executive-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.skda-phase-nav {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.skda-phase-substeps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.skda-phase-substeps span {
+  padding: .45rem .55rem;
+  border-radius: 8px;
+  background: #f4f7f6;
+  color: var(--skda-muted);
+  font-size: .7rem;
+  font-weight: 750;
+  text-align: center;
+}
+
+@media (max-width: 1180px) {
+  .skda-executive-grid,
+  .skda-phase-nav,
+  .skda-phase-substeps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .skda-executive-grid,
+  .skda-phase-nav,
+  .skda-phase-substeps {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skda-aa-reference {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: .55rem;
+  margin-top: .75rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--skda-border);
+}
+
+.skda-aa-reference > div {
+  display: grid;
+  gap: .15rem;
+}
+
+.skda-aa-reference small {
+  color: var(--skda-muted);
+  font-size: .66rem;
+  font-weight: 750;
+}
+
+.skda-aa-reference strong {
+  color: var(--skda-text);
+  font-size: .82rem;
+}
+
+.skda-aa-benchmarks {
+  grid-column: 1 / -1;
+}
+
+.skda-aa-benchmarks > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.skda-aa-benchmarks span {
+  padding: .3rem .45rem;
+  border-radius: 7px;
+  background: #f4f7f6;
+  color: var(--skda-muted);
+  font-size: .66rem;
+}
+
+.skda-workload-proposal {
+  display: grid;
+  gap: .7rem;
+  padding: .9rem 0;
+  border-top: 1px solid var(--skda-border);
+}
+
+.skda-workload-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: .55rem;
+}
+
+.skda-workload-grid article {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.skda-workload-grid article.is-internal {
+  border-style: dashed;
+  background: #f6f8f7;
+}
+
+.skda-workload-grid article > div {
+  display: grid;
+  gap: .18rem;
+}
+
+.skda-workload-grid small {
+  color: var(--skda-muted);
+  font-size: .63rem;
+  font-weight: 800;
+}
+
+.skda-workload-grid strong {
+  color: var(--skda-text);
+  font-size: .78rem;
+}
+
+.skda-workload-grid span {
+  color: var(--skda-muted);
+  font-size: .69rem;
+  line-height: 1.4;
+}
+
+.skda-workload-grid article > b {
+  flex: 0 0 auto;
+  color: var(--skda-primary);
+  font-size: 1.05rem;
+}
+
+@media (max-width: 760px) {
+  .skda-aa-reference,
+  .skda-workload-grid {
+    grid-template-columns: 1fr;
+  }
+}

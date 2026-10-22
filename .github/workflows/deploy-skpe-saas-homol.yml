@@ -55,6 +55,7 @@ jobs:
           release_root="${RUNNER_TEMP}/release"
           mkdir -p "${release_root}/source"
           cp -R deploy/hostinger/skpe-saas-homol/. "${release_root}/"
+          cp supabase/migrations/20261022175806_normalize_skda_self_assessment_intelligence.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -176,6 +177,14 @@ jobs:
           scp -P "${SSH_PORT}" \
             "${env_file}" \
             "${HOSTINGER_USER}@${HOSTINGER_HOST}:${{ steps.meta.outputs.release_dir }}/.env"
+
+      - name: Apply SK-DA Self-Assessment Intelligence Migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          migration_file='20261022175806_normalize_skda_self_assessment_intelligence.sql'
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol' < '${{ steps.meta.outputs.release_dir }}/${migration_file}'"
 
       - name: Deploy Remote Release
         shell: bash
