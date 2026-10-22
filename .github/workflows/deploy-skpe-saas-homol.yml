@@ -143,6 +143,20 @@ jobs:
             echo "HOSTINGER_USER=${HOSTINGER_USER}"
           } >> "${GITHUB_ENV}"
 
+      - name: Diagnose Remote Clock
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "RUNNER_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" '
+            echo "HOST_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "--- CONTAINER CLOCKS ---"
+            for c in $(docker ps --format "{{.Names}}"); do
+              printf "%s|" "$c"
+              docker exec "$c" date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "no-date"
+            done
+          '
+
       - name: Prepare Remote Release Directory
         shell: bash
         run: |
