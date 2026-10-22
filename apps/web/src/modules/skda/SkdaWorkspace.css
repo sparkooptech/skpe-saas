@@ -2564,3 +2564,25 @@
     grid-column: 1 / -1;
   }
 }
+
+/* SK-DA | refinamento visual validado em homologação */
+.skda-diagnosis,
+.skda-diagnosis.active {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.skda-diagnosis {
+  background: transparent;
+}
+
+.skda-diagnosis:hover,
+.skda-diagnosis.active {
+  background: color-mix(in srgb, var(--skda-primary) 4%, white);
+}
+
+.skda-metrics .sparks-metric-card__label {
+  color: var(--skda-text) !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+}
