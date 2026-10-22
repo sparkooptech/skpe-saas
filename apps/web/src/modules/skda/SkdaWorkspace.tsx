@@ -78,6 +78,7 @@ type EvolutionRow = {
 }
 type JourneyExecutionAction = {
   id: string
+  parent_action_id: string | null
   code: string
   name: string
   status: string
@@ -88,6 +89,17 @@ type JourneyExecutionAction = {
   planned_due_date: string | null
   started_at: string | null
   completed_at: string | null
+  metadata: Record<string, unknown>
+}
+type JourneyArtifact = {
+  id: string
+  artifact_code: string
+  title: string
+  purpose: string | null
+  macrophase_code: string | null
+  status: string
+  current_version_number: number
+  planned_due_date: string | null
   metadata: Record<string, unknown>
 }
 type ActionFollowup = {
@@ -161,6 +173,12 @@ const STATUS: Record<string,string> = {
   draft:'Rascunho', preparation:'Preparação', evidence:'Evidências',
   interviews:'Entrevistas', assessment:'Avaliação', validation:'Validação',
   completed:'Concluído', archived:'Arquivado',
+}
+
+const ARTIFACT_STATUS: Record<string,string> = {
+  planned:'Planejado', in_preparation:'Em preparação', in_review:'Em validação',
+  submitted:'Submetido', validated:'Validado', validated_with_reservations:'Validado com ressalvas',
+  rejected:'Rejeitado', superseded:'Substituído', archived:'Arquivado', waived:'Dispensado',
 }
 
 const TYPES: Record<string,string> = {
@@ -290,6 +308,7 @@ export function SkdaWorkspace(props: Props) {
   const [evolutionRows, setEvolutionRows] = useState<EvolutionRow[]>([])
   const [actionFollowup, setActionFollowup] = useState<ActionFollowup[]>([])
   const [journeyEap, setJourneyEap] = useState<JourneyExecutionAction[]>([])
+  const [journeyArtifacts, setJourneyArtifacts] = useState<JourneyArtifact[]>([])
   const [openingForm, setOpeningForm] = useState({
     referenceYear:String(new Date().getFullYear()),
     startedOn:'',
@@ -846,15 +865,29 @@ export function SkdaWorkspace(props: Props) {
 
   useEffect(() => {
     const run = async () => {
-      if (!selected?.execution_initiative_id) { setJourneyEap([]); return }
-      const { data } = await supabase
-        .from('sparks_initiative_actions' as never)
-        .select('id,code,name,status,progress,baseline_start_date,baseline_due_date,planned_start_date,planned_due_date,started_at,completed_at,metadata' as never)
-        .eq('organization_id', props.organizationId)
-        .eq('initiative_id', selected.execution_initiative_id)
-        .eq('source_module_code', 'SK-DA')
-        .order('code', { ascending:true })
-      setJourneyEap((data ?? []) as unknown as JourneyExecutionAction[])
+      if (!selected?.execution_initiative_id) {
+        setJourneyEap([])
+        setJourneyArtifacts([])
+        return
+      }
+      const [actionsResult, artifactsResult] = await Promise.all([
+        supabase
+          .from('sparks_initiative_actions' as never)
+          .select('id,parent_action_id,code,name,status,progress,baseline_start_date,baseline_due_date,planned_start_date,planned_due_date,started_at,completed_at,metadata' as never)
+          .eq('organization_id', props.organizationId)
+          .eq('initiative_id', selected.execution_initiative_id)
+          .eq('source_module_code', 'SK-DA')
+          .order('code', { ascending:true }),
+        supabase
+          .from('sparks_methodology_artifacts' as never)
+          .select('id,artifact_code,title,purpose,macrophase_code,status,current_version_number,planned_due_date,metadata' as never)
+          .eq('organization_id', props.organizationId)
+          .eq('project_id', selected.execution_initiative_id)
+          .eq('module_code', 'SK-DA')
+          .order('artifact_code', { ascending:true }),
+      ])
+      setJourneyEap((actionsResult.data ?? []) as unknown as JourneyExecutionAction[])
+      setJourneyArtifacts((artifactsResult.data ?? []) as unknown as JourneyArtifact[])
     }
     void run()
   }, [props.organizationId, selected?.id, selected?.execution_initiative_id, selected?.started_on, selected?.planned_end_on, selected?.lead_user_id])
@@ -1685,32 +1718,76 @@ export function SkdaWorkspace(props: Props) {
             </div>
             <span>{currentMegaphaseCode}</span>
           </div>
-          <div className="skda-megaphase-execution">
-            <div className="skda-megaphase-execution-head">
-              <span>MegaFase</span><span>LB0</span><span>Plano vigente</span><span>Realizado</span><span>Responsável</span><span>Entregas</span><span>Situação</span>
-            </div>
-            {MEGAPHASES.map((megaphase) => {
-              const action = journeyEap.find((item) => item.code === megaphase.code)
+          <div className="skda-megaphase-tree">
+            {MEGAPHASES.map((megaphase, megaphaseIndex) => {
+              const action = journeyEap.find((item) => item.code === megaphase.code && !item.parent_action_id)
+              const stages = action
+                ? journeyEap
+                    .filter((item) => item.parent_action_id === action.id)
+                    .sort((a,b) => Number(a.metadata?.display_order ?? 0) - Number(b.metadata?.display_order ?? 0) || a.code.localeCompare(b.code,'pt-BR'))
+                : []
+              const artifacts = journeyArtifacts.filter((item) => item.macrophase_code === megaphase.code)
+              const previousCode = megaphaseIndex > 0 ? MEGAPHASES[megaphaseIndex-1].code : null
+              const inheritedArtifacts = previousCode
+                ? journeyArtifacts.filter((item) => item.macrophase_code === previousCode && ['validated','validated_with_reservations','submitted','in_review'].includes(item.status))
+                : []
               const ownerId = typeof action?.metadata?.responsible_user_id === 'string' ? action.metadata.responsible_user_id : selected.lead_user_id
               const owner = organizationUsers.find((user) => user.user_id === ownerId)
-              const deliverables = Array.isArray(action?.metadata?.expected_deliverables)
-                ? action?.metadata?.expected_deliverables.filter((item): item is string => typeof item === 'string')
-                : []
               const formatRange = (start: string | null | undefined, end: string | null | undefined) => start || end
                 ? `${start ? new Date(start+'T00:00:00').toLocaleDateString('pt-BR') : '—'} → ${end ? new Date(end+'T00:00:00').toLocaleDateString('pt-BR') : '—'}`
                 : 'Pendente'
               const actualEnd = action?.completed_at ? action.completed_at.slice(0,10) : null
               const actualStart = action?.started_at ? action.started_at.slice(0,10) : null
               const statusLabel = action?.status === 'in_progress' ? 'Em andamento' : action?.status === 'completed' ? 'Concluída' : action?.status === 'blocked' ? 'Bloqueada' : action?.status === 'on_hold' ? 'Em espera' : 'Planejada'
-              return <article key={megaphase.code} className={megaphase.code === currentMegaphaseCode ? 'is-current' : ''}>
-                <div><small>{megaphase.code}</small><strong>{megaphase.title}</strong><span>{megaphase.workPattern}</span></div>
-                <div><small>Linha de base</small><strong>{formatRange(action?.baseline_start_date,action?.baseline_due_date)}</strong><span>{action?.metadata?.lb0_source === 'service_order' ? 'OS autorizada' : 'Aguardando OS'}</span></div>
-                <div><small>Plano vigente</small><strong>{formatRange(action?.planned_start_date,action?.planned_due_date)}</strong><span>Replanejável com o cliente</span></div>
-                <div><small>Realizado</small><strong>{formatRange(actualStart,actualEnd)}</strong><span>{action?.progress ?? 0}% executado</span></div>
-                <div><small>Responsável</small><strong>{owner?.user_display_name || owner?.user_email || 'A definir'}</strong></div>
-                <div><small>Entregas</small><strong>{deliverables.length}</strong><span>{deliverables.slice(0,2).join(' · ') || 'A estruturar'}</span></div>
-                <div><small>Situação</small><strong>{statusLabel}</strong></div>
-              </article>
+              return <details key={megaphase.code} open={megaphase.code === currentMegaphaseCode} className={megaphase.code === currentMegaphaseCode ? 'is-current' : ''}>
+                <summary>
+                  <div className="skda-megaphase-identity">
+                    <span>{megaphase.code}</span>
+                    <div><strong>{megaphase.title}</strong><small>{megaphase.workPattern}</small></div>
+                  </div>
+                  <div className="skda-megaphase-summary-metrics">
+                    <span><small>LB0</small><b>{formatRange(action?.baseline_start_date,action?.baseline_due_date)}</b></span>
+                    <span><small>Plano</small><b>{formatRange(action?.planned_start_date,action?.planned_due_date)}</b></span>
+                    <span><small>Realizado</small><b>{formatRange(actualStart,actualEnd)}</b></span>
+                    <span><small>Responsável</small><b>{owner?.user_display_name || owner?.user_email || 'A definir'}</b></span>
+                    <span><small>Artefatos</small><b>{artifacts.length}</b></span>
+                    <span><small>Situação</small><b>{statusLabel}</b></span>
+                  </div>
+                  <span className="skda-megaphase-chevron" aria-hidden="true">⌄</span>
+                </summary>
+                <div className="skda-megaphase-drill">
+                  <section className="skda-megaphase-inputs">
+                    <div className="skda-megaphase-subhead"><span>Entradas da MegaFase</span><strong>{megaphaseIndex === 0 ? 'Fontes autorizadoras e baseline' : 'Herança validada da MegaFase anterior'}</strong></div>
+                    {megaphaseIndex === 0 ? (
+                      <div className="skda-input-chips"><span>OS autorizadora / LB0</span><span>Autoavaliações disponíveis</span><span>Fontes e contexto inicial</span></div>
+                    ) : inheritedArtifacts.length > 0 ? (
+                      <div className="skda-input-chips">{inheritedArtifacts.map((artifact) => <span key={artifact.id}>{artifact.title}</span>)}</div>
+                    ) : (
+                      <p>Os artefatos da MegaFase anterior serão herdados conforme forem submetidos ou validados.</p>
+                    )}
+                  </section>
+                  <section className="skda-stage-list">
+                    <div className="skda-megaphase-subhead"><span>Etapas e atividades</span><strong>{stages.length} etapa(s)</strong></div>
+                    {stages.length === 0 ? <p>Estrutura operacional ainda não carregada.</p> : stages.map((stage) => {
+                      const activities = Array.isArray(stage.metadata?.activities)
+                        ? stage.metadata.activities.filter((item): item is string => typeof item === 'string')
+                        : []
+                      const stageStatus = stage.status === 'in_progress' ? 'Em andamento' : stage.status === 'completed' ? 'Concluída' : stage.status === 'blocked' ? 'Bloqueada' : 'Planejada'
+                      return <article key={stage.id}>
+                        <div className="skda-stage-title"><span>{stage.code}</span><strong>{stage.name}</strong><b>{stageStatus}</b></div>
+                        <ul>{activities.map((activity) => <li key={activity}>{activity}</li>)}</ul>
+                      </article>
+                    })}
+                  </section>
+                  <section className="skda-artifact-list">
+                    <div className="skda-megaphase-subhead"><span>Artefatos e entregáveis</span><strong>{artifacts.length} previsto(s)</strong></div>
+                    {artifacts.length === 0 ? <p>Entregáveis metodológicos ainda não estruturados.</p> : <div className="skda-artifact-grid">{artifacts.map((artifact) => <article key={artifact.id}>
+                      <div><small>{artifact.artifact_code}</small><strong>{artifact.title}</strong><span>{artifact.purpose || 'Entregável metodológico da Jornada.'}</span></div>
+                      <div className="skda-artifact-state"><b>{ARTIFACT_STATUS[artifact.status] ?? artifact.status}</b><span>v{artifact.current_version_number || 0}</span>{artifact.planned_due_date && <small>Previsto: {new Date(artifact.planned_due_date+'T00:00:00').toLocaleDateString('pt-BR')}</small>}</div>
+                    </article>)}</div>}
+                  </section>
+                </div>
+              </details>
             })}
           </div>
           <div className="skda-project-automation-note">
