@@ -133,13 +133,64 @@ const normalizeJourneyPhaseCode = (code: string | null | undefined) => {
   return PHASES.some((phase) => phase.code === code) ? code : 'DA-00'
 }
 
-const DA_25H_WORKLOAD_TEMPLATE = [
-  { code:'OPENING', title:'Abertura e validação da agenda', hours:3, audience:'organization', description:'Kickoff, alinhamento de escopo, participantes, agenda, evidências e critérios de condução.' },
-  { code:'GOV', title:'Entrevistas e avaliação · Governança', hours:6, audience:'organization', description:'1 a 1,5 dia de entrevistas orientadas às questões de Governança, com evidências e achados registrados no próprio rito.' },
-  { code:'MGT', title:'Entrevistas e avaliação · Gestão', hours:8, audience:'organization', description:'2 dias de entrevistas orientadas às questões de Gestão, com evidências e achados registrados no próprio rito.' },
-  { code:'RETURN', title:'Validação e devolutiva executiva', hours:2, audience:'organization', description:'Síntese, validações essenciais, pontos de atenção e próximos passos.' },
-  { code:'OFF', title:'Trabalho técnico interno', hours:6, audience:'internal', description:'Coleta complementar, leitura, correlação, análise, consolidação, preparação de artefatos e checagens internas.' },
-] as const
+const PDGC_WORKLOAD_REFERENCES = {
+  PP:{
+    code:'PP',
+    name:'Primeiros Passos',
+    totalHours:34,
+    technicalInstitutionalHours:17,
+    organizationHours:17,
+    studyHours:6,
+    technicalAlignmentHours:2,
+    returnPreparationHours:7,
+    actionPlanHours:2,
+  },
+  CE:{
+    code:'CE',
+    name:'Compromisso com a Excelência',
+    totalHours:42,
+    technicalInstitutionalHours:19,
+    organizationHours:23,
+    studyHours:7,
+    technicalAlignmentHours:2,
+    returnPreparationHours:8,
+    actionPlanHours:2,
+  },
+  RE:{
+    code:'RE',
+    name:'Rumo à Excelência',
+    totalHours:49,
+    technicalInstitutionalHours:23,
+    organizationHours:26,
+    studyHours:8,
+    technicalAlignmentHours:2,
+    returnPreparationHours:10,
+    actionPlanHours:3,
+  },
+  EX:{
+    code:'EX',
+    name:'Excelência',
+    totalHours:59,
+    technicalInstitutionalHours:27,
+    organizationHours:32,
+    studyHours:10,
+    technicalAlignmentHours:2,
+    returnPreparationHours:12,
+    actionPlanHours:3,
+  },
+} as const
+
+type PdgcWorkloadCode = keyof typeof PDGC_WORKLOAD_REFERENCES
+
+const normalizePdgcWorkloadCode = (value: unknown): PdgcWorkloadCode | null => {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toLocaleUpperCase('pt-BR')
+  if (normalized === 'PP' || normalized.includes('PRIMEIROS')) return 'PP'
+  if (normalized === 'CE' || normalized.includes('COMPROMISSO')) return 'CE'
+  if (normalized === 'RE' || normalized.includes('RUMO')) return 'RE'
+  if (normalized === 'EX' || normalized.includes('EXCELÊNCIA') || normalized.includes('EXCELENCIA')) return 'EX'
+  return null
+}
 
 const MEGAPHASES = [
   { code:'MF0', title:'Constituição e abertura', workPattern:'Abertura governada, kickoff, escopo, papéis e critérios de aplicação.' },
@@ -1628,6 +1679,24 @@ export function SkdaWorkspace(props: Props) {
   const selectedCatalog = catalogs.find((catalog) => catalog.id === selected?.catalog_version_id) ?? null
   const catalogLocked = metrics.responses > 0
   const currentMegaphaseCode = selected?.current_megaphase_code ?? 'MF0'
+  const workloadLevelCode = normalizePdgcWorkloadCode(
+    selected?.metadata?.maturity_level_code
+      ?? selectedCatalog?.name
+      ?? selectedCatalog?.code,
+  )
+  const workloadReference = workloadLevelCode
+    ? PDGC_WORKLOAD_REFERENCES[workloadLevelCode]
+    : null
+  const contractedHours = [
+    selected?.metadata?.contracted_hours,
+    selected?.metadata?.workload_hours,
+    selected?.metadata?.total_contracted_hours,
+  ]
+    .map((value) => Number(value))
+    .find((value) => Number.isFinite(value) && value > 0) ?? null
+  const workloadGap = workloadReference && contractedHours
+    ? contractedHours - workloadReference.totalHours
+    : null
 
   const secondary = selected ? (
     <div className="skda-detail">
@@ -1952,18 +2021,44 @@ export function SkdaWorkspace(props: Props) {
             <div className="skda-workload-proposal">
               <div className="skda-phase-workspace-head">
                 <div>
-                  <h4>Proposta de uso da carga contratada</h4>
-                  <small>Modelo-base SPARKOOP para uma OI/OS de 25h. Esta visão apresenta somente os blocos que exigem participação da Organização; o esforço técnico off-line permanece no plano interno da SPARKOOP.</small>
+                  <h4>Dimensionamento da Jornada DA</h4>
+                  <small>O nível do instrumento define o rito metodológico de referência. A OI/OS define a carga efetivamente contratada. O SPARKs deve adaptar o plano sem eliminar silenciosamente etapas essenciais.</small>
                 </div>
-                <span>Agenda proposta · 19h com a Organização</span>
+                <span>{workloadReference ? workloadReference.name : 'Nível a identificar'}{contractedHours ? ' · '+contractedHours+'h contratadas' : ''}</span>
               </div>
-              <div className="skda-workload-grid">
-                {DA_25H_WORKLOAD_TEMPLATE.filter((item) => item.audience === 'organization').map((item) => <article key={item.code} className="is-organization">
-                  <div><small>Agenda da Organização</small><strong>{item.title}</strong><span>{item.description}</span></div>
-                  <b>{item.hours}h</b>
+
+              {workloadReference ? <>
+                <div className="skda-workload-grid">
+                  <article className="is-organization">
+                    <div><small>Referência oficial do nível</small><strong>{workloadReference.name}</strong><span>Carga total prevista pela metodologia de referência.</span></div>
+                    <b>{workloadReference.totalHours}h</b>
+                  </article>
+                  <article className="is-organization">
+                    <div><small>Com a Organização</small><strong>Entrevistas, análise assistida e devolutiva</strong><span>Horas que exigem participação da cooperativa e devem compor sua agenda/cronograma.</span></div>
+                    <b>{workloadReference.organizationHours}h</b>
+                  </article>
+                  <article className="is-internal">
+                    <div><small>Trabalho técnico e institucional</small><strong>Preparação, análise e consolidação</strong><span>Estudo prévio {workloadReference.studyHours}h · alinhamentos técnicos {workloadReference.technicalAlignmentHours}h · preparação da devolutiva {workloadReference.returnPreparationHours}h · plano de melhoria {workloadReference.actionPlanHours}h.</span></div>
+                    <b>{workloadReference.technicalInstitutionalHours}h</b>
+                  </article>
+                </div>
+                {contractedHours && workloadGap !== null && <div className="skda-evidence-loop-note">
+                  <strong>{workloadGap < 0 ? 'Adaptação obrigatória' : workloadGap > 0 ? 'Capacidade adicional disponível' : 'Carga aderente ao referencial'}</strong>
+                  <span>{workloadGap < 0
+                    ? `A contratação possui ${Math.abs(workloadGap)}h a menos que o referencial de ${workloadReference.totalHours}h. O plano deve explicitar quais ganhos de eficiência, automações e reagrupamentos permitirão executar o mesmo rito com menor esforço, preservando entrevistas, evidências, avaliação, devolutiva e Plano de Ação.`
+                    : workloadGap > 0
+                      ? `A contratação possui ${workloadGap}h além do referencial. O excedente pode ampliar análise, validações, evidências ou follow-up conforme necessidade.`
+                      : 'A carga contratada coincide com o dimensionamento metodológico de referência.'}</span>
+                </div>}
+              </> : <div className="skda-evidence-loop-note"><strong>Nível de maturidade ainda não identificado</strong><span>Defina o nível do instrumento para que o SPARKs recupere automaticamente o dimensionamento metodológico de referência antes de propor a agenda.</span></div>}
+
+              <div className="skda-workload-grid skda-workload-reference-grid">
+                {Object.values(PDGC_WORKLOAD_REFERENCES).map((reference) => <article key={reference.code} className={workloadLevelCode === reference.code ? 'is-current-reference' : ''}>
+                  <div><small>{reference.code} · referência PDGC</small><strong>{reference.name}</strong><span>{reference.technicalInstitutionalHours}h técnicas/institucionais · {reference.organizationHours}h com a Organização</span></div>
+                  <b>{reference.totalHours}h</b>
                 </article>)}
               </div>
-              <div className="skda-evidence-loop-note"><strong>Regra de planejamento</strong><span>A distribuição é uma proposta inicial para aprovação. Datas e blocos podem ser reprogramados com a Organização, preservando LB0, plano vigente, justificativa e histórico da alteração.</span></div>
+              <div className="skda-evidence-loop-note"><strong>Regra de planejamento</strong><span>A agenda apresentada à Organização contém apenas os blocos que exigem sua participação. Estudo, análise documental, alinhamentos técnicos, preparação de devolutiva, lançamentos e construção do Plano de Ação permanecem no plano interno/institucional. A OI/OS é o teto contratual e qualquer reprogramação deve preservar justificativa e histórico.</span></div>
             </div>
             <div className="skda-intake-evidence">
               <div className="skda-phase-workspace-head">

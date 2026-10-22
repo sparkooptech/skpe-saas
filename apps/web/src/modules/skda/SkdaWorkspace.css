@@ -2763,3 +2763,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+.skda-workload-reference-grid {
+  margin-top: .2rem;
+}
+
+.skda-workload-reference-grid article.is-current-reference {
+  border-color: var(--skda-primary);
+  box-shadow: 0 0 0 1px var(--skda-primary) inset;
+}
