@@ -53,7 +53,10 @@ type Phase = { code: string; title: string; description: string; statusKey: stri
 type Interview = { id: string; code: string; title: string; interviewee_name: string | null; interviewee_role: string | null; status: string; channel: string; scheduled_start: string | null; scheduled_end: string | null; actual_start: string | null; actual_end: string | null; event_id: string | null }
 type ActionPlanAllocation = { id: string; finding_id: string; initiative_id: string | null; cycle_number: number; sequence_order: number; rationale: string | null }
 type ManagedInterviewEvent = { event_id: string; journey_item_code: string; journey_item_title: string; event_type: string; event_title: string; event_description: string | null; starts_at: string | null; ends_at: string | null; all_day: boolean; timezone_name: string; event_status: string; priority: string; location_text: string | null; meeting_reference: string | null; participant_count: number; accepted_count: number; attended_count: number }
-type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null }
+type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null; current_version_id: string | null }
+type EvidenceVersionText = { id: string; evidence_asset_id: string; extracted_text: string | null }
+type ContractMeetingProposal = { date: string; start: string; durationHours: number; location: string | null }
+type ContractIntakeProposal = { assetId: string; sourceTitle: string; sourceText: string; startedOn: string; plannedEndOn: string; contractedHours: number; meetings: ContractMeetingProposal[]; scopeLabel: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
 type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_date: string | null; content_hash: string | null; metadata: Record<string, unknown> }
 type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null }
@@ -190,6 +193,74 @@ const normalizePdgcWorkloadCode = (value: unknown): PdgcWorkloadCode | null => {
   if (normalized === 'RE' || normalized.includes('RUMO')) return 'RE'
   if (normalized === 'EX' || normalized.includes('EXCELÊNCIA') || normalized.includes('EXCELENCIA')) return 'EX'
   return null
+}
+
+const toIsoContractDate = (value: string) => {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  return match ? `${match[3]}-${match[2]}-${match[1]}` : ''
+}
+
+const normalizeSearchText = (value: string) =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+const formatCatalogName = (value: string) =>
+  value
+    .replace(/Excel.ncia/gi, 'Excelência')
+    .replace(/Diagn.stico/gi, 'Diagnóstico')
+    .replace(/Avalia..o/gi, 'Avaliação')
+
+const selectOrganizationContractSection = (text: string, organizationName: string) => {
+  const sections = text.split(/(?=Turma\s*:)/i)
+  const organizationKey = normalizeSearchText(organizationName)
+  const organizationTokens = organizationKey.split(/\s+/).filter((token) => token.length >= 4)
+  const matched = sections.find((section) => {
+    const normalized = normalizeSearchText(section)
+    return organizationTokens.some((token) => normalized.includes(token))
+  })
+  return matched ?? text
+}
+
+const parseContractIntakeProposal = (
+  asset: EvidenceAsset,
+  extractedText: string,
+  organizationName: string,
+): ContractIntakeProposal | null => {
+  const searchable = normalizeSearchText(`${asset.title}\n${extractedText.slice(0, 2500)}`)
+  const isContractualSource =
+    /ordem de (instrutoria|servico|serviços)|\boi\b|\bos\b|contrato|proposta aprovada/.test(searchable)
+
+  if (!isContractualSource) return null
+
+  const sourceText = selectOrganizationContractSection(extractedText, organizationName)
+  const meetings: ContractMeetingProposal[] = []
+  const meetingPattern = /Data:\s*(\d{2}\/\d{2}\/\d{4})\.\s*In[ií]cio:\s*(\d{2}:\d{2})\.\s*Carga hor[aá]ria:\s*(\d{1,2})h(\d{2})min\.[\s\S]*?Local de realiza[cç][aã]o:\s*([^\r\n]+)/gi
+
+  for (const match of sourceText.matchAll(meetingPattern)) {
+    const hours = Number(match[3]) + Number(match[4]) / 60
+    meetings.push({
+      date:toIsoContractDate(match[1]),
+      start:match[2],
+      durationHours:hours,
+      location:match[5]?.trim() || null,
+    })
+  }
+
+  if (meetings.length === 0) return null
+
+  const sortedDates = meetings.map((item) => item.date).filter(Boolean).sort()
+  const scopeMatch = extractedText.match(/\d{4}\/\d{4}\s*-\s*([^\r\n]+)/)
+  const contractedHours = meetings.reduce((total, item) => total + item.durationHours, 0)
+
+  return {
+    assetId:asset.id,
+    sourceTitle:asset.title,
+    sourceText,
+    startedOn:sortedDates[0] ?? '',
+    plannedEndOn:sortedDates.at(-1) ?? '',
+    contractedHours,
+    meetings,
+    scopeLabel:scopeMatch?.[1]?.trim() || null,
+  }
 }
 
 const MEGAPHASES = [
@@ -359,6 +430,8 @@ export function SkdaWorkspace(props: Props) {
     changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
   })
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
+  const [evidenceVersionTexts, setEvidenceVersionTexts] = useState<EvidenceVersionText[]>([])
+  const [appliedContractAssetId, setAppliedContractAssetId] = useState<string | null>(null)
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
   const [selfAssessmentSnapshots, setSelfAssessmentSnapshots] = useState<SelfAssessmentSnapshot[]>([])
   const [selfAssessmentMetrics, setSelfAssessmentMetrics] = useState<SelfAssessmentMetric[]>([])
@@ -839,11 +912,11 @@ export function SkdaWorkspace(props: Props) {
 
   useEffect(() => {
     const run = async () => {
-      if (!selectedId) { setEvidenceAssets([]); setEvidenceCorrelations([]); setSelfAssessmentSnapshots([]); setSelfAssessmentMetrics([]); return }
+      if (!selectedId) { setEvidenceAssets([]); setEvidenceVersionTexts([]); setEvidenceCorrelations([]); setSelfAssessmentSnapshots([]); setSelfAssessmentMetrics([]); return }
       const [assetsResult, correlationsResult, snapshotsResult, metricsResult] = await Promise.all([
         supabase
           .from('sparks_evidence_assets' as never)
-          .select('id,title,evidence_type,validation_status,reliability_level,reference_date' as never)
+          .select('id,title,evidence_type,validation_status,reliability_level,reference_date,current_version_id' as never)
           .eq('organization_id', props.organizationId)
           .is('archived_at', null)
           .order('updated_at', { ascending:false }),
@@ -862,7 +935,18 @@ export function SkdaWorkspace(props: Props) {
           .eq('diagnosis_id', selectedId)
           .order('reference_year', { ascending:true, nullsFirst:false }),
       ])
-      setEvidenceAssets((assetsResult.data ?? []) as unknown as EvidenceAsset[])
+      const loadedAssets = (assetsResult.data ?? []) as unknown as EvidenceAsset[]
+      setEvidenceAssets(loadedAssets)
+      const versionIds = loadedAssets.map((asset) => asset.current_version_id).filter((id): id is string => Boolean(id))
+      if (versionIds.length > 0) {
+        const { data: versionData } = await supabase
+          .from('sparks_evidence_versions' as never)
+          .select('id,evidence_asset_id,extracted_text' as never)
+          .in('id', versionIds)
+        setEvidenceVersionTexts((versionData ?? []) as unknown as EvidenceVersionText[])
+      } else {
+        setEvidenceVersionTexts([])
+      }
       setEvidenceCorrelations((correlationsResult.data ?? []) as unknown as EvidenceCorrelation[])
       setSelfAssessmentSnapshots((snapshotsResult.data ?? []) as unknown as SelfAssessmentSnapshot[])
       setSelfAssessmentMetrics((metricsResult.data ?? []) as unknown as SelfAssessmentMetric[])
@@ -1051,6 +1135,13 @@ export function SkdaWorkspace(props: Props) {
       ...(selected.metadata ?? {}),
       scope_statement:openingForm.scopeStatement.trim() || null,
       methodology_notes:openingForm.methodologyNotes.trim() || null,
+      ...(contractIntakeProposal && appliedContractAssetId === contractIntakeProposal.assetId ? {
+        contracted_hours:contractIntakeProposal.contractedHours,
+        contractual_source_evidence_asset_id:contractIntakeProposal.assetId,
+        contractual_source_title:contractIntakeProposal.sourceTitle,
+        contractual_schedule_proposal:contractIntakeProposal.meetings,
+        contractual_intake_status:'applied_pending_approval',
+      } : {}),
     }
     const { error: saveError } = await supabase
       .from('skda_diagnoses' as never)
@@ -1071,6 +1162,28 @@ export function SkdaWorkspace(props: Props) {
       return
     }
     await loadDiagnoses()
+  }
+
+  const applyContractIntakeProposal = () => {
+    if (!contractIntakeProposal) return
+    setOpeningForm((current) => ({
+      ...current,
+      referenceYear:contractIntakeProposal.startedOn
+        ? contractIntakeProposal.startedOn.slice(0,4)
+        : current.referenceYear,
+      startedOn:contractIntakeProposal.startedOn || current.startedOn,
+      plannedEndOn:contractIntakeProposal.plannedEndOn || current.plannedEndOn,
+      scopeStatement:contractIntakeProposal.scopeLabel
+        ? `${contractIntakeProposal.scopeLabel}. ${current.scopeStatement}`.trim()
+        : current.scopeStatement,
+      methodologyNotes:[
+        current.methodologyNotes,
+        `Fonte contratual identificada automaticamente: ${contractIntakeProposal.sourceTitle}.`,
+        `Carga contratada identificada: ${contractIntakeProposal.contractedHours}h.`,
+        'Datas e blocos abaixo são proposta de linha de base e permanecem sujeitos à aprovação/adequação da Organização.',
+      ].filter(Boolean).join('\n'),
+    }))
+    setAppliedContractAssetId(contractIntakeProposal.assetId)
   }
 
   const updateAssessmentDraft = (questionId: string, patch: Partial<AssessmentDraft>) => {
@@ -1235,7 +1348,7 @@ export function SkdaWorkspace(props: Props) {
 
     const { data: assetData, error: assetError } = await supabase
       .from('sparks_evidence_assets' as never)
-      .select('id,title,evidence_type,validation_status,reliability_level,reference_date' as never)
+      .select('id,title,evidence_type,validation_status,reliability_level,reference_date,current_version_id' as never)
       .eq('id', assetId as never)
       .eq('organization_id', props.organizationId)
       .single()
@@ -1677,6 +1790,15 @@ export function SkdaWorkspace(props: Props) {
   const isOverview = activePhaseCode === 'OVERVIEW'
   const isAgenda = activePhaseCode === 'AGENDA'
   const selectedCatalog = catalogs.find((catalog) => catalog.id === selected?.catalog_version_id) ?? null
+  const contractIntakeProposal = useMemo(() => {
+    for (const asset of evidenceAssets) {
+      const version = evidenceVersionTexts.find((item) => item.evidence_asset_id === asset.id)
+      if (!version?.extracted_text) continue
+      const proposal = parseContractIntakeProposal(asset, version.extracted_text, props.organizationName)
+      if (proposal) return proposal
+    }
+    return null
+  }, [evidenceAssets, evidenceVersionTexts, props.organizationName])
   const catalogLocked = metrics.responses > 0
   const currentMegaphaseCode = selected?.current_megaphase_code ?? 'MF0'
   const workloadLevelCode = normalizePdgcWorkloadCode(
@@ -2005,6 +2127,29 @@ export function SkdaWorkspace(props: Props) {
           </div>
           {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><div><h4>Configuração da Jornada DA</h4><small>Defina o ciclo, escopo, metodologia, responsável e catálogo da jornada.</small></div><span>{selectedCatalog ? selectedCatalog.framework_code : 'Não definido'}</span></div>
+            {contractIntakeProposal && <div className="skda-contract-intake">
+              <div className="skda-phase-workspace-head">
+                <div>
+                  <h4>Fonte contratual identificada</h4>
+                  <small>{contractIntakeProposal.sourceTitle}</small>
+                </div>
+                <span>{contractIntakeProposal.contractedHours}h identificadas</span>
+              </div>
+              <div className="skda-contract-summary-grid">
+                <article><small>Início sugerido</small><strong>{new Date(contractIntakeProposal.startedOn+'T00:00:00').toLocaleDateString('pt-BR')}</strong></article>
+                <article><small>Conclusão sugerida</small><strong>{new Date(contractIntakeProposal.plannedEndOn+'T00:00:00').toLocaleDateString('pt-BR')}</strong></article>
+                <article><small>Blocos contratados</small><strong>{contractIntakeProposal.meetings.length}</strong></article>
+                <article><small>Status</small><strong>{appliedContractAssetId === contractIntakeProposal.assetId ? 'Aplicada ao rascunho' : 'Aguardando análise'}</strong></article>
+              </div>
+              <div className="skda-contract-meeting-list">
+                {contractIntakeProposal.meetings.map((meeting, index) => <article key={meeting.date+'-'+meeting.start+'-'+index}>
+                  <div><small>Bloco {index+1}</small><strong>{new Date(meeting.date+'T00:00:00').toLocaleDateString('pt-BR')} · {meeting.start}</strong><span>{meeting.location || 'Local a confirmar'}</span></div>
+                  <b>{meeting.durationHours}h</b>
+                </article>)}
+              </div>
+              <div className="skda-evidence-loop-note"><strong>Regra de aprovação</strong><span>Esses dados foram extraídos do documento contratual e constituem uma proposta de linha de base. A Organização pode aprovar ou adequar datas, horários e distribuição antes da consolidação do cronograma.</span></div>
+              {canManage && <div className="skda-opening-actions"><button type="button" className="skda-primary" onClick={applyContractIntakeProposal}>Aplicar sugestão à abertura</button></div>}
+            </div>}
             <div className="skda-opening-grid">
               <label className="skda-inline-field"><span>Ano de referência</span><input type="number" min="2000" max="2100" value={openingForm.referenceYear} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,referenceYear:e.target.value}))}/></label>
               <label className="skda-inline-field"><span>Tipo de diagnóstico</span><select value={openingForm.diagnosisType} disabled={!canManage || saving || catalogLocked} onChange={(e)=>setOpeningForm(v=>({...v,diagnosisType:e.target.value}))}>{Object.entries(TYPES).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
@@ -2015,8 +2160,8 @@ export function SkdaWorkspace(props: Props) {
               <label className="skda-inline-field skda-opening-wide"><span>Orientações metodológicas</span><textarea rows={4} value={openingForm.methodologyNotes} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,methodologyNotes:e.target.value}))} placeholder="Premissas, critérios de aplicação, adaptações e observações metodológicas específicas desta jornada."/></label>
             </div>
             <div className="skda-catalog-block">
-              <div className="skda-phase-workspace-head"><h4>Catálogo metodológico</h4><span>{selectedCatalog ? selectedCatalog.name : 'Não selecionado'}</span></div>
-              {catalogs.length === 0 ? <p className="skda-phase-empty">Nenhum catálogo publicado está disponível. A jornada pode ser aberta, mas a avaliação por questão depende de um catálogo publicado.</p> : <label className="skda-inline-field"><span>Versão do catálogo</span><select value={selected.catalog_version_id ?? ''} disabled={!canManage || saving || catalogLocked} onChange={(e) => void assignCatalog(e.target.value)}><option value="">Selecione...</option>{catalogs.map((catalog) => <option key={catalog.id} value={catalog.id}>{catalog.name} · {catalog.version_code}</option>)}</select>{catalogLocked && <small>Catálogo bloqueado após o início da avaliação para preservar a rastreabilidade das respostas.</small>}</label>}
+              <div className="skda-phase-workspace-head"><h4>Catálogo metodológico</h4><span>{selectedCatalog ? formatCatalogName(selectedCatalog.name) : 'Não selecionado'}</span></div>
+              {catalogs.length === 0 ? <p className="skda-phase-empty">Nenhum catálogo publicado está disponível. A jornada pode ser aberta, mas a avaliação por questão depende de um catálogo publicado.</p> : <label className="skda-inline-field"><span>Versão do catálogo</span><select value={selected.catalog_version_id ?? ''} disabled={!canManage || saving || catalogLocked} onChange={(e) => void assignCatalog(e.target.value)}><option value="">Selecione...</option>{catalogs.map((catalog) => <option key={catalog.id} value={catalog.id}>{formatCatalogName(catalog.name)} · {catalog.version_code}</option>)}</select>{catalogLocked && <small>Catálogo bloqueado após o início da avaliação para preservar a rastreabilidade das respostas.</small>}</label>}
             </div>
             <div className="skda-workload-proposal">
               <div className="skda-phase-workspace-head">
@@ -2295,8 +2440,11 @@ export function SkdaWorkspace(props: Props) {
     <ApplicationShell
       brand={
         <div className="skda-shell-brand">
-          <strong>SPARKs</strong>
-          <span>Diagnóstico Assistido</span>
+          <span className="skda-shell-brand-mark" aria-hidden="true">S</span>
+          <div className="skda-shell-brand-copy">
+            <strong>SPARKs</strong>
+            <span>Diagnóstico Assistido</span>
+          </div>
         </div>
       }
       contextItems={[

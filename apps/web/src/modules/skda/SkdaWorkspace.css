@@ -2772,3 +2772,112 @@
   border-color: var(--skda-primary);
   box-shadow: 0 0 0 1px var(--skda-primary) inset;
 }
+
+.skda-shell-brand {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: .55rem;
+}
+
+.skda-shell-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 10px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.skda-shell-brand-copy {
+  display: grid;
+  gap: .12rem;
+  min-width: 0;
+}
+
+.application-shell-collapsed .skda-shell-brand-copy {
+  display: none;
+}
+
+.application-shell-collapsed .skda-shell-brand {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.application-shell-collapsed .skda-product-signature {
+  justify-content: center;
+}
+
+.application-shell-collapsed .skda-product-signature > div {
+  display: none;
+}
+
+.application-shell-collapsed .skda-product-signature img {
+  width: 34px;
+  height: 34px;
+}
+
+.skda-contract-intake {
+  display: grid;
+  gap: .85rem;
+  padding: 1rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 12px;
+  background: rgba(255,255,255,.7);
+}
+
+.skda-contract-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: .7rem;
+}
+
+.skda-contract-summary-grid article {
+  display: grid;
+  gap: .2rem;
+  padding: .75rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.skda-contract-summary-grid small {
+  color: var(--skda-muted);
+  font-size: .68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.skda-contract-meeting-list {
+  display: grid;
+  gap: .55rem;
+}
+
+.skda-contract-meeting-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.skda-contract-meeting-list article > div {
+  display: grid;
+  gap: .15rem;
+}
+
+.application-shell-collapsed .skda-shell-brand-mark {
+  display: grid;
+}
+
+@media (max-width: 900px) {
+  .skda-contract-summary-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}

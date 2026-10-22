@@ -334,3 +334,61 @@
     text-align: center;
   }
 }
+
+/* Collapsed shell follows the compact visual contract used by SPARKs PE. */
+.application-shell-context-item {
+  justify-items: center;
+  text-align: center;
+}
+
+.application-shell-collapsed .application-shell-context {
+  display: none;
+}
+
+.application-shell-collapsed .application-shell-sidebar {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.application-shell-collapsed .application-shell-sidebar-brand {
+  display: grid;
+  place-items: center;
+  padding: .8rem .45rem .65rem;
+}
+
+.application-shell-collapsed .application-shell-navigation {
+  justify-items: center;
+  padding-inline: .45rem;
+}
+
+.application-shell-collapsed .application-shell-navigation-item {
+  width: 46px;
+  min-width: 46px;
+  min-height: 42px;
+  padding: .58rem;
+}
+
+.application-shell-collapsed .application-shell-sidebar-footer {
+  justify-items: center;
+  padding: .75rem .45rem;
+}
+
+.application-shell-collapsed .application-shell-sidebar-footer > * {
+  max-width: 48px;
+}
+
+.application-shell-collapsed .application-shell-sidebar-footer button {
+  justify-content: center;
+  width: 46px;
+  min-width: 46px;
+  height: 42px;
+  padding: .55rem;
+  overflow: hidden;
+}
+
+.application-shell-collapsed .application-shell-sidebar-footer button span:first-child {
+  display: inline;
+}
+
+.application-shell-collapsed .application-shell-sidebar-footer button span:not(:first-child) {
+  display: none;
+}

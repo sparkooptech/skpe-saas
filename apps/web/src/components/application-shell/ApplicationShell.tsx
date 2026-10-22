@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import './ApplicationShell.css'
 
@@ -41,7 +41,7 @@ export function ApplicationShell({
   headerActions,
   sidebarFooter,
   navigationItems,
-  navigationLabel = 'Navegação principal',
+  navigationLabel = 'Navega\u00e7\u00e3o principal',
   children,
   footer,
   collapsed = false,
@@ -131,12 +131,12 @@ export function ApplicationShell({
             aria-label={collapsed ? 'Expandir menu principal' : 'Recolher menu principal'}
             title={collapsed ? 'Expandir menu principal' : 'Recolher menu principal'}
           >
-            {collapsed ? '→' : '←'}
+            {collapsed ? '\u2192' : '\u2190'}
           </button>
         )}
 
         <div className="application-shell-page-title">
-          {pageTitle ?? 'Visão Geral'}
+          {pageTitle ?? 'Vis\u00e3o Geral'}
         </div>
 
         <div className="application-shell-header-actions">
@@ -159,11 +159,9 @@ export function ApplicationShell({
       <footer className="application-shell-footer">
         {footer ?? (
           <>
+            <span>Plataforma SPARKs</span>
             <span>
-              Plataforma SPARKs
-            </span>
-            <span>
-              © {new Date().getFullYear()} SPARKOOP — Todos os direitos reservados.
+              &copy; {new Date().getFullYear()} SPARKOOP &mdash; Todos os direitos reservados.
             </span>
           </>
         )}
