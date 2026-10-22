@@ -13,7 +13,8 @@ export type ApplicationShellNavigationItem = {
   icon?: ReactNode
   active?: boolean
   disabled?: boolean
-  onActivate: () => void
+  onActivate?: () => void
+  children?: ApplicationShellNavigationItem[]
 }
 
 type ApplicationShellProps = {
@@ -81,36 +82,63 @@ export function ApplicationShell({
         </div>
 
         <nav className="application-shell-navigation">
-          {navigationItems.map((item) => (
+          {navigationItems.map((item) => item.children?.length ? (
+            <details
+              key={item.id}
+              className="application-shell-navigation-group"
+              open={item.active || collapsed}
+            >
+              <summary
+                className={[
+                  'application-shell-navigation-item',
+                  item.active ? 'active' : '',
+                ].filter(Boolean).join(' ')}
+                title={collapsed ? item.label : undefined}
+              >
+                {item.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{item.icon}</span>}
+                <span className="application-shell-navigation-label">{item.label}</span>
+              </summary>
+              <div className="application-shell-navigation-submenu">
+                {item.children.map((child) => (
+                  <button
+                    key={child.id}
+                    type="button"
+                    className={[
+                      'application-shell-navigation-subitem',
+                      child.active ? 'active' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => {
+                      child.onActivate?.()
+                      onCloseMobile?.()
+                    }}
+                    disabled={child.disabled}
+                    aria-current={child.active ? 'page' : undefined}
+                    title={collapsed ? child.label : undefined}
+                  >
+                    {child.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{child.icon}</span>}
+                    <span className="application-shell-navigation-label">{child.label}</span>
+                  </button>
+                ))}
+              </div>
+            </details>
+          ) : (
             <button
               key={item.id}
               type="button"
               className={[
                 'application-shell-navigation-item',
                 item.active ? 'active' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
+              ].filter(Boolean).join(' ')}
               onClick={() => {
-                item.onActivate()
+                item.onActivate?.()
                 onCloseMobile?.()
               }}
               disabled={item.disabled}
               aria-current={item.active ? 'page' : undefined}
               title={collapsed ? item.label : undefined}
             >
-              {item.icon && (
-                <span
-                  className="application-shell-navigation-icon"
-                  aria-hidden="true"
-                >
-                  {item.icon}
-                </span>
-              )}
-
-              <span className="application-shell-navigation-label">
-                {item.label}
-              </span>
+              {item.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{item.icon}</span>}
+              <span className="application-shell-navigation-label">{item.label}</span>
             </button>
           ))}
         </nav>

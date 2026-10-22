@@ -56,6 +56,7 @@ jobs:
           mkdir -p "${release_root}/source"
           cp -R deploy/hostinger/skpe-saas-homol/. "${release_root}/"
           cp supabase/migrations/20261022175806_normalize_skda_self_assessment_intelligence.sql "${release_root}/"
+          cp supabase/migrations/20261022192348_add_skda_evidence_intelligence_engine.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -179,13 +180,18 @@ jobs:
             "${env_file}" \
             "${HOSTINGER_USER}@${HOSTINGER_HOST}:${{ steps.meta.outputs.release_dir }}/.env"
 
-      - name: Apply SK-DA Self-Assessment Intelligence Migration
+      - name: Apply SK-DA Intelligence Migrations
         shell: bash
         run: |
           set -euo pipefail
-          migration_file='20261022175806_normalize_skda_self_assessment_intelligence.sql'
-          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
-            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol' < '${{ steps.meta.outputs.release_dir }}/${migration_file}'"
+          for migration_file in \
+            20261022175806_normalize_skda_self_assessment_intelligence.sql \
+            20261022192348_add_skda_evidence_intelligence_engine.sql
+          do
+            echo "Applying ${migration_file}"
+            ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+              "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol' < '${{ steps.meta.outputs.release_dir }}/${migration_file}'"
+          done
 
       - name: Deploy Remote Release
         shell: bash

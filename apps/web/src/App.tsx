@@ -1941,6 +1941,20 @@ function App() {
         organizationId={selectedOrganization.organization_id}
         organizationName={selectedOrganization.trade_name ?? selectedOrganization.legal_name}
         organizationCode={selectedOrganization.organization_code}
+        workspaceOrganizations={organizations.map((organization) => ({
+          id: organization.organization_id,
+          code: organization.organization_code,
+          name: organization.trade_name ?? organization.legal_name,
+        }))}
+        workspaceModules={modules.map((module) => ({
+          code: module.module_code,
+          name: module.module_name,
+          description: module.module_description,
+          available: ['SK-PE', 'SK-DA'].includes(module.module_code),
+        }))}
+        activeModuleCode={openedModule.module_code}
+        onSwitchOrganization={handleSwitchWorkspaceOrganization}
+        onSwitchModule={handleSwitchWorkspaceModule}
         userRoleCode={openedModule.role_code}
         userRoleName={openedModule.role_name}
         userDisplayName={userDisplayName || session?.user.email || 'Usuário'}

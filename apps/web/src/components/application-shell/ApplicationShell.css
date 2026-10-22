@@ -392,3 +392,97 @@
 .application-shell-collapsed .application-shell-sidebar-footer button span:not(:first-child) {
   display: none;
 }
+
+.application-shell-navigation-group {
+  margin: 0;
+}
+
+.application-shell-navigation-group > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.application-shell-navigation-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.application-shell-navigation-group > summary::after {
+  content: '›';
+  margin-left: auto;
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.application-shell-navigation-group[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.application-shell-navigation-submenu {
+  display: grid;
+  gap: .18rem;
+  padding: .18rem 0 .3rem 1.15rem;
+  margin-left: .72rem;
+  border-left: 1px solid rgba(255,255,255,.15);
+}
+
+.application-shell-navigation-subitem {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  width: 100%;
+  padding: .5rem .65rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(255,255,255,.82);
+  text-align: left;
+  cursor: pointer;
+}
+
+.application-shell-navigation-subitem:hover,
+.application-shell-navigation-subitem.active {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+}
+
+.application-shell-collapsed .application-shell-navigation-group {
+  width: 46px;
+}
+
+.application-shell-collapsed .application-shell-navigation-group > summary {
+  width: 46px;
+  min-width: 46px;
+  min-height: 42px;
+  padding: .58rem;
+  justify-content: center;
+  font-size: 0;
+}
+
+.application-shell-collapsed .application-shell-navigation-group > summary::after {
+  display: none;
+}
+
+.application-shell-collapsed .application-shell-navigation-submenu {
+  display: grid;
+  width: 46px;
+  margin: .18rem 0 0;
+  padding: 0;
+  border-left: 0;
+  justify-items: center;
+}
+
+.application-shell-collapsed .application-shell-navigation-subitem {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.application-shell-collapsed .application-shell-navigation-subitem .application-shell-navigation-label {
+  display: none;
+}

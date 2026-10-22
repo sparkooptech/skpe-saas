@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ApplicationShell } from '../../components/application-shell/ApplicationShell'
+import { OrganizationBrandingLogo } from '../../components/organization-branding/OrganizationBrandingLogo'
 import { TransversalWorkspace } from '../../components/application-shell/TransversalWorkspace'
 import { MetricCard } from '../../components/design-system'
 import { supabase } from '../../lib/supabase'
@@ -11,6 +12,11 @@ type Props = {
   organizationId: string
   organizationName: string
   organizationCode: string
+  workspaceOrganizations: Array<{ id:string; code:string; name:string }>
+  workspaceModules: Array<{ code:string; name:string; description:string | null; available:boolean }>
+  activeModuleCode: string
+  onSwitchOrganization?: (organizationId:string) => void | Promise<void>
+  onSwitchModule?: (moduleCode:string) => void | Promise<void>
   userRoleCode: string
   userRoleName: string
   userDisplayName: string
@@ -58,10 +64,11 @@ type EvidenceVersionText = { id: string; evidence_asset_id: string; extracted_te
 type ContractMeetingProposal = { date: string; start: string; durationHours: number; location: string | null }
 type ContractIntakeProposal = { assetId: string; sourceTitle: string; sourceText: string; startedOn: string; plannedEndOn: string; contractedHours: number; meetings: ContractMeetingProposal[]; scopeLabel: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
+type EvidenceQuestionIntelligence = { id:string; evidence_asset_id:string; question_id:string; document_intake_status:string; evidence_coverage_status:string; practice_state:string; relevance_score:number|null; adequacy_score:number|null; sufficiency_score:number|null; reliability_score:number|null; actuality_score:number|null; coverage_score:number|null; confidence_score:number|null; gap_description:string|null; complement_needed:string|null; improvement_suggestion:string|null; interview_question_suggestion:string|null; self_assessment_guidance:string|null; diagnostic_hypothesis:string|null; analysis_status:string; source_excerpt:string|null; source_locator:string|null }
 type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_date: string | null; content_hash: string | null; metadata: Record<string, unknown> }
 type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
-type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; display_order: number }
+type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; guidance: string | null; display_order: number }
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; evaluated_at: string | null; validated_at: string | null }
 type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; score: string }
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
@@ -123,18 +130,21 @@ type ActionFollowup = {
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
 const PHASES: Phase[] = [
-  { code:'DA-00', title:'Preparação e abertura', description:'Define ciclo, escopo, metodologia, responsáveis, catálogo, Autoavaliações, histórico, benchmarks, evidências de entrada e agenda proposta para aprovação.', statusKey:'preparation' },
-  { code:'DA-02', title:'Entrevistas e avaliação integrada', description:'Executa entrevistas orientadas pelas questões, registra evidências no momento da escuta, avalia cada requisito e produz achados e lacunas no mesmo rito.', statusKey:'interviews' },
-  { code:'DA-05', title:'Recomendações e devolutiva', description:'Consolida o diagnóstico, prioriza recomendações e prepara a devolutiva executiva.', statusKey:'validation' },
-  { code:'DA-06', title:'Plano de Ação e follow-up', description:'Organiza recomendações aprovadas em ciclos, acompanha execução e preserva a evolução entre diagnósticos.', statusKey:'validation' },
+  { code:'DA-00', title:'Preparação e abertura', description:'Constitui a Jornada, absorve Autoavaliações, histórico, benchmarks e fontes, organiza o inventário e prepara o aprofundamento.', statusKey:'preparation' },
+  { code:'DA-01', title:'Entrevistas e diagnóstico', description:'Executa entrevistas orientadas pelas questões, amplia evidências, avalia requisitos, PDCL e maturidade e consolida o diagnóstico.', statusKey:'interviews' },
+  { code:'DA-02', title:'Recomendações e priorização', description:'Converte lacunas e oportunidades em recomendações e prioriza as poucas ações de maior impacto.', statusKey:'validation' },
+  { code:'DA-03', title:'Plano de Ação e devolutiva', description:'Organiza ações por ciclos, realiza a devolutiva, pactua execução e preserva o follow-up entre ciclos.', statusKey:'validation' },
 ]
 
-const normalizeJourneyPhaseCode = (code: string | null | undefined) => {
-  if (!code) return 'DA-00'
-  if (code === 'DA-01') return 'DA-00'
-  if (code === 'DA-03' || code === 'DA-04') return 'DA-02'
-  return PHASES.some((phase) => phase.code === code) ? code : 'DA-00'
+const PHASE_MEGAPHASES: Record<string, readonly string[]> = {
+  'DA-00':['MF0','MF1','MF2','MF3'],
+  'DA-01':['MF4','MF5','MF6','MF7'],
+  'DA-02':['MF8'],
+  'DA-03':['MF9','MF10'],
 }
+
+const normalizeJourneyPhaseCode = (code: string | null | undefined) =>
+  PHASES.some((phase) => phase.code === code) ? code! : 'DA-00'
 
 const PDGC_WORKLOAD_REFERENCES = {
   PP:{
@@ -208,6 +218,41 @@ const formatCatalogName = (value: string) =>
     .replace(/Excel.ncia/gi, 'Excelência')
     .replace(/Diagn.stico/gi, 'Diagnóstico')
     .replace(/Avalia..o/gi, 'Avaliação')
+
+const sha256Hex = async (file: File) => {
+  const buffer = await file.arrayBuffer()
+  const digest = await crypto.subtle.digest('SHA-256', buffer)
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+const storageSafeFileName = (value: string) =>
+  value.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    || 'evidencia'
+
+const inferEvidenceFileMetadata = (file: File) => {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+  const evidenceType =
+    ['xls','xlsx','csv'].includes(extension) ? 'dataset'
+      : ['png','jpg','jpeg','webp'].includes(extension) ? 'image'
+        : ['mp3','wav','m4a','ogg'].includes(extension) ? 'audio'
+          : ['mp4','mov','webm'].includes(extension) ? 'video'
+            : 'document'
+  const title = file.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim()
+  const isoMatch = file.name.match(/(20\d{2})[-_.](0?[1-9]|1[0-2])[-_.]([0-2]?\d|3[01])/)
+  const brMatch = file.name.match(/([0-2]?\d|3[01])[-_.](0?[1-9]|1[0-2])[-_.](20\d{2})/)
+  const referenceDate = isoMatch
+    ? `${isoMatch[1]}-${isoMatch[2].padStart(2,'0')}-${isoMatch[3].padStart(2,'0')}`
+    : brMatch
+      ? `${brMatch[3]}-${brMatch[2].padStart(2,'0')}-${brMatch[1].padStart(2,'0')}`
+      : ''
+  return { title, evidenceType, referenceDate }
+}
 
 const selectOrganizationContractSection = (text: string, organizationName: string) => {
   const sections = text.split(/(?=Turma\s*:)/i)
@@ -419,6 +464,7 @@ export function SkdaWorkspace(props: Props) {
   const [realizationInterviewId, setRealizationInterviewId] = useState<string | null>(null)
   const [realizationForm, setRealizationForm] = useState({ actualStart:'', actualEnd:'', notes:'', changeReason:'Registro da realização da entrevista da Jornada DA.' })
   const [showEvidenceCreate, setShowEvidenceCreate] = useState(false)
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null)
   const [evidenceForm, setEvidenceForm] = useState({
     title:'',
     description:'',
@@ -433,6 +479,7 @@ export function SkdaWorkspace(props: Props) {
   const [evidenceVersionTexts, setEvidenceVersionTexts] = useState<EvidenceVersionText[]>([])
   const [appliedContractAssetId, setAppliedContractAssetId] = useState<string | null>(null)
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
+  const [evidenceQuestionIntelligence, setEvidenceQuestionIntelligence] = useState<EvidenceQuestionIntelligence[]>([])
   const [selfAssessmentSnapshots, setSelfAssessmentSnapshots] = useState<SelfAssessmentSnapshot[]>([])
   const [selfAssessmentMetrics, setSelfAssessmentMetrics] = useState<SelfAssessmentMetric[]>([])
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
@@ -877,7 +924,7 @@ export function SkdaWorkspace(props: Props) {
       const [questionsResult, responsesResult] = await Promise.all([
         supabase
           .from('skda_questions' as never)
-          .select('id,code,axis_name,criterion_name,question_text,display_order' as never)
+          .select('id,code,axis_name,criterion_name,question_text,guidance,display_order' as never)
           .eq('catalog_version_id', selected.catalog_version_id)
           .order('display_order', { ascending:true }),
         supabase
@@ -912,8 +959,8 @@ export function SkdaWorkspace(props: Props) {
 
   useEffect(() => {
     const run = async () => {
-      if (!selectedId) { setEvidenceAssets([]); setEvidenceVersionTexts([]); setEvidenceCorrelations([]); setSelfAssessmentSnapshots([]); setSelfAssessmentMetrics([]); return }
-      const [assetsResult, correlationsResult, snapshotsResult, metricsResult] = await Promise.all([
+      if (!selectedId) { setEvidenceAssets([]); setEvidenceVersionTexts([]); setEvidenceCorrelations([]); setEvidenceQuestionIntelligence([]); setSelfAssessmentSnapshots([]); setSelfAssessmentMetrics([]); return }
+      const [assetsResult, correlationsResult, intelligenceResult, snapshotsResult, metricsResult] = await Promise.all([
         supabase
           .from('sparks_evidence_assets' as never)
           .select('id,title,evidence_type,validation_status,reliability_level,reference_date,current_version_id' as never)
@@ -923,6 +970,10 @@ export function SkdaWorkspace(props: Props) {
         supabase
           .from('skda_evidence_correlations' as never)
           .select('id,evidence_asset_id,usage_type,validation_status' as never)
+          .eq('diagnosis_id', selectedId),
+        supabase
+          .from('skda_evidence_question_intelligence' as never)
+          .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator' as never)
           .eq('diagnosis_id', selectedId),
         supabase
           .from('skda_self_assessment_snapshots' as never)
@@ -948,6 +999,7 @@ export function SkdaWorkspace(props: Props) {
         setEvidenceVersionTexts([])
       }
       setEvidenceCorrelations((correlationsResult.data ?? []) as unknown as EvidenceCorrelation[])
+      setEvidenceQuestionIntelligence((intelligenceResult.data ?? []) as unknown as EvidenceQuestionIntelligence[])
       setSelfAssessmentSnapshots((snapshotsResult.data ?? []) as unknown as SelfAssessmentSnapshot[])
       setSelfAssessmentMetrics((metricsResult.data ?? []) as unknown as SelfAssessmentMetric[])
     }
@@ -1306,8 +1358,8 @@ export function SkdaWorkspace(props: Props) {
 
   const createAndLinkEvidence = async () => {
     if (!selected || !canRegisterEvidence) return
-    if (!evidenceForm.title.trim()) {
-      setError('Informe o título da evidência.')
+    if (!evidenceForm.title.trim() && !evidenceFile) {
+      setError('Informe o título ou selecione o arquivo da evidência.')
       return
     }
     if (evidenceForm.changeReason.trim().length < 10) {
@@ -1318,32 +1370,70 @@ export function SkdaWorkspace(props: Props) {
     setSaving(true)
     setError('')
 
-    const { data: assetId, error: registerError } = await supabase.rpc(
-      'register_sparks_evidence_asset' as never,
-      {
-        target_organization_id:props.organizationId,
-        evidence_title:evidenceForm.title.trim(),
-        evidence_description:evidenceForm.description.trim() || null,
-        target_evidence_type:evidenceForm.evidenceType,
-        target_source_type:evidenceForm.sourceType,
-        target_origin_module_code:'SK-DA',
-        target_reference_date:evidenceForm.referenceDate || null,
-        target_validity_date:null,
-        target_confidentiality_level:evidenceForm.confidentialityLevel,
-        target_content_hash:null,
-        target_file_name:null,
-        target_mime_type:null,
-        target_file_size_bytes:null,
-        target_storage_bucket:null,
-        target_storage_path:null,
-        change_reason:evidenceForm.changeReason.trim(),
-      } as never,
-    )
+    let contentHash: string | null = null
+    let storagePath: string | null = null
+    let assetId: string | null = null
 
-    if (registerError || !assetId) {
-      setSaving(false)
-      setError(registerError?.message ?? 'Não foi possível registrar a evidência no Core.')
-      return
+    if (evidenceFile) {
+      contentHash = await sha256Hex(evidenceFile)
+      const { data: duplicateData } = await supabase
+        .from('sparks_evidence_assets' as never)
+        .select('id' as never)
+        .eq('organization_id', props.organizationId)
+        .eq('content_hash', contentHash)
+        .is('archived_at', null)
+        .maybeSingle()
+
+      assetId = (duplicateData as unknown as { id?: string } | null)?.id ?? null
+
+      if (!assetId) {
+        const safeName = storageSafeFileName(evidenceFile.name)
+        storagePath = `${props.organizationId}/${selected.id}/${new Date().toISOString().slice(0,10)}/${crypto.randomUUID()}-${safeName}`
+        const { error: uploadError } = await supabase.storage
+          .from('sparks-evidence')
+          .upload(storagePath, evidenceFile, {
+            cacheControl:'3600',
+            contentType:evidenceFile.type || 'application/octet-stream',
+            upsert:false,
+          })
+
+        if (uploadError) {
+          setSaving(false)
+          setError(`Não foi possível enviar o arquivo ao Core de Evidências: ${uploadError.message}`)
+          return
+        }
+      }
+    }
+
+    if (!assetId) {
+      const { data: registeredAssetId, error: registerError } = await supabase.rpc(
+        'register_sparks_evidence_asset_for_module' as never,
+        {
+          target_organization_id:props.organizationId,
+          target_module_code:'SK-DA',
+          evidence_title:evidenceForm.title.trim() || evidenceFile?.name || 'Evidência',
+          evidence_description:evidenceForm.description.trim() || null,
+          target_evidence_type:evidenceForm.evidenceType,
+          target_source_type:evidenceForm.sourceType,
+          target_reference_date:evidenceForm.referenceDate || null,
+          target_validity_date:null,
+          target_confidentiality_level:evidenceForm.confidentialityLevel,
+          target_content_hash:contentHash,
+          target_file_name:evidenceFile?.name ?? null,
+          target_mime_type:evidenceFile?.type || null,
+          target_file_size_bytes:evidenceFile?.size ?? null,
+          target_storage_bucket:storagePath ? 'sparks-evidence' : null,
+          target_storage_path:storagePath,
+          change_reason:evidenceForm.changeReason.trim(),
+        } as never,
+      )
+
+      if (registerError || !registeredAssetId) {
+        setSaving(false)
+        setError(registerError?.message ?? 'Não foi possível registrar a evidência no Core.')
+        return
+      }
+      assetId = registeredAssetId as unknown as string
     }
 
     const { data: assetData, error: assetError } = await supabase
@@ -1365,7 +1455,7 @@ export function SkdaWorkspace(props: Props) {
 
     const { data: correlationData, error: correlationError } = await supabase
       .from('skda_evidence_correlations' as never)
-      .insert({
+      .upsert({
         organization_id:props.organizationId,
         diagnosis_id:selected.id,
         evidence_asset_id:assetId,
@@ -1377,25 +1467,57 @@ export function SkdaWorkspace(props: Props) {
           ? `Evidência identificada ou confirmada durante a entrevista ${targetInterview.code} · ${targetInterview.title}.`
           : 'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
         validation_status:'pending',
-        metadata:targetInterview
-          ? { source:'interview', interview_id:targetInterview.id, interview_code:targetInterview.code }
-          : { source:'diagnosis' },
-      } as never)
+        metadata:{
+          source:targetInterview ? 'interview' : 'diagnosis',
+          interview_id:targetInterview?.id ?? null,
+          interview_code:targetInterview?.code ?? null,
+          file_uploaded:Boolean(evidenceFile),
+          intelligence_pipeline:'SK-DOC>SK-KM>SK-DA',
+        },
+      } as never, { onConflict:'diagnosis_id,evidence_asset_id,target_type,target_id' })
       .select('id,evidence_asset_id,usage_type,validation_status' as never)
       .single()
 
-    setSaving(false)
-
     if (correlationError || !correlationData) {
+      setSaving(false)
       setError(correlationError?.message ?? 'A evidência foi registrada no Core, mas a correlação com o DA não foi concluída.')
       return
+    }
+
+    const { error: queueError } = await supabase.rpc(
+      'queue_skda_evidence_question_intelligence' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_diagnosis_id:selected.id,
+        target_evidence_asset_id:assetId,
+      } as never,
+    )
+
+    if (!queueError) {
+      const { data: intelligenceData } = await supabase
+        .from('skda_evidence_question_intelligence' as never)
+        .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator' as never)
+        .eq('diagnosis_id', selected.id)
+        .eq('evidence_asset_id', assetId)
+      const queuedRows = (intelligenceData ?? []) as unknown as EvidenceQuestionIntelligence[]
+      setEvidenceQuestionIntelligence((current) => [
+        ...current.filter((item) => item.evidence_asset_id !== assetId),
+        ...queuedRows,
+      ])
+    }
+
+    setSaving(false)
+
+    if (queueError) {
+      setError(`A evidência foi registrada e vinculada, mas a análise por questão não pôde ser enfileirada: ${queueError.message}`)
     }
 
     const asset = assetData as unknown as EvidenceAsset
     const correlation = correlationData as unknown as EvidenceCorrelation
     setEvidenceAssets((current) => [asset, ...current.filter((item) => item.id !== asset.id)])
-    setEvidenceCorrelations((current) => [...current, correlation])
-    setMetrics((current) => ({ ...current, evidence:current.evidence + 1 }))
+    setEvidenceCorrelations((current) => [...current.filter((item) => item.id !== correlation.id), correlation])
+    setMetrics((current) => ({ ...current, evidence:current.evidence + (current.evidence > 0 && evidenceAssets.some((item) => item.id === asset.id) ? 0 : 1) }))
+    setEvidenceFile(null)
     setEvidenceForm({
       title:'',
       description:'',
@@ -1819,6 +1941,45 @@ export function SkdaWorkspace(props: Props) {
   const workloadGap = workloadReference && contractedHours
     ? contractedHours - workloadReference.totalHours
     : null
+  const assistedSelfAssessmentActive = selected?.metadata?.self_assessment_mode === 'assisted'
+
+  const startAssistedSelfAssessment = async () => {
+    if (!selected) return
+    setSaving(true)
+    setError('')
+    const nextMetadata = {
+      ...(selected.metadata ?? {}),
+      self_assessment_mode:'assisted',
+      self_assessment_status:'in_progress',
+      self_assessment_started_at:new Date().toISOString(),
+      self_assessment_engine:'evidence_question_intelligence',
+    }
+    const { error: updateError } = await supabase
+      .from('skda_diagnoses' as never)
+      .update({ metadata:nextMetadata, current_phase_code:'DA-00' } as never)
+      .eq('id', selected.id)
+      .eq('organization_id', props.organizationId)
+    setSaving(false)
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+    setActivePhaseCode('DA-00')
+    await loadDiagnoses()
+  }
+
+  const openSelfAssessmentImport = () => {
+    setEvidenceFile(null)
+    setEvidenceForm((current) => ({
+      ...current,
+      evidenceType:'self_assessment',
+      sourceType:'external',
+      title:'',
+      description:'Autoavaliação da Organização para absorção como baseline da Jornada.',
+      changeReason:'Autoavaliação importada como declaração da Organização e baseline da Jornada DA.',
+    }))
+    setShowEvidenceCreate(true)
+  }
 
   const secondary = selected ? (
     <div className="skda-detail">
@@ -1829,6 +1990,17 @@ export function SkdaWorkspace(props: Props) {
         <MetricCard label="Evidências correlacionadas" value={metrics.evidence} helper="ativos do Core vinculados" />
         <MetricCard label="Achados" value={metrics.findings} helper="forças, lacunas, riscos e oportunidades" />
       </div>
+      {selfAssessmentSnapshots.length === 0 && <div className="skda-aa-entry-callout">
+        <div>
+          <span className="skda-eyebrow">Autoavaliação</span>
+          <h3>{assistedSelfAssessmentActive ? 'Autoavaliação Assistida em andamento' : 'Autoavaliação ainda não importada'}</h3>
+          <p>Você pode importar uma AA existente ou iniciar uma Autoavaliação Assistida. No modo assistido, o SPARKs usa as mesmas questões e evidências para explicar o padrão esperado da prática, apontar lacunas, solicitar complementos e orientar a construção segura da resposta da Organização.</p>
+        </div>
+        <div className="skda-aa-entry-actions">
+          {canRegisterEvidence && <button type="button" onClick={openSelfAssessmentImport}>Importar AA existente</button>}
+          {canManage && <button type="button" className="skda-primary" disabled={saving || assistedSelfAssessmentActive} onClick={() => void startAssistedSelfAssessment()}>{assistedSelfAssessmentActive ? 'AA Assistida iniciada' : 'Iniciar Autoavaliação Assistida'}</button>}
+        </div>
+      </div>}
       <div className="skda-executive-grid">
         <article className="skda-executive-card">
           <div className="skda-executive-card-head">
@@ -1839,12 +2011,12 @@ export function SkdaWorkspace(props: Props) {
             <span style={{ width: `${Math.max(0, Math.min(100, Number(selected.progress) || 0))}%` }} />
           </div>
           <div className="skda-progress-meta">
-            <span>Fase atual</span><b>{selected.current_phase_code} · {STATUS[selected.status] ?? selected.status}</b>
+            <span>Fase atual</span><b>{PHASES.find((phase) => phase.code === normalizeJourneyPhaseCode(selected.current_phase_code))?.title ?? 'Preparação e abertura'} · {STATUS[selected.status] ?? selected.status}</b>
           </div>
           <div className="skda-phase-strip" aria-label="Etapas da Jornada DA">
             {PHASES.map((phase) => (
               <span key={phase.code} className={phase.code === normalizeJourneyPhaseCode(selected.current_phase_code) ? 'active' : ''}>
-                {phase.code}
+                {phase.title}
               </span>
             ))}
           </div>
@@ -1988,6 +2160,7 @@ export function SkdaWorkspace(props: Props) {
           </div>
           <div className="skda-megaphase-tree">
             {MEGAPHASES.map((megaphase, megaphaseIndex) => {
+              const phaseForMegaphase = PHASES.find((phase) => PHASE_MEGAPHASES[phase.code]?.includes(megaphase.code)) ?? null
               const action = journeyEap.find((item) => item.code === megaphase.code && !item.parent_action_id)
               const stages = action
                 ? journeyEap
@@ -2011,7 +2184,7 @@ export function SkdaWorkspace(props: Props) {
                 <summary>
                   <div className="skda-megaphase-identity">
                     <span>{megaphase.code}</span>
-                    <div><strong>{megaphase.title}</strong><small>{megaphase.workPattern}</small></div>
+                    <div><strong>{megaphase.title}</strong>{phaseForMegaphase && <em>{phaseForMegaphase.title}</em>}<small>{megaphase.workPattern}</small></div>
                   </div>
                   <div className="skda-megaphase-summary-metrics">
                     <span><small>LB0</small><b>{formatRange(action?.baseline_start_date,action?.baseline_due_date)}</b></span>
@@ -2099,13 +2272,12 @@ export function SkdaWorkspace(props: Props) {
               className={activePhase.code === phase.code ? 'active' : ''}
               onClick={() => setActivePhaseCode(phase.code)}
             >
-              <small>{phase.code}</small>
               <span>{phase.title}</span>
             </button>
           ))}
         </div>
         <section className="skda-phase-panel" role="tabpanel">
-          <div><span>{activePhase.code}</span><h3>{activePhase.title}</h3></div>
+          <div><span>Fase da Jornada</span><h3>{activePhase.title}</h3></div>
           <p>{activePhase.description}</p>
           {activePhase.code === 'DA-00' && <div className="skda-phase-substeps" aria-label="Etapas internas da Preparação e abertura">
             <span>1. Leitura da AA</span>
@@ -2113,7 +2285,7 @@ export function SkdaWorkspace(props: Props) {
             <span>3. Evidências de entrada</span>
             <span>4. Agenda e uso das horas</span>
           </div>}
-          {activePhase.code === 'DA-02' && <div className="skda-phase-substeps" aria-label="Etapas internas das Entrevistas e avaliação integrada">
+          {activePhase.code === 'DA-01' && <div className="skda-phase-substeps" aria-label="Etapas internas das Entrevistas e diagnóstico">
             <span>1. Governança</span>
             <span>2. Gestão</span>
             <span>3. Avaliação por questão</span>
@@ -2121,9 +2293,9 @@ export function SkdaWorkspace(props: Props) {
           </div>}
           <div className="skda-phase-summary">
             {activePhase.code === 'DA-00' && <><span>Preparação</span><strong>{selfAssessmentSnapshots.length} AA · {metrics.evidence} evidência(s)</strong></>}
-            {activePhase.code === 'DA-02' && <><span>Execução integrada</span><strong>{metrics.interviews} entrevista(s) · {metrics.responses} questão(ões) · {metrics.findings} achado(s)</strong></>}
-            {activePhase.code === 'DA-05' && <><span>Consolidação</span><strong>{findings.filter((finding) => Boolean(finding.recommendation)).length} recomendação(ões)</strong></>}
-            {activePhase.code === 'DA-06' && <><span>Plano de Ação</span><strong>Ciclos 1 · 2 · 3</strong></>}
+            {activePhase.code === 'DA-01' && <><span>Entrevistas e diagnóstico</span><strong>{metrics.interviews} entrevista(s) · {metrics.responses} questão(ões) · {metrics.findings} achado(s)</strong></>}
+            {activePhase.code === 'DA-02' && <><span>Recomendações e priorização</span><strong>{findings.filter((finding) => Boolean(finding.recommendation)).length} recomendação(ões)</strong></>}
+            {activePhase.code === 'DA-03' && <><span>Plano de Ação e devolutiva</span><strong>Ciclos 1 · 2 · 3</strong></>}
           </div>
           {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><div><h4>Configuração da Jornada DA</h4><small>Defina o ciclo, escopo, metodologia, responsável e catálogo da jornada.</small></div><span>{selectedCatalog ? selectedCatalog.framework_code : 'Não definido'}</span></div>
@@ -2239,20 +2411,23 @@ export function SkdaWorkspace(props: Props) {
               <div><h4>Evidências disponíveis no Core</h4><small>Registre novas evidências no Core ou correlacione ativos já existentes com esta Jornada DA.</small></div>
               <div className="skda-phase-workspace-actions">
                 <span>{evidenceAssets.length} ativo(s)</span>
-                {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => setShowEvidenceCreate(true)}>Registrar nova evidência</button>}
+                {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceFile(null); setShowEvidenceCreate(true) }}>Adicionar e analisar evidência</button>}
               </div>
             </div>
             {evidenceAssets.length === 0 ? <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p> : <div className="skda-evidence-list">
               {evidenceAssets.map((asset) => {
                 const correlation = evidenceCorrelations.find((item) => item.evidence_asset_id === asset.id)
+                const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.evidence_asset_id === asset.id)
+                const proposedCount = intelligenceRows.filter((item) => ['proposed','validated'].includes(item.analysis_status)).length
+                const pendingCount = intelligenceRows.filter((item) => ['pending','queued','processing'].includes(item.analysis_status)).length
                 return <article key={asset.id}>
-                  <div><small>{EVIDENCE_TYPES[asset.evidence_type] ?? asset.evidence_type}</small><strong>{asset.title}</strong><span>{EVIDENCE_STATUS[asset.validation_status] ?? asset.validation_status} · Confiabilidade: {RELIABILITY[asset.reliability_level] ?? asset.reliability_level}</span></div>
+                  <div><small>{EVIDENCE_TYPES[asset.evidence_type] ?? asset.evidence_type}</small><strong>{asset.title}</strong><span>{EVIDENCE_STATUS[asset.validation_status] ?? asset.validation_status} · Confiabilidade: {RELIABILITY[asset.reliability_level] ?? asset.reliability_level}</span>{intelligenceRows.length > 0 && <span>Análise por questão: {intelligenceRows.length} vínculo(s) · {pendingCount} em análise · {proposedCount} proposta(s)</span>}</div>
                   <div>{correlation ? <b>Vinculada ao diagnóstico</b> : canLinkEvidence ? <button type="button" className="skda-primary" disabled={saving} onClick={() => void linkEvidence(asset)}>Vincular</button> : <span>Disponível</span>}</div>
                 </article>
               })}
             </div>}
           </div>}
-          {activePhase.code === 'DA-02' && <div className="skda-phase-workspace">
+          {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head">
               <div><h4>Entrevistas do diagnóstico</h4><small>Entrevistas são eventos da Agenda da Organização. Participantes planejados e presença efetiva são geridos pelo mesmo motor transversal do PE.</small></div>
               {canEditInterviews && <button type="button" className="skda-primary" onClick={() => setShowInterviewCreate(true)}>Nova entrevista</button>}
@@ -2282,16 +2457,38 @@ export function SkdaWorkspace(props: Props) {
               </article>)}
             </div>}
           </div>}
-          {activePhase.code === 'DA-02' && <div className="skda-phase-workspace">
+          {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><div><h4>Avaliação por questão</h4><small>Registre a constatação, classifique, atribua nota e confiança e submeta à validação conforme o papel.</small></div><span>{selectedCatalog ? selectedCatalog.name : 'Catálogo não definido'}</span></div>
             <div className="skda-assessment-method-note"><strong>Maturidade</strong><span>A escala de maturidade não está publicada no catálogo atual. O campo não será preenchido artificialmente; quando a escala metodológica estiver no catálogo, a avaliação passará a derivá-la daqui.</span></div>
             {!selected.catalog_version_id ? <p className="skda-phase-empty">Defina o catálogo na fase DA-00 antes de iniciar a avaliação.</p> : questions.length === 0 ? <p className="skda-phase-empty">O catálogo selecionado ainda não possui questões disponíveis.</p> : <div className="skda-question-list skda-assessment-list">
               {questions.map((question) => {
                 const response = responses.find((item) => item.question_id === question.id)
+                const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.question_id === question.id)
+                const proposedRows = intelligenceRows.filter((item) => item.analysis_status === 'proposed' || item.analysis_status === 'validated')
+                const queuedRows = intelligenceRows.filter((item) => item.analysis_status === 'queued' || item.analysis_status === 'processing' || item.analysis_status === 'pending')
                 const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', score:'' }
                 return <article key={question.id} className="skda-assessment-card">
                   <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
+                  {assistedSelfAssessmentActive && question.guidance && <div className="skda-aa-guidance"><strong>Orientação metodológica da questão</strong><span>{question.guidance}</span></div>}
                   <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>
+                  {intelligenceRows.length > 0 && <div className="skda-question-intelligence">
+                    <div className="skda-question-intelligence-head">
+                      <strong>Inteligência de evidências</strong>
+                      <span>{intelligenceRows.length} evidência(s) · {queuedRows.length} em análise · {proposedRows.length} proposta(s)</span>
+                    </div>
+                    {proposedRows.length === 0 ? <p>As evidências vinculadas estão na fila de análise por requisitos desta questão.</p> : proposedRows.map((item) => <article key={item.id}>
+                      <div className="skda-question-intelligence-state">
+                        <b>{item.evidence_coverage_status === 'covers' ? 'Contempla' : item.evidence_coverage_status === 'partially_covers' ? 'Contempla parcialmente' : item.evidence_coverage_status === 'does_not_cover' ? 'Não contempla' : item.evidence_coverage_status === 'needs_complement' ? 'Necessita complemento' : 'Em análise'}</b>
+                        {item.confidence_score != null && <span>Confiança {Number(item.confidence_score).toFixed(0)}%</span>}
+                      </div>
+                      {item.diagnostic_hypothesis && <p><strong>Hipótese:</strong> {item.diagnostic_hypothesis}</p>}
+                      {item.gap_description && <p><strong>Lacuna:</strong> {item.gap_description}</p>}
+                      {item.complement_needed && <p><strong>Complemento necessário:</strong> {item.complement_needed}</p>}
+                      {item.improvement_suggestion && <p><strong>Melhoria sugerida:</strong> {item.improvement_suggestion}</p>}
+                      {assistedSelfAssessmentActive && item.self_assessment_guidance && <p><strong>Orientação para AA:</strong> {item.self_assessment_guidance}</p>}
+                      {item.interview_question_suggestion && <p><strong>Pergunta sugerida para entrevista:</strong> {item.interview_question_suggestion}</p>}
+                    </article>)}
+                  </div>}
                   <div className="skda-assessment-fields">
                     <label className="wide"><span>Constatação / resposta</span><textarea rows={3} value={draft.answerText} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{answerText:e.target.value})}/></label>
                     <label><span>Classificação</span><select value={draft.classification} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{classification:e.target.value})}>{Object.entries(CLASSIFICATION).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
@@ -2307,7 +2504,7 @@ export function SkdaWorkspace(props: Props) {
               })}
             </div>}
           </div>}
-          {activePhase.code === 'DA-02' && <div className="skda-phase-workspace">
+          {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Achados do diagnóstico</h4>{canEditFindings && <button type="button" className="skda-primary" onClick={() => setShowFindingCreate(true)}>Novo achado</button>}</div>
             {findings.length === 0 ? <p className="skda-phase-empty">Nenhum achado registrado.</p> : <div className="skda-finding-list">
               {findings.map((finding) => {
@@ -2319,7 +2516,7 @@ export function SkdaWorkspace(props: Props) {
               })}
             </div>}
           </div>}
-          {activePhase.code === 'DA-05' && <div className="skda-phase-workspace">
+          {activePhase.code === 'DA-02' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Recomendações para devolutiva</h4><span>{findings.filter((finding) => Boolean(finding.recommendation)).length} recomendação(ões)</span></div>
             {findings.filter((finding) => Boolean(finding.recommendation)).length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação registrada nos achados.</p> : <div className="skda-finding-list">
               {findings.filter((finding) => Boolean(finding.recommendation)).map((finding) => <article key={finding.id}>
@@ -2333,7 +2530,7 @@ export function SkdaWorkspace(props: Props) {
               </article>)}
             </div>}
           </div>}
-          {activePhase.code === 'DA-06' && <div className="skda-phase-workspace">
+          {activePhase.code === 'DA-03' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head">
               <div>
                 <h4>Plano de Ação</h4>
@@ -2410,21 +2607,46 @@ export function SkdaWorkspace(props: Props) {
       id:'journey',
       label:'Jornada DA',
       icon:<span aria-hidden="true">⌁</span>,
-      active:PHASES.some((phase) => phase.code === activePhaseCode) && activePhaseCode !== 'DA-06',
+      active:PHASES.some((phase) => phase.code === activePhaseCode) && activePhaseCode !== 'DA-03' || isAgenda,
       disabled:!selected,
-      onActivate:() => setActivePhaseCode(
-        PHASES.some((phase) => phase.code === activePhaseCode) && activePhaseCode !== 'DA-06'
-          ? activePhaseCode
-          : normalizeJourneyPhaseCode(selected?.current_phase_code),
-      ),
+      children:[
+        {
+          id:'journey-opening',
+          label:'Preparação e abertura',
+          icon:<span aria-hidden="true">◌</span>,
+          active:activePhaseCode === 'DA-00',
+          onActivate:() => setActivePhaseCode('DA-00'),
+        },
+        {
+          id:'journey-diagnosis',
+          label:'Entrevistas e diagnóstico',
+          icon:<span aria-hidden="true">⌕</span>,
+          active:activePhaseCode === 'DA-01',
+          onActivate:() => setActivePhaseCode('DA-01'),
+        },
+        {
+          id:'journey-return',
+          label:'Recomendações e priorização',
+          icon:<span aria-hidden="true">◇</span>,
+          active:activePhaseCode === 'DA-02',
+          onActivate:() => setActivePhaseCode('DA-02'),
+        },
+        {
+          id:'journey-agenda',
+          label:'Agenda',
+          icon:<span aria-hidden="true">▣</span>,
+          active:isAgenda,
+          onActivate:() => setActivePhaseCode('AGENDA'),
+        },
+      ],
     },
     {
       id:'action-plan',
       label:'Plano de Ação',
       icon:<span aria-hidden="true">✓</span>,
-      active:activePhaseCode === 'DA-06',
+      active:activePhaseCode === 'DA-03',
       disabled:!selected,
-      onActivate:() => setActivePhaseCode('DA-06'),
+      onActivate:() => setActivePhaseCode('DA-03'),
     },
   ]
 
@@ -2439,18 +2661,43 @@ export function SkdaWorkspace(props: Props) {
   return <>
     <ApplicationShell
       brand={
-        <div className="skda-shell-brand">
-          <span className="skda-shell-brand-mark" aria-hidden="true">S</span>
-          <div className="skda-shell-brand-copy">
-            <strong>SPARKs</strong>
-            <span>Diagnóstico Assistido</span>
+        <div className="skda-pe-identity">
+          <OrganizationBrandingLogo
+            organizationId={props.organizationId}
+            organizationName={props.organizationName}
+            className="skda-pe-organization-logo"
+          />
+          <div className="skda-pe-organization-switcher">
+            {props.workspaceOrganizations.length > 1 && props.onSwitchOrganization ? (
+              <select
+                aria-label="Selecionar organização"
+                value={props.organizationId}
+                onChange={(event) => void props.onSwitchOrganization?.(event.target.value)}
+                title="Selecionar organização"
+              >
+                {props.workspaceOrganizations.map((organization) => (
+                  <option key={organization.id} value={organization.id}>{organization.name}</option>
+                ))}
+              </select>
+            ) : <strong>{props.organizationName}</strong>}
+          </div>
+          <div className="skda-pe-module-switcher" aria-label="Módulos disponíveis">
+            {props.workspaceModules.map((module) => (
+              <button
+                key={module.code}
+                type="button"
+                className={module.code === props.activeModuleCode ? 'is-active' : ''}
+                disabled={!module.available}
+                title={module.description ? `${module.name} — ${module.description}` : module.name}
+                onClick={() => module.available && void props.onSwitchModule?.(module.code)}
+              >
+                {module.code}
+              </button>
+            ))}
           </div>
         </div>
       }
-      contextItems={[
-        { label:'Organização', value:props.organizationName },
-        { label:'Módulo', value:'SK-DA' },
-      ]}
+      contextItems={[]}
       userArea={
         <div className="skda-shell-user">
           <div className="skda-shell-avatar" aria-hidden="true">
@@ -2494,7 +2741,7 @@ export function SkdaWorkspace(props: Props) {
     </ApplicationShell>
     {validationFindingId && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-05 · Validação</p><h2>Aceitar recomendação</h2></div><button type="button" onClick={() => setValidationFindingId(null)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Recomendações e priorização</p><h2>Aceitar recomendação</h2></div><button type="button" onClick={() => setValidationFindingId(null)}>×</button></div>
         <p>Registre a justificativa da validação executiva. A recomendação aceita ficará elegível para priorização no Plano de Ação e, quando aplicável, conversão em iniciativa transversal.</p>
         <div className="skda-form-grid"><label className="wide"><span>Justificativa *</span><textarea rows={5} value={validationReason} onChange={(e)=>setValidationReason(e.target.value)}/></label></div>
         {error && <div className="skda-alert">{error}</div>}
@@ -2503,7 +2750,7 @@ export function SkdaWorkspace(props: Props) {
     </div>}
     {showTacticalCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-06 · Plano de Ação</p><h2>Criar iniciativa transversal</h2></div><button type="button" onClick={() => setShowTacticalCreate(false)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Plano de Ação e devolutiva</p><h2>Criar iniciativa transversal</h2></div><button type="button" onClick={() => setShowTacticalCreate(false)}>×</button></div>
         <div className="skda-form-grid">
           <label><span>Classe da iniciativa</span><select value={tacticalForm.initiativeClass} onChange={(e)=>changeTacticalClass(e.target.value)}>{Object.entries(INITIATIVE_CLASSES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>Modelo primário de execução</span><select value={tacticalForm.primaryModelCode} onChange={(e)=>setTacticalForm(v=>({...v,primaryModelCode:e.target.value}))}>{Object.entries(EXECUTION_MODELS).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
@@ -2525,7 +2772,7 @@ export function SkdaWorkspace(props: Props) {
     </div>}
     {showFindingCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-04 · Achados e lacunas</p><h2>Registrar achado</h2></div><button type="button" onClick={() => setShowFindingCreate(false)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Entrevistas e diagnóstico</p><h2>Registrar achado</h2></div><button type="button" onClick={() => setShowFindingCreate(false)}>×</button></div>
         <div className="skda-form-grid">
           <label><span>Tipo</span><select value={findingForm.findingType} onChange={(e)=>setFindingForm(v=>({...v,findingType:e.target.value}))}>{Object.entries(FINDING_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>Prioridade</span><select value={findingForm.priority} onChange={(e)=>setFindingForm(v=>({...v,priority:e.target.value}))}>{Object.entries(PRIORITIES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
@@ -2543,8 +2790,28 @@ export function SkdaWorkspace(props: Props) {
     </div>}
     {showEvidenceCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">Evidência transversal da Jornada</p><h2>Registrar nova evidência no Core</h2></div><button type="button" onClick={() => setShowEvidenceCreate(false)}>×</button></div>
-        <p>O ativo será registrado no Core transversal de Evidências e correlacionado a esta Jornada DA. Se a evidência surgiu em uma entrevista, selecione-a para preservar a origem metodológica.</p>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Evidência transversal da Jornada</p><h2>Adicionar e analisar evidência</h2></div><button type="button" onClick={() => setShowEvidenceCreate(false)}>×</button></div>
+        <p>O arquivo será gravado e versionado no Core transversal de Evidências, deduplicado por hash e enfileirado para análise por questão. O SK-DA preserva a correlação metodológica sem duplicar o documento.</p>
+        <div className="skda-evidence-upload"><label><span>Arquivo da evidência</span><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.webp" onChange={(event)=>{
+          const file=event.target.files?.[0] ?? null
+          if (file && file.size > 50 * 1024 * 1024) {
+            event.currentTarget.value=''
+            setEvidenceFile(null)
+            setError('O arquivo excede o limite de 50 MB do Core de Evidências.')
+            return
+          }
+          setError('')
+          setEvidenceFile(file)
+          if (file) {
+            const inferred = inferEvidenceFileMetadata(file)
+            setEvidenceForm((current)=>({
+              ...current,
+              title:current.title.trim() || inferred.title,
+              evidenceType:current.evidenceType === 'document' ? inferred.evidenceType : current.evidenceType,
+              referenceDate:current.referenceDate || inferred.referenceDate,
+            }))
+          }
+        }}/><small>{evidenceFile ? `${evidenceFile.name} · ${(evidenceFile.size/1024/1024).toFixed(2)} MB` : 'PDF, Word, Excel, CSV, texto ou imagem · até 50 MB'}</small></label></div>
         <div className="skda-form-grid">
           <label className="wide"><span>Título *</span><input value={evidenceForm.title} onChange={(e)=>setEvidenceForm(v=>({...v,title:e.target.value}))} placeholder="Ata, relatório, indicador, registro ou evidência identificada"/></label>
           <label><span>Tipo</span><select value={evidenceForm.evidenceType} onChange={(e)=>setEvidenceForm(v=>({...v,evidenceType:e.target.value}))}>{Object.entries(EVIDENCE_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
@@ -2555,14 +2822,14 @@ export function SkdaWorkspace(props: Props) {
           <label className="wide"><span>Descrição / contexto</span><textarea rows={4} value={evidenceForm.description} onChange={(e)=>setEvidenceForm(v=>({...v,description:e.target.value}))} placeholder="O que esta evidência demonstra, como surgiu e por que é relevante para o diagnóstico."/></label>
           <label className="wide"><span>Justificativa do registro *</span><textarea rows={3} value={evidenceForm.changeReason} onChange={(e)=>setEvidenceForm(v=>({...v,changeReason:e.target.value}))}/></label>
         </div>
-        <div className="skda-tactical-note"><strong>Core + contexto metodológico</strong><span>O documento/ativo não será duplicado no SK-DA. O módulo guarda apenas a correlação e a interpretação contextual da Jornada.</span></div>
+        <div className="skda-tactical-note"><strong>SK-DOC + SK-KM + SK-DA</strong><span>Após o registro, a evidência entra na fila de inteligência para ser confrontada com as questões do catálogo: relevância, suficiência, confiabilidade, lacunas, complemento necessário, orientação para Autoavaliação e perguntas sugeridas para entrevistas.</span></div>
         {error && <div className="skda-alert">{error}</div>}
-        <div className="skda-modal-actions"><button type="button" onClick={() => setShowEvidenceCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createAndLinkEvidence()}>{saving?'Registrando...':'Registrar e vincular'}</button></div>
+        <div className="skda-modal-actions"><button type="button" onClick={() => setShowEvidenceCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createAndLinkEvidence()}>{saving?'Processando...':'Gravar, vincular e analisar'}</button></div>
       </section>
     </div>}
     {showInterviewCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-02 · Entrevistas</p><h2>Planejar entrevista</h2></div><button type="button" onClick={() => setShowInterviewCreate(false)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Entrevistas e diagnóstico</p><h2>Planejar entrevista</h2></div><button type="button" onClick={() => setShowInterviewCreate(false)}>×</button></div>
         <p>A entrevista será criada também como evento da Agenda da Organização. Depois do agendamento, inclua participantes internos e externos pelo gerenciamento do evento.</p>
         <div className="skda-form-grid">
           <label><span>Código *</span><input value={interviewForm.code} onChange={(e)=>setInterviewForm(v=>({...v,code:e.target.value}))} placeholder="ENT-001"/></label>
@@ -2586,7 +2853,7 @@ export function SkdaWorkspace(props: Props) {
 
     {realizationInterviewId && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">DA-02 · Entrevistas</p><h2>Registrar realização</h2></div><button type="button" onClick={() => setRealizationInterviewId(null)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Entrevistas e diagnóstico</p><h2>Registrar realização</h2></div><button type="button" onClick={() => setRealizationInterviewId(null)}>×</button></div>
         <p>Registre quando a entrevista realmente aconteceu. A previsão original permanece preservada na Agenda para comparação.</p>
         <div className="skda-form-grid">
           <label><span>Início realizado *</span><input type="datetime-local" value={realizationForm.actualStart} onChange={(e)=>setRealizationForm(v=>({...v,actualStart:e.target.value}))}/></label>

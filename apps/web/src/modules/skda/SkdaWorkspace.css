@@ -2881,3 +2881,278 @@
     grid-template-columns: repeat(2, minmax(0,1fr));
   }
 }
+
+/* SK-DA inherits the same organization/module identity contract used by SK-PE. */
+.skda-pe-identity {
+  display: grid;
+  justify-items: center;
+  gap: .55rem;
+  width: 100%;
+}
+
+.skda-pe-organization-logo {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 12px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.skda-pe-organization-switcher {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+}
+
+.skda-pe-organization-switcher select,
+.skda-pe-organization-switcher strong {
+  width: 100%;
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  padding: .4rem .65rem;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 8px;
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  text-align: center;
+  text-align-last: center;
+}
+
+.skda-pe-organization-switcher select option {
+  color: #17211e;
+  background: #fff;
+}
+
+.skda-pe-module-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .35rem;
+  width: 100%;
+}
+
+.skda-pe-module-switcher button {
+  min-width: 46px;
+  min-height: 28px;
+  padding: .32rem .55rem;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.82);
+  font-size: .68rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.skda-pe-module-switcher button.is-active {
+  background: #fff;
+  color: var(--skda-primary);
+}
+
+.skda-pe-module-switcher button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.application-shell-collapsed .skda-pe-organization-switcher,
+.application-shell-collapsed .skda-pe-module-switcher {
+  display: none;
+}
+
+.application-shell-collapsed .skda-pe-organization-logo {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+/* SK-DA | fases, AA assistida e motor de inteligência de evidências */
+.skda-phase-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .4rem;
+}
+
+.skda-phase-strip > span {
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  padding: .42rem .55rem;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.skda-megaphase-identity em {
+  display: block;
+  margin-top: .12rem;
+  color: var(--skda-primary);
+  font-size: .62rem;
+  font-style: normal;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.skda-aa-entry-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 .9rem;
+  padding: 1rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.skda-aa-entry-callout > div:first-child {
+  display: grid;
+  gap: .25rem;
+}
+
+.skda-aa-entry-callout h3,
+.skda-aa-entry-callout p {
+  margin: 0;
+}
+
+.skda-aa-entry-callout p {
+  max-width: 920px;
+  color: var(--skda-muted);
+  font-size: .76rem;
+  line-height: 1.5;
+}
+
+.skda-aa-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .5rem;
+}
+
+.skda-aa-entry-actions button,
+.skda-evidence-upload input::file-selector-button {
+  min-height: 38px;
+  padding: .55rem .78rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--skda-text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.skda-aa-entry-actions .skda-primary {
+  border-color: var(--skda-primary);
+  background: var(--skda-primary);
+  color: #fff;
+}
+
+.skda-evidence-upload {
+  margin: .75rem 0;
+  padding: .9rem;
+  border: 1px dashed color-mix(in srgb, var(--skda-primary) 42%, var(--skda-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--skda-primary) 3%, white);
+}
+
+.skda-evidence-upload label {
+  display: grid;
+  gap: .45rem;
+}
+
+.skda-evidence-upload label > span {
+  color: var(--skda-text);
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.skda-evidence-upload small {
+  color: var(--skda-muted);
+  font-size: .68rem;
+}
+
+.skda-question-intelligence {
+  display: grid;
+  gap: .5rem;
+  grid-column: 1 / -1;
+  padding: .7rem;
+  border: 1px solid color-mix(in srgb, var(--skda-primary) 24%, var(--skda-border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--skda-primary) 3%, white);
+}
+
+.skda-question-intelligence-head,
+.skda-question-intelligence-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+}
+
+.skda-question-intelligence-head strong {
+  color: var(--skda-primary);
+  font-size: .75rem;
+}
+
+.skda-question-intelligence-head span,
+.skda-question-intelligence-state span {
+  color: var(--skda-muted);
+  font-size: .66rem;
+}
+
+.skda-question-intelligence > p,
+.skda-question-intelligence article p {
+  margin: 0;
+  color: var(--skda-muted);
+  font-size: .71rem;
+  line-height: 1.45;
+}
+
+.skda-question-intelligence article {
+  display: grid;
+  gap: .32rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--skda-border);
+}
+
+.skda-question-intelligence-state b {
+  color: var(--skda-text);
+  font-size: .72rem;
+}
+
+@media (max-width: 900px) {
+  .skda-phase-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skda-aa-entry-callout {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .skda-aa-entry-actions {
+    justify-content: flex-start;
+  }
+}
+
+.skda-aa-guidance {
+  display: grid;
+  gap: .22rem;
+  grid-column: 1 / -1;
+  padding: .65rem .75rem;
+  border-left: 3px solid var(--skda-primary);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--skda-primary) 4%, white);
+}
+
+.skda-aa-guidance strong {
+  color: var(--skda-primary);
+  font-size: .72rem;
+}
+
+.skda-aa-guidance span {
+  color: var(--skda-muted);
+  font-size: .72rem;
+  line-height: 1.45;
+}
