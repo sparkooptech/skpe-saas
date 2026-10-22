@@ -2586,3 +2586,32 @@
   font-weight: 800 !important;
   text-align: center !important;
 }
+
+/* SK-DA | refinamento visual final dos cards e Jornada */
+.skda-diagnosis,
+.skda-diagnosis.active,
+.skda-diagnosis:focus,
+.skda-diagnosis:focus-visible {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.skda-diagnosis.active,
+.skda-diagnosis:hover,
+.skda-diagnosis:focus-visible {
+  background: color-mix(in srgb, var(--skda-primary) 4%, white) !important;
+}
+
+.skda-executive-card-head span,
+.skda-metrics .sparks-metric-card__label {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-weight: 800 !important;
+}
+
+.skda-metrics .sparks-metric-card__label,
+.skda-metrics .sparks-metric-card__value,
+.skda-metrics .sparks-metric-card__helper {
+  text-align: center !important;
+}
