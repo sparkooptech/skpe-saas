@@ -34,6 +34,26 @@ const SECURITY_POLICY_CODE = 'POL-001'
 const SECURITY_POLICY_REVISION = '00'
 const SECURITY_POLICY_DATE = '08/01/2025'
 
+let jwtRecoveryInFlight: Promise<boolean> | null = null
+
+function isFutureIssuedJwtError(error: { message?: string | null } | null | undefined) {
+  return /jwt issued at future/i.test(error?.message ?? '')
+}
+
+async function recoverFutureIssuedJwt() {
+  if (!jwtRecoveryInFlight) {
+    jwtRecoveryInFlight = supabase.auth
+      .refreshSession()
+      .then(({ data, error }) => !error && Boolean(data.session))
+      .catch(() => false)
+      .finally(() => {
+        jwtRecoveryInFlight = null
+      })
+  }
+
+  return jwtRecoveryInFlight
+}
+
 type MessageType = 'info' | 'success' | 'error'
 
 type Organization = {
@@ -445,6 +465,9 @@ function App() {
 
   const [organizations, setOrganizations] =
     useState<Organization[]>([])
+
+  const [organizationsLoadFailed, setOrganizationsLoadFailed] =
+    useState(false)
 
   const [organizationHierarchy, setOrganizationHierarchy] =
     useState<OrganizationHierarchyNode[]>([])
@@ -912,18 +935,27 @@ function App() {
     let active = true
 
     const loadTransversalProfile = async () => {
-      const { data, error } = await supabase.rpc(
+      let profileResponse = await supabase.rpc(
         'get_my_transversal_profile',
       )
 
-      if (!active || error) {
-        if (error) {
-          console.error('Erro ao carregar perfil transversal', error)
+      if (isFutureIssuedJwtError(profileResponse.error)) {
+        const recovered = await recoverFutureIssuedJwt()
+        if (recovered) {
+          profileResponse = await supabase.rpc(
+            'get_my_transversal_profile',
+          )
+        }
+      }
+
+      if (!active || profileResponse.error) {
+        if (profileResponse.error) {
+          console.error('Erro ao carregar perfil transversal', profileResponse.error)
         }
         return
       }
 
-      const profile = ((data ?? [])[0] ?? null) as {
+      const profile = ((profileResponse.data ?? [])[0] ?? null) as {
         full_name: string | null
         display_name: string | null
         avatar_storage_path: string | null
@@ -1026,6 +1058,7 @@ function App() {
           setShowPassword(false)
           setPasswordFieldReady(false)
           setOrganizations([])
+          setOrganizationsLoadFailed(false)
           setOrganizationHierarchy([])
           setModules([])
           setPlatformRoles([])
@@ -1070,6 +1103,7 @@ function App() {
       async () => {
         if (!session || passwordRecoveryMode) {
           setOrganizations([])
+          setOrganizationsLoadFailed(false)
           setOrganizationHierarchy([])
           setPlatformRoles([])
           return
@@ -1078,15 +1112,32 @@ function App() {
         setLoading(true)
         clearMessage()
 
-        const [
-          organizationsResponse,
-          platformRolesResponse,
-          hierarchyResponse,
-        ] = await Promise.all([
+        const loadAuthorizationData = () => Promise.all([
           supabase.rpc('get_my_organizations_v2'),
           supabase.rpc('get_my_platform_roles'),
           supabase.rpc('get_my_organization_hierarchy_v1'),
         ])
+
+        let [
+          organizationsResponse,
+          platformRolesResponse,
+          hierarchyResponse,
+        ] = await loadAuthorizationData()
+
+        if (
+          isFutureIssuedJwtError(organizationsResponse.error) ||
+          isFutureIssuedJwtError(platformRolesResponse.error) ||
+          isFutureIssuedJwtError(hierarchyResponse.error)
+        ) {
+          const recovered = await recoverFutureIssuedJwt()
+          if (recovered) {
+            ;[
+              organizationsResponse,
+              platformRolesResponse,
+              hierarchyResponse,
+            ] = await loadAuthorizationData()
+          }
+        }
 
         if (!mounted) {
           return
@@ -1099,8 +1150,10 @@ function App() {
           )
 
           setOrganizations([])
+          setOrganizationsLoadFailed(true)
         } else {
           setOrganizations((organizationsResponse.data ?? []) as Organization[])
+          setOrganizationsLoadFailed(false)
         }
 
         if (hierarchyResponse.error) {
@@ -2895,16 +2948,34 @@ function App() {
 
             {organizations.length === 0 ? (
               <div className="state-card">
-                <h2>
-                  Nenhuma organização
-                  disponível
-                </h2>
+                {organizationsLoadFailed ? (
+                  <>
+                    <h2>Não foi possível carregar suas organizações</h2>
+                    <p>
+                      Sua sessão foi reconhecida, mas a autorização não pôde ser atualizada. O SPARKs tentou renovar a sessão automaticamente.
+                    </p>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => setAuthorizationRefreshVersion((current) => current + 1)}
+                    >
+                      Tentar novamente
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2>
+                      Nenhuma organização
+                      disponível
+                    </h2>
 
-                <p>
-                  O usuário está autenticado,
-                  mas não possui vínculo ativo
-                  com uma organização.
-                </p>
+                    <p>
+                      O usuário está autenticado,
+                      mas não possui vínculo ativo
+                      com uma organização.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <>
