@@ -60,12 +60,12 @@ with d as (
 snap_gov as (
   select s.id from public.skda_self_assessment_snapshots s,d
   where s.diagnosis_id=d.id and s.metadata->>'block'='GOVERNANCA'
-  order by s.created_at desc limit 1
+  order by s.source_date desc nulls last, s.captured_at desc limit 1
 ),
 snap_mgt as (
   select s.id from public.skda_self_assessment_snapshots s,d
   where s.diagnosis_id=d.id and s.metadata->>'block'='GESTAO'
-  order by s.created_at desc limit 1
+  order by s.source_date desc nulls last, s.captured_at desc limit 1
 )
 insert into public.skda_self_assessment_metrics (
   organization_id,diagnosis_id,snapshot_id,block_code,metric_kind,metric_code,metric_name,
