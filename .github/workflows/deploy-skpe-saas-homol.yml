@@ -237,3 +237,16 @@ jobs:
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/healthz"
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/login"
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/" 'Plataforma SPARKs|<div id="root">'
+
+      - name: CNTCOOP read-only inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" <<'SQL'
+          begin read only;
+          select 'ORGANIZATION' as kind, to_jsonb(o) as record from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%';
+          select 'JOURNEY' as kind, to_jsonb(d) as record from public.skda_diagnoses d where d.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
+          select 'INITIATIVE' as kind, to_jsonb(i) as record from public.sparks_initiatives i where i.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
+          commit;
+          SQL
