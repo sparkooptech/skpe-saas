@@ -2784,22 +2784,22 @@ function App() {
               <div className="state-card">
                 <p>Carregando visão consolidada da rede organizacional...</p>
               </div>
-            ) : organizationNetwork.length > 0 && modules.some((module) => module.module_code === 'SK-PE') ? (
+            ) : organizationNetwork.length > 0 && modules.length > 0 ? (
               <section className="network-dashboard" aria-label="Painel consolidado da rede organizacional">
                 <div className="network-dashboard-heading">
                   <div>
                     <p className="eyebrow">Visão consolidada</p>
                     <h2>Desempenho da organização e de sua rede</h2>
-                    <p>Acompanhamento do Planejamento Estratégico das organizações acessíveis no nível atual.</p>
+                    <p>Acompanhe os módulos habilitados e o desempenho das organizações acessíveis no nível atual.</p>
                   </div>
                 </div>
 
                 <div className="network-summary-grid">
                   {[
                     ['Organizações', networkSummary.organizationsTotal, 'Abrir organizações da rede'],
-                    ['Projetos estratégicos', networkSummary.activeProjects, 'Abrir detalhamento por organização'],
-                    ['Progresso médio', `${networkSummary.averageProgress.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`, 'Comparar progresso da rede'],
-                    ['Iniciativas', networkSummary.initiativesTotal, `${networkSummary.initiativesAttention} requerem atenção`],
+                    ['Módulos ativos', modules.length, 'Ver módulos habilitados para esta organização'],
+                    ['Módulos disponíveis', modules.map((module) => module.module_code).join(', '), 'Conforme permissões da organização'],
+                    ['Organização selecionada', selectedOrganization.trade_name ?? selectedOrganization.legal_name, 'Abrir um dos módulos abaixo'],
                   ].map(([label, value, detail]) => (
                     <article
                       key={String(label)}
@@ -2816,7 +2816,7 @@ function App() {
 
                 <div className="network-table-wrap" id="network-organization-details">
                   <table className="network-table">
-                    <thead><tr><th>Organização</th><th>Nível</th><th>SK-PE</th><th>Projetos</th><th>Progresso</th><th>Iniciativas</th><th>Atenção</th></tr></thead>
+                    <thead><tr><th>Organização</th><th>Nível</th><th>Módulos ativos</th><th>Projetos</th><th>Progresso</th><th>Iniciativas</th><th>Atenção</th></tr></thead>
                     <tbody>
                       {organizationNetwork.map((row) => {
                         const accessibleOrganization = organizations.find((organization) => organization.organization_id === row.organization_id)
@@ -2851,11 +2851,11 @@ function App() {
                               </span>
                             </td>
                             <td>{getOrganizationLevelLabel(row.organization_level)}</td>
-                            <td>{row.module_enabled ? 'Habilitado' : 'Não habilitado'}</td>
-                            <td>{row.active_projects}</td>
-                            <td>{Number(row.average_project_progress ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</td>
-                            <td>{row.initiatives_total}</td>
-                            <td>{row.initiatives_attention}</td>
+                            <td>{row.organization_id === selectedOrganization.organization_id ? modules.map((module) => module.module_code).join(', ') : 'Consultar módulos'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? row.active_projects : '—'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? `${Number(row.average_project_progress ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%` : '—'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? row.initiatives_total : '—'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? row.initiatives_attention : '—'}</td>
                           </tr>
                         )
                       })}
