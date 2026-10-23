@@ -40,16 +40,19 @@ create unique index if not exists idx_skda_reported_cycle_measures_source
   where source_content_hash is not null;
 
 alter table public.skda_reported_cycle_measures enable row level security;
+drop policy if exists skda_reported_cycle_measures_select on public.skda_reported_cycle_measures;
 create policy skda_reported_cycle_measures_select
   on public.skda_reported_cycle_measures
   for select to authenticated
   using (public.has_module_access(organization_id, 'SK-DA'));
 
+drop policy if exists skda_reported_cycle_measures_insert on public.skda_reported_cycle_measures;
 create policy skda_reported_cycle_measures_insert
   on public.skda_reported_cycle_measures
   for insert to authenticated
   with check (public.has_module_permission(organization_id, 'SK-DA', 'assessment.edit'));
 
+drop policy if exists skda_reported_cycle_measures_update on public.skda_reported_cycle_measures;
 create policy skda_reported_cycle_measures_update
   on public.skda_reported_cycle_measures
   for update to authenticated
