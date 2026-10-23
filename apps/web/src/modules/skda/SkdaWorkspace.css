@@ -3175,3 +3175,12 @@
   font-size: .72rem;
   line-height: 1.45;
 }
+
+.skda-evidence-checklist{margin:1rem 0;padding:1rem;border:1px solid var(--border-color,#dce4e9);border-radius:14px}
+.skda-evidence-checklist h4{margin:0 0 .35rem}
+.skda-evidence-checklist p{margin:0 0 1rem}
+.skda-evidence-checklist-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem}
+.skda-evidence-checklist-grid article{display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;padding:.9rem;border:1px solid var(--border-color,#dce4e9);border-radius:12px}
+.skda-evidence-checklist-grid strong{text-transform:none;font-weight:700}
+.skda-evidence-checklist-grid small{flex:1}
+.skda-evidence-checklist-grid button{cursor:pointer}

@@ -128,6 +128,17 @@ type ActionFollowup = {
   execution_completed: boolean
 }
 
+const DA_EVIDENCE_CHECKLIST = [
+  { code:'historico-governanca', title:'Diagnósticos anteriores de Governança', hint:'Relatórios, devolutivas e resultados por ciclo' },
+  { code:'historico-gestao', title:'Diagnósticos anteriores de Gestão', hint:'Relatórios, devolutivas e resultados por ciclo' },
+  { code:'planos-acao', title:'Planos de ação e acompanhamento', hint:'Planos anteriores, responsáveis, prazos e execução' },
+  { code:'autoavaliacao', title:'Autoavaliação vigente', hint:'Respostas, comentários e relatórios oficiais' },
+  { code:'governanca', title:'Governança e quadro social', hint:'Estatuto, regimentos, atas, políticas e registros' },
+  { code:'gestao', title:'Gestão e resultados', hint:'Estratégia, processos, indicadores e controles' },
+  { code:'entrevistas', title:'Entrevistas e verificações', hint:'Atas, gravações, transcrições e complementos' },
+  { code:'complementar', title:'Outras evidências', hint:'Documentos não previstos no checklist inicial' },
+] as const
+
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
 
 const PHASES: Phase[] = [
@@ -2413,6 +2424,28 @@ export function SkdaWorkspace(props: Props) {
               <div className="skda-phase-workspace-actions">
                 <span>{evidenceAssets.length} ativo(s)</span>
                 {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceFile(null); setShowEvidenceCreate(true) }}>Adicionar e analisar evidência</button>}
+              </div>
+            </div>
+            <div className="skda-evidence-checklist">
+              <h4>Checklist documental da Jornada</h4>
+              <p>Importe documentos históricos, materiais solicitados e outras evidências. A classificação é orientativa e não impede novos registros.</p>
+              <div className="skda-evidence-checklist-grid">
+                {DA_EVIDENCE_CHECKLIST.map((item) => (
+                  <article key={item.code}>
+                    <strong>{item.title}</strong>
+                    <small>{item.hint}</small>
+                    {canRegisterEvidence && <button type="button" onClick={() => {
+                      setEvidenceFile(null)
+                      setEvidenceForm((current) => ({
+                        ...current,
+                        title:'',
+                        description:item.title + ' — ' + item.hint,
+                        changeReason:'Importação documental orientada pelo checklist da Jornada SK-DA.',
+                      }))
+                      setShowEvidenceCreate(true)
+                    }}>Importar evidência</button>}
+                  </article>
+                ))}
               </div>
             </div>
             {evidenceAssets.length === 0 ? <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p> : <div className="skda-evidence-list">
