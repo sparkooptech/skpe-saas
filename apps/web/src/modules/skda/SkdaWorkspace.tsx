@@ -12,6 +12,7 @@ type Props = {
   organizationId: string
   organizationName: string
   organizationCode: string
+  organizationLogoStoragePath?: string | null
   workspaceOrganizations: Array<{ id:string; code:string; name:string }>
   workspaceModules: Array<{ code:string; name:string; description:string | null; available:boolean }>
   activeModuleCode: string
@@ -2665,6 +2666,7 @@ export function SkdaWorkspace(props: Props) {
           <OrganizationBrandingLogo
             organizationId={props.organizationId}
             organizationName={props.organizationName}
+            logoStoragePath={props.organizationLogoStoragePath}
             className="skda-pe-organization-logo"
           />
           <div className="skda-pe-organization-switcher">
@@ -2691,7 +2693,7 @@ export function SkdaWorkspace(props: Props) {
                 title={module.description ? `${module.name} — ${module.description}` : module.name}
                 onClick={() => module.available && void props.onSwitchModule?.(module.code)}
               >
-                {module.code}
+                <span className="skda-pe-module-label">{module.name || module.code}</span>
               </button>
             ))}
           </div>

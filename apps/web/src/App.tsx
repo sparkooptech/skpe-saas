@@ -1341,7 +1341,7 @@ function App() {
     )
     if (!organization) return
 
-    const currentModuleCode = openedModule?.module_code ?? 'SK-PE'
+    const currentModuleCode = openedModule?.module_code ?? null
     setPlatformAdminOpen(false)
     setOrganizationAdminOpen(false)
     setSelectedOrganization(organization)
@@ -1367,7 +1367,7 @@ function App() {
 
     const nextModule = nextModules.find(
       (module) => module.module_code === currentModuleCode,
-    ) ?? nextModules.find((module) => module.module_code === 'SK-PE')
+    ) ?? nextModules.find((module) => ['SK-DA', 'SK-PE'].includes(module.module_code))
 
     if (nextModule && ['SK-PE', 'SK-DA'].includes(nextModule.module_code)) {
       setOpenedModule(nextModule)
@@ -1941,6 +1941,7 @@ function App() {
         organizationId={selectedOrganization.organization_id}
         organizationName={selectedOrganization.trade_name ?? selectedOrganization.legal_name}
         organizationCode={selectedOrganization.organization_code}
+        organizationLogoStoragePath={selectedOrganization.logo_storage_path ?? null}
         workspaceOrganizations={organizations.map((organization) => ({
           id: organization.organization_id,
           code: organization.organization_code,
@@ -2783,7 +2784,7 @@ function App() {
               <div className="state-card">
                 <p>Carregando visão consolidada da rede organizacional...</p>
               </div>
-            ) : organizationNetwork.length > 0 ? (
+            ) : organizationNetwork.length > 0 && modules.some((module) => module.module_code === 'SK-PE') ? (
               <section className="network-dashboard" aria-label="Painel consolidado da rede organizacional">
                 <div className="network-dashboard-heading">
                   <div>
@@ -2895,7 +2896,7 @@ function App() {
                     onKeyDown={(event) => activateWithKeyboard(event, () => handleOpenModule(module))}
                   >
                     <div className="module-icon">
-                      <StrategyIcon />
+                      {module.module_code === 'SK-PE' ? <StrategyIcon /> : <span aria-hidden="true">{module.module_short_name || module.module_code}</span>}
                     </div>
 
                     <div className="module-card-content">
