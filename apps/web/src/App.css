@@ -2881,3 +2881,4 @@ td,
     grid-template-columns: 1fr;
   }
 }
+.network-summary-grid .network-summary-card > span { text-align: center; font-weight: 700; }
