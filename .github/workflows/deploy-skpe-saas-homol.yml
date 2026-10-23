@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      database_only:
+        description: Apply SK-DA migrations without frontend deployment
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -57,6 +62,7 @@ jobs:
           cp -R deploy/hostinger/skpe-saas-homol/. "${release_root}/"
           cp supabase/migrations/20261022175806_normalize_skda_self_assessment_intelligence.sql "${release_root}/"
           cp supabase/migrations/20261022192348_add_skda_evidence_intelligence_engine.sql "${release_root}/"
+          cp supabase/migrations/20261023113000_prepare_skda_pdgc_cycle_import.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -186,7 +192,8 @@ jobs:
           set -euo pipefail
           for migration_file in \
             20261022175806_normalize_skda_self_assessment_intelligence.sql \
-            20261022192348_add_skda_evidence_intelligence_engine.sql
+            20261022192348_add_skda_evidence_intelligence_engine.sql \
+            20261023113000_prepare_skda_pdgc_cycle_import.sql
           do
             echo "Applying ${migration_file}"
             ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
@@ -194,6 +201,7 @@ jobs:
           done
 
       - name: Deploy Remote Release
+        if: ${{ !inputs.database_only }}
         shell: bash
         run: |
           set -euo pipefail
@@ -201,6 +209,7 @@ jobs:
             "cd '${{ steps.meta.outputs.release_dir }}' && chmod +x deploy-remote.sh && GITHUB_SHA='${GITHUB_SHA}' RELEASE_SHORT_SHA='${{ steps.meta.outputs.short_sha }}' ./deploy-remote.sh"
 
       - name: Public Domain Smoke Test
+        if: ${{ !inputs.database_only }}
         shell: bash
         run: |
           set -euo pipefail
