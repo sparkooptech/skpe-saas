@@ -1,0 +1,42 @@
+name: SKDA CNTCOOP HOMOL Database Preparation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: skda-cntcoop-homol-db
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Hostinger SSH
+        env:
+          HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$HOSTINGER_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$HOSTINGER_HOST" >> ~/.ssh/known_hosts
+      - name: Apply isolated SKDA import schema to sparks_homol
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_USER: ${{ secrets.HOSTINGER_USER }}
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes "$HOSTINGER_USER@$HOSTINGER_HOST" "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < supabase/migrations/20261023113000_prepare_skda_pdgc_cycle_import.sql
+      - name: Verify schema and locate CNTCOOP without modifying organization
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_USER: ${{ secrets.HOSTINGER_USER }}
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes "$HOSTINGER_USER@$HOSTINGER_HOST" "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" <<'SQL'
+          select 'skda_reported_cycle_measures' as object_name, to_regclass('public.skda_reported_cycle_measures') is not null as exists;
+          select table_name,column_name from information_schema.columns where table_schema='public' and table_name in ('skda_self_assessment_snapshots','skda_self_assessment_answers') and column_name in ('assessment_cycle_year','original_comments','source_question_code') order by table_name,column_name;
+          select id,name from public.organizations where name ilike '%CNTCOOP%' limit 5;
+          SQL

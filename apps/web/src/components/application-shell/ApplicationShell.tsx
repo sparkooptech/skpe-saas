@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import './ApplicationShell.css'
 
@@ -13,13 +13,17 @@ export type ApplicationShellNavigationItem = {
   icon?: ReactNode
   active?: boolean
   disabled?: boolean
-  onActivate: () => void
+  onActivate?: () => void
+  children?: ApplicationShellNavigationItem[]
 }
 
 type ApplicationShellProps = {
   brand: ReactNode
   contextItems: ApplicationShellContextItem[]
   userArea: ReactNode
+  pageTitle?: ReactNode
+  headerActions?: ReactNode
+  sidebarFooter?: ReactNode
   navigationItems: ApplicationShellNavigationItem[]
   navigationLabel?: string
   children: ReactNode
@@ -34,8 +38,11 @@ export function ApplicationShell({
   brand,
   contextItems,
   userArea,
+  pageTitle,
+  headerActions,
+  sidebarFooter,
   navigationItems,
-  navigationLabel = 'Navegação principal',
+  navigationLabel = 'Navega\u00e7\u00e3o principal',
   children,
   footer,
   collapsed = false,
@@ -53,8 +60,11 @@ export function ApplicationShell({
         .filter(Boolean)
         .join(' ')}
     >
-      <header className="application-shell-header">
-        <div className="application-shell-brand">{brand}</div>
+      <aside
+        className="application-shell-sidebar"
+        aria-label={navigationLabel}
+      >
+        <div className="application-shell-sidebar-brand">{brand}</div>
 
         <div
           className="application-shell-context"
@@ -71,72 +81,97 @@ export function ApplicationShell({
           ))}
         </div>
 
-        <div className="application-shell-user">{userArea}</div>
-      </header>
-
-      <aside
-        className="application-shell-sidebar"
-        aria-label={navigationLabel}
-      >
-        <div className="application-shell-sidebar-header">
-          <strong>Menu</strong>
-
-          {onToggleCollapsed && (
-            <button
-              type="button"
-              className="application-shell-collapse-button"
-              onClick={onToggleCollapsed}
-              aria-label={
-                collapsed
-                  ? 'Expandir menu'
-                  : 'Recolher menu'
-              }
-              title={
-                collapsed
-                  ? 'Expandir menu'
-                  : 'Recolher menu'
-              }
-            >
-              {collapsed ? '→' : '←'}
-            </button>
-          )}
-        </div>
-
         <nav className="application-shell-navigation">
-          {navigationItems.map((item) => (
+          {navigationItems.map((item) => item.children?.length ? (
+            <details
+              key={item.id}
+              className="application-shell-navigation-group"
+              open={item.active || collapsed}
+            >
+              <summary
+                className={[
+                  'application-shell-navigation-item',
+                  item.active ? 'active' : '',
+                ].filter(Boolean).join(' ')}
+                title={collapsed ? item.label : undefined}
+              >
+                {item.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{item.icon}</span>}
+                <span className="application-shell-navigation-label">{item.label}</span>
+              </summary>
+              <div className="application-shell-navigation-submenu">
+                {item.children.map((child) => (
+                  <button
+                    key={child.id}
+                    type="button"
+                    className={[
+                      'application-shell-navigation-subitem',
+                      child.active ? 'active' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => {
+                      child.onActivate?.()
+                      onCloseMobile?.()
+                    }}
+                    disabled={child.disabled}
+                    aria-current={child.active ? 'page' : undefined}
+                    title={collapsed ? child.label : undefined}
+                  >
+                    {child.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{child.icon}</span>}
+                    <span className="application-shell-navigation-label">{child.label}</span>
+                  </button>
+                ))}
+              </div>
+            </details>
+          ) : (
             <button
               key={item.id}
               type="button"
               className={[
                 'application-shell-navigation-item',
                 item.active ? 'active' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
+              ].filter(Boolean).join(' ')}
               onClick={() => {
-                item.onActivate()
+                item.onActivate?.()
                 onCloseMobile?.()
               }}
               disabled={item.disabled}
               aria-current={item.active ? 'page' : undefined}
               title={collapsed ? item.label : undefined}
             >
-              {item.icon && (
-                <span
-                  className="application-shell-navigation-icon"
-                  aria-hidden="true"
-                >
-                  {item.icon}
-                </span>
-              )}
-
-              <span className="application-shell-navigation-label">
-                {item.label}
-              </span>
+              {item.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{item.icon}</span>}
+              <span className="application-shell-navigation-label">{item.label}</span>
             </button>
           ))}
         </nav>
+
+        {sidebarFooter && (
+          <div className="application-shell-sidebar-footer">
+            {sidebarFooter}
+          </div>
+        )}
       </aside>
+
+      <header className="application-shell-header">
+        {onToggleCollapsed && (
+          <button
+            type="button"
+            className="application-shell-collapse-button"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? 'Expandir menu principal' : 'Recolher menu principal'}
+            title={collapsed ? 'Expandir menu principal' : 'Recolher menu principal'}
+          >
+            {collapsed ? '\u2192' : '\u2190'}
+          </button>
+        )}
+
+        <div className="application-shell-page-title">
+          {pageTitle ?? 'Vis\u00e3o Geral'}
+        </div>
+
+        <div className="application-shell-header-actions">
+          {headerActions}
+          <div className="application-shell-user">{userArea}</div>
+        </div>
+      </header>
 
       {mobileOpen && (
         <button
@@ -152,11 +187,9 @@ export function ApplicationShell({
       <footer className="application-shell-footer">
         {footer ?? (
           <>
+            <span>Plataforma SPARKs</span>
             <span>
-              Plataforma SPARKs
-            </span>
-            <span>
-              © {new Date().getFullYear()} SPARKOOP — Todos os direitos reservados.
+              &copy; {new Date().getFullYear()} SPARKOOP &mdash; Todos os direitos reservados.
             </span>
           </>
         )}

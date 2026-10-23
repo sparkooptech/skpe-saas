@@ -9,6 +9,7 @@ import { supabase } from './lib/supabase'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { SkpeWorkspace } from './modules/skpe/app/SkpeWorkspace'
+import { SkdaWorkspace } from './modules/skda/SkdaWorkspace'
 import {
   parsePlatformRoute,
   platformRoutes,
@@ -32,6 +33,26 @@ const SECURITY_POLICY_VERSION = 'POL-001-R00-2025-01-08'
 const SECURITY_POLICY_CODE = 'POL-001'
 const SECURITY_POLICY_REVISION = '00'
 const SECURITY_POLICY_DATE = '08/01/2025'
+
+let jwtRecoveryInFlight: Promise<boolean> | null = null
+
+function isFutureIssuedJwtError(error: { message?: string | null } | null | undefined) {
+  return /jwt issued at future/i.test(error?.message ?? '')
+}
+
+async function recoverFutureIssuedJwt() {
+  if (!jwtRecoveryInFlight) {
+    jwtRecoveryInFlight = supabase.auth
+      .refreshSession()
+      .then(({ data, error }) => !error && Boolean(data.session))
+      .catch(() => false)
+      .finally(() => {
+        jwtRecoveryInFlight = null
+      })
+  }
+
+  return jwtRecoveryInFlight
+}
 
 type MessageType = 'info' | 'success' | 'error'
 
@@ -445,6 +466,9 @@ function App() {
   const [organizations, setOrganizations] =
     useState<Organization[]>([])
 
+  const [organizationsLoadFailed, setOrganizationsLoadFailed] =
+    useState(false)
+
   const [organizationHierarchy, setOrganizationHierarchy] =
     useState<OrganizationHierarchyNode[]>([])
 
@@ -580,9 +604,6 @@ function App() {
     const term = organizationSearch.trim().toLocaleLowerCase('pt-BR')
     return [...organizations]
       .filter((organization) => {
-        // O tenant técnico pertence exclusivamente à homologação runtime/E2E.
-        // Ele permanece preservado no banco, mas não integra o portal operacional.
-        if (organization.organization_code === 'SKPE-V1-RUNTIME') return false
         if (!term) return true
         const identity =
           organizationIdentityById[organization.organization_id]
@@ -765,6 +786,9 @@ function App() {
   const [modules, setModules] =
     useState<PlatformModule[]>([])
 
+  const [modulesOrganizationId, setModulesOrganizationId] =
+    useState<string | null>(null)
+
   const [
     selectedOrganizationJobTitle,
     setSelectedOrganizationJobTitle,
@@ -911,18 +935,27 @@ function App() {
     let active = true
 
     const loadTransversalProfile = async () => {
-      const { data, error } = await supabase.rpc(
+      let profileResponse = await supabase.rpc(
         'get_my_transversal_profile',
       )
 
-      if (!active || error) {
-        if (error) {
-          console.error('Erro ao carregar perfil transversal', error)
+      if (isFutureIssuedJwtError(profileResponse.error)) {
+        const recovered = await recoverFutureIssuedJwt()
+        if (recovered) {
+          profileResponse = await supabase.rpc(
+            'get_my_transversal_profile',
+          )
+        }
+      }
+
+      if (!active || profileResponse.error) {
+        if (profileResponse.error) {
+          console.error('Erro ao carregar perfil transversal', profileResponse.error)
         }
         return
       }
 
-      const profile = ((data ?? [])[0] ?? null) as {
+      const profile = ((profileResponse.data ?? [])[0] ?? null) as {
         full_name: string | null
         display_name: string | null
         avatar_storage_path: string | null
@@ -1025,6 +1058,7 @@ function App() {
           setShowPassword(false)
           setPasswordFieldReady(false)
           setOrganizations([])
+          setOrganizationsLoadFailed(false)
           setOrganizationHierarchy([])
           setModules([])
           setPlatformRoles([])
@@ -1069,6 +1103,7 @@ function App() {
       async () => {
         if (!session || passwordRecoveryMode) {
           setOrganizations([])
+          setOrganizationsLoadFailed(false)
           setOrganizationHierarchy([])
           setPlatformRoles([])
           return
@@ -1077,15 +1112,32 @@ function App() {
         setLoading(true)
         clearMessage()
 
-        const [
-          organizationsResponse,
-          platformRolesResponse,
-          hierarchyResponse,
-        ] = await Promise.all([
+        const loadAuthorizationData = () => Promise.all([
           supabase.rpc('get_my_organizations_v2'),
           supabase.rpc('get_my_platform_roles'),
           supabase.rpc('get_my_organization_hierarchy_v1'),
         ])
+
+        let [
+          organizationsResponse,
+          platformRolesResponse,
+          hierarchyResponse,
+        ] = await loadAuthorizationData()
+
+        if (
+          isFutureIssuedJwtError(organizationsResponse.error) ||
+          isFutureIssuedJwtError(platformRolesResponse.error) ||
+          isFutureIssuedJwtError(hierarchyResponse.error)
+        ) {
+          const recovered = await recoverFutureIssuedJwt()
+          if (recovered) {
+            ;[
+              organizationsResponse,
+              platformRolesResponse,
+              hierarchyResponse,
+            ] = await loadAuthorizationData()
+          }
+        }
 
         if (!mounted) {
           return
@@ -1098,12 +1150,10 @@ function App() {
           )
 
           setOrganizations([])
+          setOrganizationsLoadFailed(true)
         } else {
-          setOrganizations(
-            ((organizationsResponse.data ?? []) as Organization[]).filter(
-              (organization) => organization.organization_code !== 'SKPE-V1-RUNTIME',
-            ),
-          )
+          setOrganizations((organizationsResponse.data ?? []) as Organization[])
+          setOrganizationsLoadFailed(false)
         }
 
         if (hierarchyResponse.error) {
@@ -1115,9 +1165,7 @@ function App() {
           setOrganizationHierarchy([])
         } else {
           setOrganizationHierarchy(
-            ((hierarchyResponse.data ?? []) as OrganizationHierarchyNode[]).filter(
-              (node) => node.organization_id !== '112e3bb0-82f3-4185-9f4d-7ac117c63f97',
-            ),
+            (hierarchyResponse.data ?? []) as OrganizationHierarchyNode[],
           )
         }
 
@@ -1158,6 +1206,7 @@ function App() {
     setSelectedOrganization(organization)
     setOpenedModule(null)
     setModules([])
+    setModulesOrganizationId(null)
     setOrganizationNetwork([])
     setLoadingModules(true)
     setLoadingOrganizationNetwork(true)
@@ -1189,6 +1238,7 @@ function App() {
       setModules([])
     } else {
       setModules((modulesResponse.data ?? []) as PlatformModule[])
+      setModulesOrganizationId(organization.organization_id)
     }
 
     if (networkResponse.error) {
@@ -1291,10 +1341,11 @@ function App() {
     )
     if (!organization) return
 
-    const currentModuleCode = openedModule?.module_code ?? 'SK-PE'
+    const currentModuleCode = openedModule?.module_code ?? null
     setPlatformAdminOpen(false)
     setOrganizationAdminOpen(false)
     setSelectedOrganization(organization)
+    setModulesOrganizationId(null)
     setLoadingModules(true)
     clearMessage()
 
@@ -1304,6 +1355,7 @@ function App() {
 
     const nextModules = error ? [] : ((data ?? []) as PlatformModule[])
     setModules(nextModules)
+    if (!error) setModulesOrganizationId(organization.organization_id)
     setLoadingModules(false)
 
     if (error) {
@@ -1315,9 +1367,9 @@ function App() {
 
     const nextModule = nextModules.find(
       (module) => module.module_code === currentModuleCode,
-    ) ?? nextModules.find((module) => module.module_code === 'SK-PE')
+    ) ?? nextModules.find((module) => ['SK-DA', 'SK-PE'].includes(module.module_code))
 
-    if (nextModule?.module_code === 'SK-PE') {
+    if (nextModule && ['SK-PE', 'SK-DA'].includes(nextModule.module_code)) {
       setOpenedModule(nextModule)
       navigate(platformRoutes.module(organization.organization_id, nextModule.module_code))
       return
@@ -1330,7 +1382,7 @@ function App() {
   const handleOpenModule = (
     module: PlatformModule,
   ) => {
-    if (module.module_code === 'SK-PE') {
+    if (['SK-PE', 'SK-DA'].includes(module.module_code)) {
       setOpenedModule(module)
       clearMessage()
       if (selectedOrganization) {
@@ -1785,7 +1837,10 @@ function App() {
 
     setOrganizationAdminOpen(false)
 
-    if (loadingModules) {
+    if (
+      loadingModules ||
+      modulesOrganizationId !== routeOrganization.organization_id
+    ) {
       return
     }
 
@@ -1821,6 +1876,7 @@ function App() {
     loading,
     loadingModules,
     modules,
+    modulesOrganizationId,
     navigate,
     openedModule,
     organizationAdminOpen,
@@ -1879,7 +1935,40 @@ function App() {
     )
   }
 
-  if (openedModule && selectedOrganization) {
+  if (openedModule?.module_code === 'SK-DA' && selectedOrganization) {
+    return (
+      <SkdaWorkspace
+        organizationId={selectedOrganization.organization_id}
+        organizationName={selectedOrganization.trade_name ?? selectedOrganization.legal_name}
+        organizationCode={selectedOrganization.organization_code}
+        organizationLogoStoragePath={selectedOrganization.logo_storage_path ?? null}
+        workspaceOrganizations={organizations.map((organization) => ({
+          id: organization.organization_id,
+          code: organization.organization_code,
+          name: organization.trade_name ?? organization.legal_name,
+        }))}
+        workspaceModules={modules.map((module) => ({
+          code: module.module_code,
+          name: module.module_name,
+          description: module.module_description,
+          available: ['SK-PE', 'SK-DA'].includes(module.module_code),
+        }))}
+        activeModuleCode={openedModule.module_code}
+        onSwitchOrganization={handleSwitchWorkspaceOrganization}
+        onSwitchModule={handleSwitchWorkspaceModule}
+        userRoleCode={openedModule.role_code}
+        userRoleName={openedModule.role_name}
+        userDisplayName={userDisplayName || session?.user.email || 'Usuário'}
+        userEmail={session?.user.email ?? ''}
+        userAvatarUrl={userAvatarUrl}
+        isOrganizationAdmin={selectedOrganization.is_organization_admin}
+        isPlatformSuperAdmin={isPlatformSuperAdmin}
+        onReturnToModules={handleReturnToModules}
+      />
+    )
+  }
+
+  if (openedModule?.module_code === 'SK-PE' && selectedOrganization) {
     return (
       <>
 <SkpeWorkspace
@@ -1902,7 +1991,7 @@ function App() {
           code: module.module_code,
           name: module.module_name,
           description: module.module_description,
-          available: module.module_code === 'SK-PE',
+          available: ['SK-PE', 'SK-DA'].includes(module.module_code),
         }))}
         activeModuleCode={openedModule.module_code}
         onSwitchOrganization={handleSwitchWorkspaceOrganization}
@@ -2695,22 +2784,22 @@ function App() {
               <div className="state-card">
                 <p>Carregando visão consolidada da rede organizacional...</p>
               </div>
-            ) : organizationNetwork.length > 0 ? (
+            ) : organizationNetwork.length > 0 && modules.length > 0 ? (
               <section className="network-dashboard" aria-label="Painel consolidado da rede organizacional">
                 <div className="network-dashboard-heading">
                   <div>
                     <p className="eyebrow">Visão consolidada</p>
                     <h2>Desempenho da organização e de sua rede</h2>
-                    <p>Acompanhamento do Planejamento Estratégico das organizações acessíveis no nível atual.</p>
+                    <p>Acompanhe os módulos habilitados e o desempenho das organizações acessíveis no nível atual.</p>
                   </div>
                 </div>
 
                 <div className="network-summary-grid">
                   {[
                     ['Organizações', networkSummary.organizationsTotal, 'Abrir organizações da rede'],
-                    ['Projetos estratégicos', networkSummary.activeProjects, 'Abrir detalhamento por organização'],
-                    ['Progresso médio', `${networkSummary.averageProgress.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`, 'Comparar progresso da rede'],
-                    ['Iniciativas', networkSummary.initiativesTotal, `${networkSummary.initiativesAttention} requerem atenção`],
+                    ['Módulos ativos', modules.length, 'Ver módulos habilitados para esta organização'],
+                    ['Módulos disponíveis', modules.map((module) => module.module_code).join(', '), 'Conforme permissões da organização'],
+                    ['Organização selecionada', selectedOrganization.trade_name ?? selectedOrganization.legal_name, 'Abrir um dos módulos abaixo'],
                   ].map(([label, value, detail]) => (
                     <article
                       key={String(label)}
@@ -2727,7 +2816,7 @@ function App() {
 
                 <div className="network-table-wrap" id="network-organization-details">
                   <table className="network-table">
-                    <thead><tr><th>Organização</th><th>Nível</th><th>Módulo</th><th>Projetos</th><th>Progresso</th><th>Iniciativas</th><th>Atenção</th></tr></thead>
+                    <thead><tr><th>Organização</th><th>Nível</th><th>Módulos ativos</th><th>Projetos</th><th>Progresso</th><th>Iniciativas</th><th>Atenção</th></tr></thead>
                     <tbody>
                       {organizationNetwork.map((row) => {
                         const accessibleOrganization = organizations.find((organization) => organization.organization_id === row.organization_id)
@@ -2762,11 +2851,11 @@ function App() {
                               </span>
                             </td>
                             <td>{getOrganizationLevelLabel(row.organization_level)}</td>
-                            <td>{row.module_enabled ? 'Habilitado' : 'Não habilitado'}</td>
-                            <td>{row.active_projects}</td>
-                            <td>{Number(row.average_project_progress ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</td>
-                            <td>{row.initiatives_total}</td>
-                            <td>{row.initiatives_attention}</td>
+                            <td>{row.organization_id === selectedOrganization.organization_id ? modules.map((module) => module.module_code).join(', ') : 'Consultar módulos'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? row.active_projects : '—'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? `${Number(row.average_project_progress ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%` : '—'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? row.initiatives_total : '—'}</td>
+                            <td>{modules.some((module) => module.module_code === 'SK-PE') ? row.initiatives_attention : '—'}</td>
                           </tr>
                         )
                       })}
@@ -2807,7 +2896,7 @@ function App() {
                     onKeyDown={(event) => activateWithKeyboard(event, () => handleOpenModule(module))}
                   >
                     <div className="module-icon">
-                      <StrategyIcon />
+                      {module.module_code === 'SK-PE' ? <StrategyIcon /> : <span aria-hidden="true">{module.module_short_name || module.module_code}</span>}
                     </div>
 
                     <div className="module-card-content">
@@ -2874,16 +2963,34 @@ function App() {
 
             {organizations.length === 0 ? (
               <div className="state-card">
-                <h2>
-                  Nenhuma organização
-                  disponível
-                </h2>
+                {organizationsLoadFailed ? (
+                  <>
+                    <h2>Não foi possível carregar suas organizações</h2>
+                    <p>
+                      Sua sessão foi reconhecida, mas a autorização não pôde ser atualizada. O SPARKs tentou renovar a sessão automaticamente.
+                    </p>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => setAuthorizationRefreshVersion((current) => current + 1)}
+                    >
+                      Tentar novamente
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2>
+                      Nenhuma organização
+                      disponível
+                    </h2>
 
-                <p>
-                  O usuário está autenticado,
-                  mas não possui vínculo ativo
-                  com uma organização.
-                </p>
+                    <p>
+                      O usuário está autenticado,
+                      mas não possui vínculo ativo
+                      com uma organização.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <>

@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      database_only:
+        description: Apply SK-DA migrations without frontend deployment
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -55,6 +60,9 @@ jobs:
           release_root="${RUNNER_TEMP}/release"
           mkdir -p "${release_root}/source"
           cp -R deploy/hostinger/skpe-saas-homol/. "${release_root}/"
+          cp supabase/migrations/20261022175806_normalize_skda_self_assessment_intelligence.sql "${release_root}/"
+          cp supabase/migrations/20261022192348_add_skda_evidence_intelligence_engine.sql "${release_root}/"
+          cp supabase/migrations/20261023113000_prepare_skda_pdgc_cycle_import.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -142,6 +150,7 @@ jobs:
             echo "HOSTINGER_USER=${HOSTINGER_USER}"
           } >> "${GITHUB_ENV}"
 
+
       - name: Prepare Remote Release Directory
         shell: bash
         run: |
@@ -177,7 +186,22 @@ jobs:
             "${env_file}" \
             "${HOSTINGER_USER}@${HOSTINGER_HOST}:${{ steps.meta.outputs.release_dir }}/.env"
 
+      - name: Apply SK-DA Intelligence Migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          for migration_file in \
+            20261022175806_normalize_skda_self_assessment_intelligence.sql \
+            20261022192348_add_skda_evidence_intelligence_engine.sql \
+            20261023113000_prepare_skda_pdgc_cycle_import.sql
+          do
+            echo "Applying ${migration_file}"
+            ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+              "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol' < '${{ steps.meta.outputs.release_dir }}/${migration_file}'"
+          done
+
       - name: Deploy Remote Release
+        if: ${{ !inputs.database_only }}
         shell: bash
         run: |
           set -euo pipefail
@@ -185,6 +209,7 @@ jobs:
             "cd '${{ steps.meta.outputs.release_dir }}' && chmod +x deploy-remote.sh && GITHUB_SHA='${GITHUB_SHA}' RELEASE_SHORT_SHA='${{ steps.meta.outputs.short_sha }}' ./deploy-remote.sh"
 
       - name: Public Domain Smoke Test
+        if: ${{ !inputs.database_only }}
         shell: bash
         run: |
           set -euo pipefail
@@ -212,3 +237,16 @@ jobs:
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/healthz"
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/login"
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/" 'Plataforma SPARKs|<div id="root">'
+
+      - name: CNTCOOP read-only inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" <<'SQL'
+          begin read only;
+          select 'ORGANIZATION' as kind, to_jsonb(o) as record from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%';
+          select 'JOURNEY' as kind, to_jsonb(d) as record from public.skda_diagnoses d where d.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
+          select 'INITIATIVE' as kind, to_jsonb(i) as record from public.sparks_initiatives i where i.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
+          commit;
+          SQL
