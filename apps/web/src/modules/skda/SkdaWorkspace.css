@@ -2135,14 +2135,16 @@
 }
 
 .skda-evolution-axis {
-  display: grid;
-  grid-template-rows: repeat(5,1fr);
-  align-items: center;
-  justify-items: end;
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  display: block;
+  height: 260px;
+  min-width: 0;
   color: var(--skda-muted);
   font-size: .68rem;
-  padding: .2rem 0;
 }
+.skda-evolution-axis > span { font-size: .66rem; line-height: 1; white-space: nowrap; }
 
 .skda-evolution-gridline {
   stroke: #dfe7e3;

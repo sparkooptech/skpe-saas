@@ -2016,12 +2016,12 @@ export function SkdaWorkspace(props: Props) {
           </div>}
           {(reference.current || reference.history.length > 0 || reference.benchmarks.length > 0) && <div className="skda-aa-reference">
             <div>
-              <small>Índice atual</small>
-              <strong>{reference.current && reference.current.reference_year === selected?.reference_year ? Number(reference.current.metric_value).toFixed(2)+'%' : 'Índice do ciclo não integrado'}</strong>
-            </div>
-            <div>
               <small>Ciclo anterior</small>
               <strong>{reference.history.length > 0 ? Number(reference.history.at(-1)?.metric_value ?? 0).toFixed(2)+'%' : 'Não informado na fonte'}</strong>
+            </div>
+            <div>
+              <small>Índice atual</small>
+              <strong>{reference.current && reference.current.reference_year === selected?.reference_year ? Number(reference.current.metric_value).toFixed(2)+'%' : 'Índice do ciclo não integrado'}</strong>
             </div>
             <div className="skda-aa-benchmarks">
               <small>Referenciais comparativos da AA</small>
@@ -2085,10 +2085,10 @@ export function SkdaWorkspace(props: Props) {
               </div>
             </div>
             <div className="skda-evolution-legend">
-              <span><i style={{background:'#2563eb'}} />Governança · AA</span>
-              <span><i style={{background:'#047857'}} />Governança · DA</span>
-              <span><i style={{background:'#9333ea'}} />Gestão · AA</span>
-              <span><i style={{background:'#d97706'}} />Gestão · DA</span>
+              <span><b style={{color:'#2563eb'}}>●</b> Governança · AA</span>
+              <span><b style={{color:'#047857'}}>■</b> Governança · DA</span>
+              <span><b style={{color:'#9333ea'}}>◆</b> Gestão · AA</span>
+              <span><b style={{color:'#d97706'}}>▲</b> Gestão · DA</span>
               {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed' }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code} ({benchmark.reference_year ?? 's/ano'}): {Number(benchmark.metric_value).toFixed(2)}%</span>)}
               {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
             </div>
