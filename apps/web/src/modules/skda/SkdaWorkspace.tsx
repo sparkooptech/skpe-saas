@@ -725,6 +725,14 @@ export function SkdaWorkspace(props: Props) {
     .map((item) => `${item.x},${item.y}`)
     .join(' ')
 
+  // Indicative trajectory across the available historical indices, with explicit
+  // provenance labels. This is NOT a homogeneous official AA or DA series.
+  const evolutionReportedPolyline = evolutionChartSeries
+    .map((item,index) => ({ ...evolutionChartPoint(index,item.aaScore ?? item.daScore), score:item.aaScore ?? item.daScore }))
+    .filter((item): item is { x:number; y:number; score:number } => item.y != null && item.score != null)
+    .map((item) => `${item.x},${item.y}`)
+    .join(' ')
+
   const actionFollowupSummary = useMemo(() => {
     const counts = {
       total:actionFollowup.length,
@@ -2127,6 +2135,7 @@ export function SkdaWorkspace(props: Props) {
                   const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
                   return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed'} strokeWidth=".35" strokeDasharray="2 1.5" />
                 })}
+                {evolutionReportedPolyline && <polyline points={evolutionReportedPolyline} fill="none" stroke="#64748b" strokeWidth=".5" strokeDasharray="1.5 1.2" vectorEffect="non-scaling-stroke" />}
                 {evolutionAaPolyline && <polyline points={evolutionAaPolyline} className="skda-evolution-line-aa" />}
                 {evolutionDaPolyline && <polyline points={evolutionDaPolyline} className="skda-evolution-line-da" />}
                 {evolutionChartSeries.map((item,index) => {
@@ -2149,6 +2158,7 @@ export function SkdaWorkspace(props: Props) {
             <div className="skda-evolution-legend">
               <span><i className="aa" />Autoavaliação</span>
               <span><i className="da" />Diagnóstico Assistido reportado (validar comparabilidade)</span>
+              <span>Linha tracejada: trajetória indicativa com origens AA/DA distintas, não homologada</span>
               {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed' }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code} ({benchmark.reference_year ?? 's/ano'}): {Number(benchmark.metric_value).toFixed(2)}%</span>)}
               {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
             </div>
