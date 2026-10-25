@@ -815,7 +815,7 @@ export function SkdaWorkspace(props: Props) {
 
   const selfAssessmentReference = useMemo(() => {
     const build = (block: 'GOVERNANCA' | 'GESTAO') => ({
-      current:selfAssessmentMetrics.find((item) => item.block_code===block && item.metric_kind==='overall_index' && item.comparator_code==='COOPERATIVA') ?? null,
+      current:selfAssessmentMetrics.filter((item) => item.block_code===block && item.metric_kind==='overall_index' && item.comparator_code==='COOPERATIVA').sort((a,b)=>(b.reference_year??0)-(a.reference_year??0))[0] ?? null,
       history:selfAssessmentMetrics.filter((item) => item.block_code===block && item.metric_kind==='history').sort((a,b)=>(a.reference_year??0)-(b.reference_year??0)),
       benchmarks:selfAssessmentMetrics.filter((item) => item.block_code===block && item.metric_kind==='benchmark').sort((a,b)=>Number(b.metric_value)-Number(a.metric_value)),
     })
@@ -2079,7 +2079,7 @@ export function SkdaWorkspace(props: Props) {
             <strong>{series.baseline.length > 0 ? 'AA com índice' : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada · índice pendente' : 'AA pendente'}</strong>
           </div>
           {series.baseline.length === 0 ? (
-            <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? `As respostas declaradas de ${title.toLocaleLowerCase('pt-BR')} já foram importadas. O índice consolidado não está disponível nesta fonte; o radar será exibido após a conferência do índice, sem atribuir pontuação de DA não validada.` : `Autoavaliação ainda não importada para ${title.toLocaleLowerCase('pt-BR')}.`}</p>
+            <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? `As respostas declaradas de ${title.toLocaleLowerCase('pt-BR')} já foram importadas, mas as pontuações por critério ainda não estão integradas aos indicadores do sistema. O radar exige essas pontuações com fonte e regra de cálculo verificadas; não serão inferidas das alternativas A–D.` : `Autoavaliação ainda não importada para ${title.toLocaleLowerCase('pt-BR')}.`}</p>
           ) : <div className="skda-radar-wrap">
             <svg viewBox="0 0 200 200" role="img" aria-label={`Comparação entre Autoavaliação e Diagnóstico Assistido · ${title}`}>
               <circle cx="100" cy="100" r="72" className="skda-radar-grid" />
@@ -2097,7 +2097,7 @@ export function SkdaWorkspace(props: Props) {
           {(reference.current || reference.history.length > 0 || reference.benchmarks.length > 0) && <div className="skda-aa-reference">
             <div>
               <small>Índice atual</small>
-              <strong>{reference.current ? Number(reference.current.metric_value).toFixed(2)+'%' : 'Não informado na fonte'}</strong>
+              <strong>{reference.current && reference.current.reference_year === selected?.reference_year ? Number(reference.current.metric_value).toFixed(2)+'%' : 'Índice do ciclo não integrado'}</strong>
             </div>
             <div>
               <small>Ciclo anterior</small>
