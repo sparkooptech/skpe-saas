@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { ApplicationShell } from '../../components/application-shell/ApplicationShell'
 import { OrganizationBrandingLogo } from '../../components/organization-branding/OrganizationBrandingLogo'
 import { TransversalWorkspace } from '../../components/application-shell/TransversalWorkspace'
@@ -594,55 +594,6 @@ export function SkdaWorkspace(props: Props) {
       .slice(0, 6)
   }, [questions, responses])
 
-  const evolutionByCycle = useMemo(() => {
-    const grouped = new Map<string, {
-      diagnosisId: string
-      diagnosisCode: string
-      referenceYear: number | null
-      diagnosisStatus: string
-      totalQuestions: number
-      answeredQuestions: number
-      validatedQuestions: number
-      validatedPractices: number
-      validatedEvidenceLinks: number
-      openGaps: number
-    }>()
-
-    evolutionRows.forEach((row) => {
-      const current = grouped.get(row.diagnosis_id) ?? {
-        diagnosisId:row.diagnosis_id,
-        diagnosisCode:row.diagnosis_code,
-        referenceYear:row.reference_year,
-        diagnosisStatus:row.diagnosis_status,
-        totalQuestions:0,
-        answeredQuestions:0,
-        validatedQuestions:0,
-        validatedPractices:0,
-        validatedEvidenceLinks:0,
-        openGaps:0,
-      }
-      current.totalQuestions += 1
-      if (row.response_id) current.answeredQuestions += 1
-      if (row.response_status === 'validated') current.validatedQuestions += 1
-      current.validatedPractices += Number(row.validated_practice_count) || 0
-      current.validatedEvidenceLinks += Number(row.validated_evidence_count) || 0
-      current.openGaps += Number(row.open_gap_count) || 0
-      grouped.set(row.diagnosis_id,current)
-    })
-
-    return [...grouped.values()]
-      .map((cycle) => ({
-        ...cycle,
-        validationCoverage:cycle.totalQuestions > 0
-          ? Math.round((cycle.validatedQuestions / cycle.totalQuestions) * 100)
-          : 0,
-      }))
-      .sort((a,b) =>
-        (a.referenceYear ?? 0) - (b.referenceYear ?? 0)
-        || a.diagnosisCode.localeCompare(b.diagnosisCode,'pt-BR'),
-      )
-  }, [evolutionRows])
-
   const evolutionChartSeries = useMemo(() => {
     const byYear = new Map<number, { diagnosisId:string; label:string; aaValues:number[]; daScore:number|null; current:boolean }>()
 
@@ -715,25 +666,20 @@ export function SkdaWorkspace(props: Props) {
     return { x, y }
   }
 
-  const evolutionAaPolyline = evolutionChartSeries
-    .map((item,index) => ({ ...evolutionChartPoint(index,item.aaScore), score:item.aaScore }))
-    .filter((item): item is { x:number; y:number; score:number } => item.y != null && item.score != null)
-    .map((item) => `${item.x},${item.y}`)
-    .join(' ')
-
-  const evolutionDaPolyline = evolutionChartSeries
-    .map((item,index) => ({ ...evolutionChartPoint(index,item.daScore), score:item.daScore }))
-    .filter((item): item is { x:number; y:number; score:number } => item.y != null && item.score != null)
-    .map((item) => `${item.x},${item.y}`)
-    .join(' ')
-
-  // Indicative trajectory across the available historical indices, with explicit
-  // provenance labels. This is NOT a homogeneous official AA or DA series.
-  const evolutionReportedPolyline = evolutionChartSeries
-    .map((item,index) => ({ ...evolutionChartPoint(index,item.aaScore ?? item.daScore), score:item.aaScore ?? item.daScore }))
-    .filter((item): item is { x:number; y:number; score:number } => item.y != null && item.score != null)
-    .map((item) => `${item.x},${item.y}`)
-    .join(' ')
+  // Preserve each official block and source type; never average Governance and Management.
+  const evolutionBlockSeries = (['GOVERNANCA','GESTAO'] as const).flatMap((block) =>
+    (['AA','DA'] as const).map((kind) => ({
+      block,kind,
+      values:evolutionChartSeries.map((cycle,index) => {
+        const metric = selfAssessmentMetrics.find((item) => item.block_code === block
+          && item.reference_year === Number(cycle.label)
+          && item.comparator_code === 'COOPERATIVA'
+          && ['history','overall_index'].includes(item.metric_kind)
+          && (String(item.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED') === (kind === 'DA'))
+        const score = metric && Number.isFinite(Number(metric.metric_value)) ? Number(metric.metric_value) : null
+        return { ...evolutionChartPoint(index,score),score }
+      }),
+    })))
 
   const actionFollowupSummary = useMemo(() => {
     const counts = {
@@ -755,34 +701,6 @@ export function SkdaWorkspace(props: Props) {
     })
     return counts
   }, [actionFollowup])
-
-  const evolutionMessage = useMemo(() => {
-    const current = evolutionByCycle.find((cycle) => cycle.diagnosisId === selectedId)
-    if (!current) {
-      const baseline = evolutionChartSeries.find((cycle) => cycle.diagnosisId === selectedId)
-      if (baseline?.aaScore != null) return 'A Autoavaliação foi absorvida como linha de base. O Diagnóstico Assistido será sobreposto à medida que as avaliações forem validadas.'
-      return 'A trajetória será consolidada conforme os ciclos da organização forem avaliados.'
-    }
-    const prior = evolutionByCycle
-      .filter((cycle) => cycle.diagnosisId !== current.diagnosisId)
-      .filter((cycle) => (cycle.referenceYear ?? 0) <= (current.referenceYear ?? 0))
-      .at(-1)
-    if (!prior) {
-      return 'Este é o primeiro ciclo disponível para comparação longitudinal. Ele formará a linha de base da evolução da organização.'
-    }
-    const coverageDelta = current.validationCoverage - prior.validationCoverage
-    const gapDelta = current.openGaps - prior.openGaps
-    if (coverageDelta > 0 && gapDelta <= 0) {
-      return `A cobertura validada avançou ${coverageDelta} p.p. em relação ao ciclo anterior, sem aumento das lacunas abertas.`
-    }
-    if (gapDelta > 0) {
-      return `O ciclo atual possui ${gapDelta} lacuna(s) aberta(s) a mais que o ciclo anterior. O foco deve ser execução e institucionalização das melhorias prioritárias.`
-    }
-    if (coverageDelta < 0) {
-      return `A cobertura validada está ${Math.abs(coverageDelta)} p.p. abaixo do ciclo anterior. Verifique evidências, práticas e ações ainda não consolidadas.`
-    }
-    return 'A trajetória permanece estável no recorte disponível. O próximo avanço depende de ampliar evidências validadas e executar as ações prioritárias.'
-  }, [evolutionByCycle, evolutionChartSeries, selectedId])
 
   const selfAssessmentRadar = useMemo(() => {
     const metricsFor = (block: 'GOVERNANCA' | 'GESTAO') => selfAssessmentMetrics
@@ -2137,48 +2055,51 @@ export function SkdaWorkspace(props: Props) {
                   const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
                   return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed'} strokeWidth=".35" strokeDasharray="2 1.5" />
                 })}
-                {evolutionReportedPolyline && <polyline points={evolutionReportedPolyline} fill="none" stroke="#64748b" strokeWidth=".5" strokeDasharray="1.5 1.2" vectorEffect="non-scaling-stroke" />}
-                {evolutionAaPolyline && <polyline points={evolutionAaPolyline} className="skda-evolution-line-aa" />}
-                {evolutionDaPolyline && <polyline points={evolutionDaPolyline} className="skda-evolution-line-da" />}
-                {evolutionChartSeries.map((item,index) => {
-                  const aa = evolutionChartPoint(index,item.aaScore)
-                  const da = evolutionChartPoint(index,item.daScore)
-                  return <g key={item.diagnosisId}>
-                    {aa.y != null && <circle cx={aa.x} cy={aa.y} r={item.current ? 2.4 : 1.9} className="skda-evolution-dot-aa" />}
-                    {da.y != null && <circle cx={da.x} cy={da.y} r={item.current ? 2.4 : 1.9} className="skda-evolution-dot-da" />}
+                {evolutionBlockSeries.map((series) => {
+                  const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
+                  const points = series.values.filter((point) => point.score != null).map((point) => `${point.x},${point.y}`).join(' ')
+                  return <g key={`${series.block}-${series.kind}`}>
+                    {series.values.filter((point) => point.score != null).length > 1 && <polyline points={points} fill="none" stroke={color} strokeWidth=".55" vectorEffect="non-scaling-stroke" />}
+                    {series.values.filter((point) => point.score != null).map((point) => <circle key={`${point.x}-${point.y}`} cx={point.x} cy={point.y!} r="1.65" fill={color}><title>{`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind}: ${point.score?.toFixed(2)}%`}</title></circle>)}
                   </g>
                 })}
+
               </svg>
               <div className="skda-evolution-labels">
                 {evolutionChartSeries.map((item) => <div key={item.diagnosisId} className={item.current ? 'is-current' : ''}>
                   <strong>{item.label}</strong>
-                  <span>AA {item.aaScore == null ? '—' : item.aaScore.toFixed(1)+'%'}</span>
-                  <span>DA {item.daScore == null ? '—' : item.daScore.toFixed(1)+'%'}</span>
+
                 </div>)}
               </div>
             </div>
             <div className="skda-evolution-legend">
-              <span><i className="aa" />Autoavaliação</span>
-              <span><i className="da" />Diagnóstico Assistido reportado (validar comparabilidade)</span>
-              <span>Linha tracejada: trajetória indicativa com origens AA/DA distintas, não homologada</span>
+              <span><i style={{background:'#2563eb'}} />Governança · AA</span>
+              <span><i style={{background:'#047857'}} />Governança · DA</span>
+              <span><i style={{background:'#9333ea'}} />Gestão · AA</span>
+              <span><i style={{background:'#d97706'}} />Gestão · DA</span>
               {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed' }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code} ({benchmark.reference_year ?? 's/ano'}): {Number(benchmark.metric_value).toFixed(2)}%</span>)}
               {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
             </div>
             <div className="skda-artifact-grid">
               {(['GOVERNANCA','GESTAO'] as const).map((block) => <article key={block}>
                 <strong>{block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · índices por origem</strong>
-                {selfAssessmentMetrics.filter((metric) => metric.block_code === block
-                  && metric.comparator_code === 'COOPERATIVA'
-                  && ['history','overall_index'].includes(metric.metric_kind))
-                  .sort((a,b) => (a.reference_year ?? 0)-(b.reference_year ?? 0))
-                  .map((metric) => <div key={metric.id}>
-                    {metric.reference_year ?? 'Ano pendente'} · {String(metric.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED' ? 'DA reportado' : 'AA declarada'}: <b>{Number(metric.metric_value).toFixed(2)}%</b>
-                    {metric.source_label && <small> · {metric.source_label}</small>}
-                  </div>)}
+                <div style={{display:'grid',gridTemplateColumns:`64px repeat(${evolutionChartSeries.length}, minmax(0,1fr))`,gap:'8px',marginTop:'12px'}}>
+                  <span>Ano</span>{evolutionChartSeries.map((cycle) => <b key={cycle.label}>{cycle.label}</b>)}
+                  {(['AA','DA'] as const).map((kind) => <Fragment key={kind}>
+                    <b>{kind}</b>
+                    {evolutionChartSeries.map((cycle) => {
+                      const metric = selfAssessmentMetrics.find((item) => item.block_code === block
+                        && item.reference_year === Number(cycle.label)
+                        && item.comparator_code === 'COOPERATIVA'
+                        && ['history','overall_index'].includes(item.metric_kind)
+                        && (String(item.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED') === (kind === 'DA'))
+                      return <span key={`${kind}-${cycle.label}`}><b>{metric ? `${Number(metric.metric_value).toFixed(2)}%` : '—'}</b></span>
+                    })}
+                  </Fragment>)}
+                </div>
               </article>)}
             </div>
-            <small className="skda-evolution-message">A linha representa a média dos blocos disponíveis por tipo e ano, não a pontuação global oficial. Séries com instrumentos diferentes exigem validação de comparabilidade.</small>
-            <small className="skda-evolution-message">{evolutionMessage}</small>
+
           </>
         )}
       </section>}
