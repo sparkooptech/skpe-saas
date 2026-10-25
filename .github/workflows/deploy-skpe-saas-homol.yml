@@ -18,6 +18,10 @@ on:
         description: Import CNTCOOP 2026 AA declared answers into sparks_homol
         type: boolean
         default: false
+      cntcoop_governance_index_2026:
+        description: Import verified 2026 governance AA index from official report
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -271,6 +275,14 @@ jobs:
           python3 scripts/build_cntcoop_2026_import.py > /tmp/cntcoop-aa-2026-import.sql
           ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
             "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < /tmp/cntcoop-aa-2026-import.sql
+
+      - name: Import CNTCOOP 2026 Governance AA official index
+        if: ${{ inputs.cntcoop_governance_index_2026 && inputs.database_only }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < scripts/cntcoop-aa-2026-governance-index.sql
 
       - name: Import CNTCOOP verified 2024-2025 historical indices
         if: ${{ inputs.cntcoop_history_2024_2025 && inputs.database_only }}
