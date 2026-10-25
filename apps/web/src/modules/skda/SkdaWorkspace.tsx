@@ -1996,10 +1996,10 @@ export function SkdaWorkspace(props: Props) {
         ].map(({ key,title,series,reference }) => <article key={key} className="skda-executive-card skda-radar-card">
           <div className="skda-executive-card-head">
             <div><span>Maturidade</span><h3>{title} · AA × DA</h3></div>
-            <strong>{series.baseline.length > 0 ? 'AA com índice' : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada · índice pendente' : 'AA pendente'}</strong>
+            <strong>{series.baseline.length >= 3 ? 'Radar da AA' : reference.current && reference.current.reference_year === selected?.reference_year ? `AA ${Number(reference.current.metric_value).toFixed(2)}%` : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada' : 'AA a integrar'}</strong>
           </div>
           {series.baseline.length === 0 ? (
-            <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? `As respostas declaradas de ${title.toLocaleLowerCase('pt-BR')} já foram importadas, mas as pontuações por critério ainda não estão integradas aos indicadores do sistema. O radar exige essas pontuações com fonte e regra de cálculo verificadas; não serão inferidas das alternativas A–D.` : `Autoavaliação ainda não importada para ${title.toLocaleLowerCase('pt-BR')}.`}</p>
+            <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'Radar por critério: aguardando a integração das pontuações oficiais do relatório.' : 'Autoavaliação ainda não integrada.'}</p>
           ) : <div className="skda-radar-wrap">
             <svg viewBox="0 0 200 200" role="img" aria-label={`Comparação entre Autoavaliação e Diagnóstico Assistido · ${title}`}>
               <circle cx="100" cy="100" r="72" className="skda-radar-grid" />
@@ -2060,15 +2060,27 @@ export function SkdaWorkspace(props: Props) {
                   const points = series.values.filter((point) => point.score != null).map((point) => `${point.x},${point.y}`).join(' ')
                   return <g key={`${series.block}-${series.kind}`}>
                     {series.values.filter((point) => point.score != null).length > 1 && <polyline points={points} fill="none" stroke={color} strokeWidth=".55" vectorEffect="non-scaling-stroke" />}
-                    {series.values.filter((point) => point.score != null).map((point) => <circle key={`${point.x}-${point.y}`} cx={point.x} cy={point.y!} r="1.65" fill={color}><title>{`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind}: ${point.score?.toFixed(2)}%`}</title></circle>)}
+                    {series.values.filter((point) => point.score != null).map((point) => <g key={`${point.x}-${point.y}`}>
+                      {series.block === 'GOVERNANCA' && series.kind === 'AA' && <circle cx={point.x} cy={point.y!} r="1.1" fill={color} />}
+                      {series.block === 'GOVERNANCA' && series.kind === 'DA' && <rect x={point.x-1.1} y={point.y!-1.1} width="2.2" height="2.2" fill={color} />}
+                      {series.block === 'GESTAO' && series.kind === 'AA' && <polygon points={`${point.x},${point.y!-1.5} ${point.x+1.5},${point.y!} ${point.x},${point.y!+1.5} ${point.x-1.5},${point.y!}`} fill={color} />}
+                      {series.block === 'GESTAO' && series.kind === 'DA' && <polygon points={`${point.x},${point.y!-1.5} ${point.x+1.5},${point.y!+1.2} ${point.x-1.5},${point.y!+1.2}`} fill={color} />}
+                      <title>{`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind}: ${point.score?.toFixed(2)}%`}</title>
+                    </g>)}
                   </g>
                 })}
 
               </svg>
+              <div className="skda-evolution-value-labels">
+                {evolutionBlockSeries.flatMap((series) => series.values.filter((point) => point.score != null).map((point) => {
+                  const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
+                  const offset = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? -18 : 10) : (series.kind === 'AA' ? -32 : 24)
+                  return <span key={`${series.block}-${series.kind}-${point.x}`} style={{position:'absolute',left:`${point.x}%`,top:`calc(${point.y}% + ${offset}px)`,transform:'translateX(-50%)',color}} title={`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind}`}><b>{point.score!.toFixed(2)}%</b></span>
+                }))}
+              </div>
               <div className="skda-evolution-labels">
-                {evolutionChartSeries.map((item) => <div key={item.diagnosisId} className={item.current ? 'is-current' : ''}>
+                {evolutionChartSeries.map((item,index) => <div key={item.diagnosisId} className={item.current ? 'is-current' : ''} style={{position:'absolute',left:`${evolutionChartPoint(index,null).x}%`,transform:'translateX(-50%)'}}>
                   <strong>{item.label}</strong>
-
                 </div>)}
               </div>
             </div>
@@ -2080,7 +2092,7 @@ export function SkdaWorkspace(props: Props) {
               {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed' }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code} ({benchmark.reference_year ?? 's/ano'}): {Number(benchmark.metric_value).toFixed(2)}%</span>)}
               {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
             </div>
-            <div className="skda-artifact-grid">
+            <div className="skda-artifact-grid" hidden>
               {(['GOVERNANCA','GESTAO'] as const).map((block) => <article key={block}>
                 <strong>{block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · índices por origem</strong>
                 <div style={{display:'grid',gridTemplateColumns:`64px repeat(${evolutionChartSeries.length}, minmax(0,1fr))`,gap:'8px',marginTop:'12px'}}>

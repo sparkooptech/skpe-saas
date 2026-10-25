@@ -3200,3 +3200,12 @@
 .skda-input-chips span:has(> button:disabled) { opacity: .58; cursor: help; }
 .skda-input-chips span > button:disabled { cursor: not-allowed; }
 .skda-artifact-grid button:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Align labels with SVG coordinates and keep official scores next to markers. */
+.skda-evolution-chart { grid-template-rows: 260px 24px; }
+.skda-evolution-labels { position: relative; display: block; height: 24px; }
+.skda-evolution-labels > div { min-width: 0; }
+.skda-evolution-value-labels { grid-column: 2; grid-row: 1; position: relative; height: 260px; pointer-events: none; z-index: 2; }
+.skda-evolution-chart > svg { grid-column: 2; grid-row: 1; }
+.skda-evolution-value-labels > span { font-size: .7rem; white-space: nowrap; background: rgba(255,255,255,.88); padding: 1px 3px; border-radius: 3px; }
+.skda-artifact-grid[hidden] { display: none !important; }
