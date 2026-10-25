@@ -248,5 +248,9 @@ jobs:
           select 'ORGANIZATION' as kind, to_jsonb(o) as record from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%';
           select 'JOURNEY' as kind, to_jsonb(d) as record from public.skda_diagnoses d where d.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
           select 'INITIATIVE' as kind, to_jsonb(i) as record from public.sparks_initiatives i where i.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
+          select 'CATALOG' as kind,id,code,version_code,status from public.skda_catalog_versions order by code,version_code;
+          select 'QUESTIONS' as kind,cv.code,cv.version_code,count(q.id) as total,count(*) filter(where q.axis_name ilike '%Govern%') as gov,count(*) filter(where q.axis_name ilike '%Gest%') as ges from public.skda_catalog_versions cv left join public.skda_questions q on q.catalog_version_id=cv.id group by cv.code,cv.version_code;
+          select 'SNAPSHOTS' as kind,assessment_cycle_year,source_section,count(*) from public.skda_self_assessment_snapshots where organization_id='bd58a170-b5ef-4150-9b69-026afa138661' group by 2,3;
+          select 'ANSWERS' as kind,count(*) from public.skda_self_assessment_answers a join public.skda_self_assessment_snapshots s on s.id=a.snapshot_id where s.organization_id='bd58a170-b5ef-4150-9b69-026afa138661';
           commit;
           SQL
