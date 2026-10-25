@@ -2052,10 +2052,10 @@ export function SkdaWorkspace(props: Props) {
         ].map(({ key,title,series,reference }) => <article key={key} className="skda-executive-card skda-radar-card">
           <div className="skda-executive-card-head">
             <div><span>Maturidade</span><h3>{title} · AA × DA</h3></div>
-            <strong>{series.baseline.length > 0 ? 'AA absorvida' : 'AA pendente'}</strong>
+            <strong>{series.baseline.length > 0 ? 'AA com índice' : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada · índice pendente' : 'AA pendente'}</strong>
           </div>
           {series.baseline.length === 0 ? (
-            <p className="skda-radar-empty">Autoavaliação ainda não estruturada para {title.toLocaleLowerCase('pt-BR')}. Quando a AA for absorvida, os índices e referenciais deste eixo devem ser carregados automaticamente.</p>
+            <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? `As respostas declaradas de ${title.toLocaleLowerCase('pt-BR')} já foram importadas. O índice consolidado não está disponível nesta fonte; o radar será exibido após a conferência do índice, sem atribuir pontuação de DA não validada.` : `Autoavaliação ainda não importada para ${title.toLocaleLowerCase('pt-BR')}.`}</p>
           ) : <div className="skda-radar-wrap">
             <svg viewBox="0 0 200 200" role="img" aria-label={`Comparação entre Autoavaliação e Diagnóstico Assistido · ${title}`}>
               <circle cx="100" cy="100" r="72" className="skda-radar-grid" />
