@@ -2047,10 +2047,10 @@ export function SkdaWorkspace(props: Props) {
           <>
             <div className="skda-evolution-chart">
               <div className="skda-evolution-axis">
-                <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+                {[100,90,80,70,60,50,40,30,20,10,0].map((tick) => <span key={tick} style={{position:'absolute',top:`${92 - tick * .78}%`,right:0,transform:'translateY(-50%)'}}>{tick}%</span>)}
               </div>
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Evolução da Autoavaliação e do Diagnóstico Assistido por ciclo">
-                {[14,33.5,53,72.5,92].map((y) => <line key={y} x1="5" x2="95" y1={y} y2={y} className="skda-evolution-gridline" />)}
+                {[100,90,80,70,60,50,40,30,20,10,0].map((tick) => <line key={tick} x1="5" x2="95" y1={92 - tick * .78} y2={92 - tick * .78} className="skda-evolution-gridline" />)}
                 {evolutionBenchmarks.map((benchmark) => {
                   const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
                   return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed'} strokeWidth=".35" strokeDasharray="2 1.5" />
@@ -2074,7 +2074,7 @@ export function SkdaWorkspace(props: Props) {
               <div className="skda-evolution-value-labels">
                 {evolutionBlockSeries.flatMap((series) => series.values.filter((point) => point.score != null).map((point) => {
                   const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
-                  const offset = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? -18 : 10) : (series.kind === 'AA' ? -32 : 24)
+                  const offset = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? -12 : 12) : (series.kind === 'AA' ? -12 : 12)
                   return <span key={`${series.block}-${series.kind}-${point.x}`} style={{position:'absolute',left:`${point.x}%`,top:`calc(${point.y}% + ${offset}px)`,transform:'translateX(-50%)',color}} title={`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind}`}><b>{point.score!.toFixed(2)}%</b></span>
                 }))}
               </div>
