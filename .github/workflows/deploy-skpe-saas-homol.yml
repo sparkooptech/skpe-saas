@@ -10,6 +10,10 @@ on:
         description: Apply SK-DA migrations without frontend deployment
         type: boolean
         default: false
+      cntcoop_history_2024_2025:
+        description: Import verified CNTCOOP 2024 and 2025 historical indices
+        type: boolean
+        default: false
       cntcoop_import_2026:
         description: Import CNTCOOP 2026 AA declared answers into sparks_homol
         type: boolean
@@ -267,3 +271,11 @@ jobs:
           python3 scripts/build_cntcoop_2026_import.py > /tmp/cntcoop-aa-2026-import.sql
           ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
             "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < /tmp/cntcoop-aa-2026-import.sql
+
+      - name: Import CNTCOOP verified 2024-2025 historical indices
+        if: ${{ inputs.cntcoop_history_2024_2025 && inputs.database_only }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < scripts/cntcoop-history-2024-2025.sql
