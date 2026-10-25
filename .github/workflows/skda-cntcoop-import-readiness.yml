@@ -1,0 +1,36 @@
+name: SKDA CNTCOOP Import Readiness
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.HOSTINGER_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+      - name: Inspect catalog and imported answers (read only)
+        env:
+          HOST: ${{ secrets.HOSTINGER_HOST }}
+          USER: ${{ secrets.HOSTINGER_USER }}
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes "$USER@$HOST" "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" <<'SQL'
+          begin read only;
+          select 'JOURNEY' as kind,id,code,name,catalog_version_id from public.skda_diagnoses where id='79f8b0dc-371e-4483-bfad-542cdbb37724';
+          select 'CATALOG' as kind,id,code,version_code,status from public.skda_catalog_versions order by code,version_code;
+          select 'QUESTIONS' as kind,cv.code as catalog_code,cv.version_code,count(q.id) as total,count(*) filter(where q.axis_name ilike '%Govern%') as gov,count(*) filter(where q.axis_name ilike '%Gest%') as ges from public.skda_catalog_versions cv left join public.skda_questions q on q.catalog_version_id=cv.id group by cv.code,cv.version_code;
+          select 'SNAPSHOTS' as kind,assessment_cycle_year,source_section,count(*) from public.skda_self_assessment_snapshots where organization_id='bd58a170-b5ef-4150-9b69-026afa138661' group by 2,3;
+          select 'ANSWERS' as kind,count(*) from public.skda_self_assessment_answers a join public.skda_self_assessment_snapshots s on s.id=a.snapshot_id where s.organization_id='bd58a170-b5ef-4150-9b69-026afa138661';
+          rollback;
+          SQL
