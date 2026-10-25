@@ -650,8 +650,9 @@ export function SkdaWorkspace(props: Props) {
       if (!diagnosis.reference_year) continue
       const metadata = diagnosis.metadata ?? {}
       const aaValues = [metadata.governance_index,metadata.management_index]
+        .filter((value) => value !== null && value !== undefined && value !== '')
         .map((value) => Number(value))
-        .filter((value) => Number.isFinite(value))
+        .filter((value) => Number.isFinite(value) && value >= 0 && value <= 100)
       const validatedScores = evolutionRows
         .filter((row) => row.diagnosis_id === diagnosis.id && row.response_status === 'validated' && row.score != null)
         .map((row) => Number(row.score))
@@ -667,6 +668,7 @@ export function SkdaWorkspace(props: Props) {
 
     for (const metric of selfAssessmentMetrics) {
       if (!metric.reference_year || metric.comparator_code!=='COOPERATIVA' || !['overall_index','history'].includes(metric.metric_kind)) continue
+      if (!Number.isFinite(Number(metric.metric_value)) || Number(metric.metric_value) < 0 || Number(metric.metric_value) > 100) continue
       const current = byYear.get(metric.reference_year) ?? {
         diagnosisId:`aa-history-${metric.reference_year}`,
         label:String(metric.reference_year),
@@ -2245,7 +2247,7 @@ export function SkdaWorkspace(props: Props) {
                     <div><strong>{megaphase.title}</strong>{phaseForMegaphase && <em>{phaseForMegaphase.title}</em>}<small>{megaphase.workPattern}</small></div>
                   </div>
                   <div className="skda-megaphase-summary-metrics">
-                    <span><small>LB0</small><b>{formatRange(action?.baseline_start_date,action?.baseline_due_date)}</b></span>
+                    <span><small>LB0 contratual</small><b>{action?.baseline_start_date || action?.baseline_due_date ? formatRange(action?.baseline_start_date,action?.baseline_due_date) : 'Cronograma contratual não integrado'}</b></span>
                     <span><small>Plano</small><b>{formatRange(action?.planned_start_date,action?.planned_due_date)}</b></span>
                     <span><small>Realizado</small><b>{formatRange(actualStart,actualEnd)}</b></span>
                     <span><small>Responsável</small><b>{owner?.user_display_name || owner?.user_email || 'A definir'}</b></span>
