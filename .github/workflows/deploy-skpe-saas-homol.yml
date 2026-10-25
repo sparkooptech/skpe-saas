@@ -10,6 +10,10 @@ on:
         description: Apply SK-DA migrations without frontend deployment
         type: boolean
         default: false
+      cntcoop_import_2026:
+        description: Import CNTCOOP 2026 AA declared answers into sparks_homol
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -254,3 +258,12 @@ jobs:
           select 'ANSWERS' as kind,count(*) from public.skda_self_assessment_answers a join public.skda_self_assessment_snapshots s on s.id=a.snapshot_id where s.organization_id='bd58a170-b5ef-4150-9b69-026afa138661';
           commit;
           SQL
+
+      - name: Import CNTCOOP 2026 declared AA (explicit dispatch only)
+        if: ${{ inputs.cntcoop_import_2026 && inputs.database_only }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/build_cntcoop_2026_import.py > /tmp/cntcoop-aa-2026-import.sql
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < /tmp/cntcoop-aa-2026-import.sql
