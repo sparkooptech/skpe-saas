@@ -2370,6 +2370,9 @@
   display: grid;
   gap: .12rem;
   min-width: 0;
+  text-align: center;
+  justify-items: center;
+  align-content: center;
 }
 
 .skda-megaphase-summary-metrics small {

@@ -2168,7 +2168,7 @@ export function SkdaWorkspace(props: Props) {
                     <div><strong>{megaphase.title}</strong>{phaseForMegaphase && <em>{phaseForMegaphase.title}</em>}<small>{megaphase.workPattern}</small></div>
                   </div>
                   <div className="skda-megaphase-summary-metrics">
-                    <span><small>LB0 contratual</small><b>{action?.baseline_start_date || action?.baseline_due_date ? formatRange(action?.baseline_start_date,action?.baseline_due_date) : 'Cronograma contratual não integrado'}</b></span>
+                    <span title={action?.baseline_start_date || action?.baseline_due_date ? formatRange(action?.baseline_start_date,action?.baseline_due_date) : 'Aguardando confirmação do cronograma da OS autorizadora.'}><small>LB0 contratual</small><b>{action?.metadata?.baseline_validation_status === 'validated' ? 'Validada' : 'A validar'}</b></span>
                     <span><small>Plano</small><b>{formatRange(action?.planned_start_date,action?.planned_due_date)}</b></span>
                     <span><small>Realizado</small><b>{formatRange(actualStart,actualEnd)}</b></span>
                     <span><small>Responsável</small><b>{owner?.user_display_name || owner?.user_email || 'A definir'}</b></span>
