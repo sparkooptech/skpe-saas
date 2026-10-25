@@ -67,7 +67,7 @@ type ContractIntakeProposal = { assetId: string; sourceTitle: string; sourceText
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
 type EvidenceQuestionIntelligence = { id:string; evidence_asset_id:string; question_id:string; document_intake_status:string; evidence_coverage_status:string; practice_state:string; relevance_score:number|null; adequacy_score:number|null; sufficiency_score:number|null; reliability_score:number|null; actuality_score:number|null; coverage_score:number|null; confidence_score:number|null; gap_description:string|null; complement_needed:string|null; improvement_suggestion:string|null; interview_question_suggestion:string|null; self_assessment_guidance:string|null; diagnostic_hypothesis:string|null; analysis_status:string; source_excerpt:string|null; source_locator:string|null }
 type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_date: string | null; content_hash: string | null; metadata: Record<string, unknown> }
-type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null }
+type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null; metadata?:Record<string,unknown>|null }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; guidance: string | null; display_order: number }
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; evaluated_at: string | null; validated_at: string | null }
@@ -674,7 +674,13 @@ export function SkdaWorkspace(props: Props) {
         daScore:null,
         current:false,
       }
-      current.aaValues.push(Number(metric.metric_value))
+      const sourceKind = String(metric.metadata?.source_kind ?? '').toUpperCase()
+      // A source report from a prior DA is not an AA. Preserve the reported origin.
+      if (sourceKind === 'DA_REPORTED') {
+        current.daScore = current.daScore == null ? Number(metric.metric_value) : current.daScore
+      } else {
+        current.aaValues.push(Number(metric.metric_value))
+      }
       if (selected?.reference_year===metric.reference_year) current.current=true
       byYear.set(metric.reference_year,current)
     }
@@ -689,6 +695,16 @@ export function SkdaWorkspace(props: Props) {
         current:item.current,
       }))
   }, [diagnoses,evolutionRows,selectedId,selected?.reference_year,selfAssessmentMetrics])
+
+  const evolutionBenchmarks = useMemo(() => {
+    const latest = new Map<string,SelfAssessmentMetric>()
+    selfAssessmentMetrics.filter((metric) => metric.metric_kind === 'benchmark'
+      && Number.isFinite(Number(metric.metric_value))
+      && /RAMO|NACIONAL|NATIONAL/.test(metric.comparator_code.toUpperCase()))
+      .sort((a,b) => (a.reference_year ?? 0) - (b.reference_year ?? 0))
+      .forEach((metric) => latest.set(metric.block_code + ':' + metric.comparator_code,metric))
+    return [...latest.values()]
+  },[selfAssessmentMetrics])
 
   const evolutionChartPoint = (index: number, score: number | null) => {
     const count = Math.max(1,evolutionChartSeries.length)
@@ -994,7 +1010,7 @@ export function SkdaWorkspace(props: Props) {
           .order('source_date', { ascending:true, nullsFirst:false }),
         supabase
           .from('skda_self_assessment_metrics' as never)
-          .select('id,block_code,metric_kind,metric_code,metric_name,reference_year,comparator_code,comparator_label,metric_value,unit,source_label,source_reference' as never)
+          .select('id,block_code,metric_kind,metric_code,metric_name,reference_year,comparator_code,comparator_label,metric_value,unit,source_label,source_reference,metadata' as never)
           .eq('organization_id', props.organizationId)
           .order('reference_year', { ascending:true, nullsFirst:false }),
       ])
@@ -2107,6 +2123,10 @@ export function SkdaWorkspace(props: Props) {
               </div>
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Evolução da Autoavaliação e do Diagnóstico Assistido por ciclo">
                 {[14,33.5,53,72.5,92].map((y) => <line key={y} x1="5" x2="95" y1={y} y2={y} className="skda-evolution-gridline" />)}
+                {evolutionBenchmarks.map((benchmark) => {
+                  const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
+                  return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed'} strokeWidth=".35" strokeDasharray="2 1.5" />
+                })}
                 {evolutionAaPolyline && <polyline points={evolutionAaPolyline} className="skda-evolution-line-aa" />}
                 {evolutionDaPolyline && <polyline points={evolutionDaPolyline} className="skda-evolution-line-da" />}
                 {evolutionChartSeries.map((item,index) => {
@@ -2128,8 +2148,24 @@ export function SkdaWorkspace(props: Props) {
             </div>
             <div className="skda-evolution-legend">
               <span><i className="aa" />Autoavaliação</span>
-              <span><i className="da" />Diagnóstico Assistido validado</span>
+              <span><i className="da" />Diagnóstico Assistido reportado (validar comparabilidade)</span>
+              {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed' }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code} ({benchmark.reference_year ?? 's/ano'}): {Number(benchmark.metric_value).toFixed(2)}%</span>)}
+              {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
             </div>
+            <div className="skda-artifact-grid">
+              {(['GOVERNANCA','GESTAO'] as const).map((block) => <article key={block}>
+                <strong>{block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · índices por origem</strong>
+                {selfAssessmentMetrics.filter((metric) => metric.block_code === block
+                  && metric.comparator_code === 'COOPERATIVA'
+                  && ['history','overall_index'].includes(metric.metric_kind))
+                  .sort((a,b) => (a.reference_year ?? 0)-(b.reference_year ?? 0))
+                  .map((metric) => <div key={metric.id}>
+                    {metric.reference_year ?? 'Ano pendente'} · {String(metric.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED' ? 'DA reportado' : 'AA declarada'}: <b>{Number(metric.metric_value).toFixed(2)}%</b>
+                    {metric.source_label && <small> · {metric.source_label}</small>}
+                  </div>)}
+              </article>)}
+            </div>
+            <small className="skda-evolution-message">A linha representa a média dos blocos disponíveis por tipo e ano, não a pontuação global oficial. Séries com instrumentos diferentes exigem validação de comparabilidade.</small>
             <small className="skda-evolution-message">{evolutionMessage}</small>
           </>
         )}
@@ -2233,7 +2269,19 @@ export function SkdaWorkspace(props: Props) {
                     })}
                   </section>
                   <section className="skda-artifact-list">
-                    <div className="skda-megaphase-subhead"><span>Artefatos e entregáveis</span><strong>{artifacts.length} previsto(s)</strong></div>
+                    <div className="skda-megaphase-subhead"><span>KIT de condução da MegaFase</span><strong>Pacote metodológico previsto · não gerado</strong></div>
+                    <div className="skda-input-chips">
+                      <span>Apresentação da MegaFase (PPTX)</span>
+                      <span>Roteiro detalhado por slide e perguntas de facilitação</span>
+                      <span>Prompt completo para Gamma</span>
+                      <span>Instrumentos, formulários e matrizes de trabalho</span>
+                      <span>Checklist de evidências e critérios de aceite</span>
+                      <span>Relatório, decisões e pendências</span>
+                      <span>Plano de Ação 5W2H e follow-up entre ciclos</span>
+                      <span>Pacote de entrega e handoff à próxima MegaFase</span>
+                    </div>
+                    <p>Este é o contrato mínimo do KIT, ainda pendente de geração, vinculação documental, versionamento e aprovação. Os artefatos efetivamente cadastrados aparecem abaixo.</p>
+                    <div className="skda-megaphase-subhead"><span>Artefatos e entregáveis cadastrados</span><strong>{artifacts.length} previsto(s)</strong></div>
                     {artifacts.length === 0 ? <p>Entregáveis metodológicos ainda não estruturados.</p> : <div className="skda-artifact-grid">{artifacts.map((artifact) => <article key={artifact.id}>
                       <div><small>{artifact.artifact_code}</small><strong>{artifact.title}</strong><span>{artifact.purpose || 'Entregável metodológico da Jornada.'}</span></div>
                       <div className="skda-artifact-state"><b>{ARTIFACT_STATUS[artifact.status] ?? artifact.status}</b><span>v{artifact.current_version_number || 0}</span>{artifact.planned_due_date && <small>Previsto: {new Date(artifact.planned_due_date+'T00:00:00').toLocaleDateString('pt-BR')}</small>}</div>
