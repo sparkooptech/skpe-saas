@@ -995,7 +995,7 @@ export function SkdaWorkspace(props: Props) {
         supabase
           .from('skda_self_assessment_metrics' as never)
           .select('id,block_code,metric_kind,metric_code,metric_name,reference_year,comparator_code,comparator_label,metric_value,unit,source_label,source_reference' as never)
-          .eq('diagnosis_id', selectedId)
+          .eq('organization_id', props.organizationId)
           .order('reference_year', { ascending:true, nullsFirst:false }),
       ])
       const loadedAssets = (assetsResult.data ?? []) as unknown as EvidenceAsset[]
