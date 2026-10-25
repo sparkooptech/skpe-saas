@@ -30,7 +30,7 @@ create temporary table cntcoop_import_items on commit drop as
 select e.value as item from cntcoop_import_data d,
 lateral jsonb_array_elements(d.payload->'items') e;
 do $guard$
-declare n integer; current_catalog uuid; catalog_id uuid;
+declare n integer; journey_catalog_id uuid; catalog_id uuid;
 begin
   select count(*) into n from cntcoop_import_items;
   if n <> 70 or (select count(*) from cntcoop_import_items where item->>'axis'='Governança') <> 24
@@ -47,9 +47,9 @@ begin
   select id into catalog_id from public.skda_catalog_versions
    where code='PDGC-PP' and version_code='2025' and status='published';
   if catalog_id is null then raise exception 'PDGC-PP 2025 published catalog not found'; end if;
-  select catalog_version_id into current_catalog from public.skda_diagnoses
+  select catalog_version_id into journey_catalog_id from public.skda_diagnoses
     where id='79f8b0dc-371e-4483-bfad-542cdbb37724' for update;
-  if current_catalog is not null and current_catalog <> catalog_id then
+  if journey_catalog_id is not null and journey_catalog_id <> catalog_id then
     raise exception 'CNTCOOP journey linked to a different catalog';
   end if;
   select count(*) into n from public.skda_questions where catalog_version_id=catalog_id;
