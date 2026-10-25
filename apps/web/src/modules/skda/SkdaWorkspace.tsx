@@ -2135,7 +2135,7 @@ export function SkdaWorkspace(props: Props) {
             <div>
               <span className="skda-eyebrow">Processo metodológico</span>
               <h3>MegaFases e Padrões de Trabalho</h3>
-              <small>Mesmo padrão gerencial do PE: linha de base, plano vigente, realizado, responsável, entregas e situação. A LB0 será originada pela OS autorizadora e poderá ser replanejada sem perder o histórico.</small>
+              <small>Acompanhe etapas, atividades, evidências e entregas de cada MegaFase.</small>
             </div>
             <span>{currentMegaphaseCode}</span>
           </div>
@@ -2157,7 +2157,7 @@ export function SkdaWorkspace(props: Props) {
               const owner = organizationUsers.find((user) => user.user_id === ownerId)
               const formatRange = (start: string | null | undefined, end: string | null | undefined) => start || end
                 ? `${start ? new Date(start+'T00:00:00').toLocaleDateString('pt-BR') : '—'} → ${end ? new Date(end+'T00:00:00').toLocaleDateString('pt-BR') : '—'}`
-                : 'Pendente'
+                : 'A validar'
               const actualEnd = action?.completed_at ? action.completed_at.slice(0,10) : null
               const actualStart = action?.started_at ? action.started_at.slice(0,10) : null
               const statusLabel = action?.status === 'in_progress' ? 'Em andamento' : action?.status === 'completed' ? 'Concluída' : action?.status === 'blocked' ? 'Bloqueada' : action?.status === 'on_hold' ? 'Em espera' : 'Planejada'
@@ -2180,13 +2180,16 @@ export function SkdaWorkspace(props: Props) {
                 <div className="skda-megaphase-drill">
                   <section className="skda-megaphase-inputs">
                     <div className="skda-megaphase-subhead"><span>Entradas da MegaFase</span><strong>{megaphaseIndex === 0 ? 'Fontes autorizadoras e baseline' : 'Herança validada da MegaFase anterior'}</strong></div>
-                    {megaphaseIndex === 0 ? (
-                      <div className="skda-input-chips"><span>OS autorizadora / LB0</span><span>Autoavaliações disponíveis</span><span>Fontes e contexto inicial</span></div>
-                    ) : inheritedArtifacts.length > 0 ? (
-                      <div className="skda-input-chips">{inheritedArtifacts.map((artifact) => <span key={artifact.id}>{artifact.title}</span>)}</div>
-                    ) : (
-                      <p>Os artefatos da MegaFase anterior serão herdados conforme forem submetidos ou validados.</p>
-                    )}
+                    <div className="skda-input-chips">
+                      {megaphaseIndex === 0 && <>
+                        <span title="Acesse a abertura da Jornada para registrar a OS autorizadora e validar a linha de base."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>OS autorizadora / LB0</button></span>
+                        <span title="Cadastre ou consulte as Autoavaliações e respectivas evidências."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Autoavaliações disponíveis</button></span>
+                        <span title="Acesse o inventário de evidências e documentos da organização."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Fontes e contexto inicial</button></span>
+                      </>}
+                      {inheritedArtifacts.map((artifact) => <span key={artifact.id} title="Entregável cadastrado. A abertura do documento depende de uma versão vinculada ao repositório."><button type="button" disabled>{artifact.title}</button></span>)}
+                      <span title="Acesse o repositório transversal para cadastrar, consultar e correlacionar evidências desta Jornada."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Consultar evidências</button></span>
+                      {canRegisterEvidence && <span title="Abra o cadastro de evidências da organização; disponível em todas as MegaFases."><button type="button" onClick={() => {setEvidenceFile(null);setShowEvidenceCreate(true)}}>Adicionar evidência</button></span>}
+                    </div>
                   </section>
                   <section className="skda-stage-list">
                     <div className="skda-megaphase-subhead"><span>Etapas e atividades</span><strong>{stages.length} etapa(s)</strong></div>
@@ -2198,25 +2201,25 @@ export function SkdaWorkspace(props: Props) {
                       return <article key={stage.id}>
                         <div className="skda-stage-title"><span>{stage.code}</span><strong>{stage.name}</strong><b>{stageStatus}</b></div>
                         <ul>{activities.map((activity) => <li key={activity}>{activity}</li>)}</ul>
+                        <div className="skda-input-chips">
+                          <span title="Abra a área de trabalho desta etapa para consultar e correlacionar evidências."><button type="button" onClick={() => setActivePhaseCode(['MF4','MF5','MF6','MF7'].includes(megaphase.code) ? 'DA-01' : 'DA-00')}>Acessar área de trabalho</button></span>
+                          <span title="Consulte as evidências transversais da organização."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Consultar evidências</button></span>
+                          {canRegisterEvidence && <span title="Registre uma nova evidência relacionada a esta etapa."><button type="button" onClick={() => {setEvidenceFile(null);setShowEvidenceCreate(true)}}>Adicionar evidência</button></span>}
+                        </div>
                       </article>
                     })}
                   </section>
                   <section className="skda-artifact-list">
                     <div className="skda-megaphase-subhead"><span>KIT de condução da MegaFase</span><strong>Pacote metodológico previsto · não gerado</strong></div>
                     <div className="skda-input-chips">
-                      <span>Apresentação da MegaFase (PPTX)</span>
-                      <span>Roteiro detalhado por slide e perguntas de facilitação</span>
-                      <span>Prompt completo para Gamma</span>
-                      <span>Instrumentos, formulários e matrizes de trabalho</span>
-                      <span>Checklist de evidências e critérios de aceite</span>
-                      <span>Relatório, decisões e pendências</span>
-                      <span>Plano de Ação 5W2H e follow-up entre ciclos</span>
-                      <span>Pacote de entrega e handoff à próxima MegaFase</span>
+                      {['Apresentação da MegaFase (PPTX)','Roteiro detalhado por slide e perguntas de facilitação','Prompt completo para AI','Instrumentos, formulários e matrizes de trabalho','Checklist de evidências e critérios de aceite','Relatório, decisões e pendências','Plano de Ação 5W2H e follow-up entre ciclos','Pacote de entrega e handoff à próxima MegaFase'].map((item) =>
+                        <span key={item} title="Ainda não disponível. É necessário gerar o artefato, vinculá-lo à MegaFase e registrar sua versão antes de abrir."><button type="button" disabled>{item}</button></span>
+                      )}
                     </div>
                     <p>Este é o contrato mínimo do KIT, ainda pendente de geração, vinculação documental, versionamento e aprovação. Os artefatos efetivamente cadastrados aparecem abaixo.</p>
                     <div className="skda-megaphase-subhead"><span>Artefatos e entregáveis cadastrados</span><strong>{artifacts.length} previsto(s)</strong></div>
                     {artifacts.length === 0 ? <p>Entregáveis metodológicos ainda não estruturados.</p> : <div className="skda-artifact-grid">{artifacts.map((artifact) => <article key={artifact.id}>
-                      <div><small>{artifact.artifact_code}</small><strong>{artifact.title}</strong><span>{artifact.purpose || 'Entregável metodológico da Jornada.'}</span></div>
+                      <div><small>{artifact.artifact_code}</small><strong>{artifact.title}</strong><span>{artifact.purpose || 'Entregável metodológico da Jornada.'}</span><span title="A validar: vincule uma versão documental ao entregável para habilitar sua abertura."><button type="button" disabled>Abrir entregável</button></span></div>
                       <div className="skda-artifact-state"><b>{ARTIFACT_STATUS[artifact.status] ?? artifact.status}</b><span>v{artifact.current_version_number || 0}</span>{artifact.planned_due_date && <small>Previsto: {new Date(artifact.planned_due_date+'T00:00:00').toLocaleDateString('pt-BR')}</small>}</div>
                     </article>)}</div>}
                   </section>
@@ -2224,9 +2227,7 @@ export function SkdaWorkspace(props: Props) {
               </details>
             })}
           </div>
-          <div className="skda-project-automation-note">
-            O Projeto da Jornada e sua EAP são criados automaticamente. A OS autorizadora deve originar a LB0; replanejamentos posteriores preservam a linha de base e o histórico das mudanças pactuadas com o cliente.
-          </div>
+
         </div>
       </section>}
 

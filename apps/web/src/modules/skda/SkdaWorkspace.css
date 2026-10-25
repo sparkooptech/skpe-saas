@@ -3184,3 +3184,16 @@
 .skda-evidence-checklist-grid strong{text-transform:none;font-weight:700}
 .skda-evidence-checklist-grid small{flex:1}
 .skda-evidence-checklist-grid button{cursor:pointer}
+
+/* MegaFase actions: interactive when available; explanatory tooltip on disabled items. */
+.skda-input-chips span:has(> button) { padding: 0; }
+.skda-input-chips span > button {
+  border: 0; border-radius: inherit; padding: .36rem .65rem;
+  background: transparent; color: inherit; font: inherit;
+  font-size: inherit; font-weight: inherit; cursor: pointer;
+}
+.skda-input-chips span:has(> button:not(:disabled)):hover { border-color: #047857; background: #e8f5ef; }
+.skda-input-chips span > button:focus-visible { outline: 2px solid #047857; outline-offset: 2px; }
+.skda-input-chips span:has(> button:disabled) { opacity: .58; cursor: help; }
+.skda-input-chips span > button:disabled { cursor: not-allowed; }
+.skda-artifact-grid button:disabled { opacity: .6; cursor: not-allowed; }
