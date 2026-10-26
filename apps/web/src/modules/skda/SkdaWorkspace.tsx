@@ -408,6 +408,18 @@ const FINDING_TYPES: Record<string,string> = {
   strength:'Força', gap:'Lacuna', opportunity:'Oportunidade', risk:'Risco', observation:'Observação',
 }
 
+const PRACTICE_STATE_LABELS: Record<string,string> = {
+  not_assessed:'Não avaliada',
+  exists:'Estruturada / existe',
+  applied:'Aplicada',
+  recurrent:'Recorrente',
+  broad:'Abrangente',
+  controlled:'Controlada',
+  result_oriented:'Orientada a resultados',
+  learning_improvement:'Aprendizado e melhoria',
+}
+const PRACTICE_STATE_ORDER = ['not_assessed','exists','applied','recurrent','broad','controlled','result_oriented','learning_improvement'] as const
+
 const PRIORITIES: Record<string,string> = { low:'Baixa', medium:'Média', high:'Alta', critical:'Crítica' }
 
 const INITIATIVE_CLASSES: Record<string,string> = {
@@ -2206,6 +2218,15 @@ export function SkdaWorkspace(props: Props) {
       || item.gap_description?.trim()
       || 'Inteligência validada a partir de evidência da Organização.'
     const priority = findingType === 'gap' ? 'high' : 'medium'
+    const practiceIndex=PRACTICE_STATE_ORDER.indexOf(item.practice_state as typeof PRACTICE_STATE_ORDER[number])
+    const nextPracticeState=practiceIndex >= 0 && practiceIndex < PRACTICE_STATE_ORDER.length - 1 ? PRACTICE_STATE_ORDER[practiceIndex + 1] : null
+    const explicitImprovement=item.improvement_suggestion?.trim()
+    const generatedPracticeRecommendation=nextPracticeState
+      ? `Evoluir a prática de “${PRACTICE_STATE_LABELS[item.practice_state] ?? item.practice_state}” para “${PRACTICE_STATE_LABELS[nextPracticeState]}”, definindo responsáveis, evidências de execução, medição e critérios de efetividade.`
+      : 'Preservar a prática, monitorar seus resultados e avaliar sua replicabilidade de forma governada.'
+    const recommendation=explicitImprovement && !explicitImprovement.startsWith('Usar a entrevista para distinguir')
+      ? explicitImprovement
+      : generatedPracticeRecommendation
     setSaving(true)
     setError('')
     const { data, error: convertError } = await supabase.rpc(
@@ -2216,7 +2237,7 @@ export function SkdaWorkspace(props: Props) {
         target_title:title,
         target_description:description,
         target_priority:priority,
-        target_recommendation:item.improvement_suggestion?.trim() || null,
+        target_recommendation:recommendation,
         target_owner_user_id:null,
         target_due_date:null,
       } as never,
@@ -3415,6 +3436,11 @@ export function SkdaWorkspace(props: Props) {
                         <b>{item.evidence_coverage_status === 'covers' ? 'Contempla' : item.evidence_coverage_status === 'partially_covers' ? 'Contempla parcialmente' : item.evidence_coverage_status === 'does_not_cover' ? 'Não contempla' : item.evidence_coverage_status === 'needs_complement' ? 'Necessita complemento' : 'Em análise'}</b>
                         {item.confidence_score != null && <span>Confiança {Number(item.confidence_score).toFixed(0)}%</span>}
                       </div>
+                      <p><strong>Estado da prática:</strong> {PRACTICE_STATE_LABELS[item.practice_state] ?? item.practice_state}{(() => {
+                        const index=PRACTICE_STATE_ORDER.indexOf(item.practice_state as typeof PRACTICE_STATE_ORDER[number])
+                        const next=index >= 0 && index < PRACTICE_STATE_ORDER.length - 1 ? PRACTICE_STATE_ORDER[index + 1] : null
+                        return next ? <> · <strong>Próximo nível:</strong> {PRACTICE_STATE_LABELS[next]}</> : null
+                      })()}</p>
                       {item.diagnostic_hypothesis && <p><strong>Hipótese:</strong> {item.diagnostic_hypothesis}</p>}
                       {item.gap_description && <p><strong>Lacuna:</strong> {item.gap_description}</p>}
                       {item.complement_needed && <p><strong>Complemento necessário:</strong> {item.complement_needed}</p>}
