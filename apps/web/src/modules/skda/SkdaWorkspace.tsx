@@ -1964,28 +1964,14 @@ export function SkdaWorkspace(props: Props) {
   const secondary = selected ? (
     <div className="skda-detail">
       {isOverview && <>
-      <div className="skda-metrics">
-        <MetricCard label="Questões avaliadas" value={metrics.responses} helper={String(assessmentCoverage) + '% da cobertura'} />
-        <MetricCard label="Entrevistas" value={metrics.interviews} helper="registradas na jornada" />
-        <MetricCard label="Evidências correlacionadas" value={metrics.evidence} helper="ativos do Core vinculados" />
-        <MetricCard label="Achados" value={metrics.findings} helper="forças, lacunas, riscos e oportunidades" />
-      </div>
-      {selfAssessmentSnapshots.length === 0 && <div className="skda-aa-entry-callout">
-        <div>
-          <span className="skda-eyebrow">Autoavaliação</span>
-          <h3>{assistedSelfAssessmentActive ? 'Autoavaliação Assistida em andamento' : 'Autoavaliação ainda não importada'}</h3>
-          <p>Você pode importar uma AA existente ou iniciar uma Autoavaliação Assistida. No modo assistido, o SPARKs usa as mesmas questões e evidências para explicar o padrão esperado da prática, apontar lacunas, solicitar complementos e orientar a construção segura da resposta da Organização.</p>
-        </div>
-        <div className="skda-aa-entry-actions">
-          {canRegisterEvidence && <button type="button" onClick={openSelfAssessmentImport}>Importar AA existente</button>}
-          {canManage && <button type="button" className="skda-primary" disabled={saving || assistedSelfAssessmentActive} onClick={() => void startAssistedSelfAssessment()}>{assistedSelfAssessmentActive ? 'AA Assistida iniciada' : 'Iniciar Autoavaliação Assistida'}</button>}
-        </div>
-      </div>}
       <div className="skda-executive-grid">
-        <article className="skda-executive-card">
-          <div className="skda-executive-card-head">
-            <div><span>Evolução da jornada</span><h3>Progresso do diagnóstico</h3></div>
-            <strong>{Number(selected.progress).toFixed(0)}%</strong>
+        <article className="skda-executive-card skda-journey-progress-card">
+          <div className="skda-executive-card-head skda-journey-progress-head">
+            <div><span>{TYPES[selected.diagnosis_type] ?? selected.diagnosis_type}</span><h3>Evolução da Jornada {selected.reference_year ?? ''}</h3></div>
+            <div className="skda-journey-progress-actions">
+              {diagnoses.length > 1 && <label className="skda-cycle-selector"><span>Ciclo</span><select value={selectedId ?? ''} onChange={(event)=>setSelectedId(event.target.value)}>{diagnoses.map((item)=><option key={item.id} value={item.id}>{formatDiagnosisBusinessTitle(item)}</option>)}</select></label>}
+              <strong>{Number(selected.progress).toFixed(0)}%</strong>
+            </div>
           </div>
           <div className="skda-progress-track" aria-label="Progresso do diagnóstico">
             <span style={{ width: `${Math.max(0, Math.min(100, Number(selected.progress) || 0))}%` }} />
@@ -1999,19 +1985,6 @@ export function SkdaWorkspace(props: Props) {
                 {phase.title}
               </span>
             ))}
-          </div>
-        </article>
-        <article className="skda-executive-card">
-          <div className="skda-executive-card-head">
-            <div><span>Achados</span><h3>Distribuição atual</h3></div>
-            <strong>{metrics.findings}</strong>
-          </div>
-          <div className="skda-finding-bars">
-            {Object.entries(FINDING_TYPES).map(([type,label]) => {
-              const value = findingsByType[type] ?? 0
-              const width = metrics.findings > 0 ? Math.round((value / metrics.findings) * 100) : 0
-              return <div key={type}><span>{label}</span><div><i style={{ width: `${width}%` }} /></div><b>{value}</b></div>
-            })}
           </div>
         </article>
         {[
@@ -2059,6 +2032,36 @@ export function SkdaWorkspace(props: Props) {
           </div>}
         </article>)}
       </div>
+      <div className="skda-metrics skda-metrics-after-radars">
+        <MetricCard label="Questões avaliadas" value={metrics.responses} helper={String(assessmentCoverage) + '% da cobertura'} />
+        <MetricCard label="Entrevistas" value={metrics.interviews} helper="registradas na jornada" />
+        <MetricCard label="Evidências correlacionadas" value={metrics.evidence} helper="ativos do Core vinculados" />
+        <MetricCard label="Achados" value={metrics.findings} helper="forças, lacunas, riscos e oportunidades" />
+      </div>
+      <article className="skda-executive-card skda-findings-summary-card">
+        <div className="skda-executive-card-head">
+          <div><span>Achados</span><h3>Distribuição atual</h3></div>
+          <strong>{metrics.findings}</strong>
+        </div>
+        <div className="skda-finding-bars">
+          {Object.entries(FINDING_TYPES).map(([type,label]) => {
+            const value = findingsByType[type] ?? 0
+            const width = metrics.findings > 0 ? Math.round((value / metrics.findings) * 100) : 0
+            return <div key={type}><span>{label}</span><div><i style={{ width: `${width}%` }} /></div><b>{value}</b></div>
+          })}
+        </div>
+      </article>
+      {selfAssessmentSnapshots.length === 0 && <div className="skda-aa-entry-callout">
+        <div>
+          <span className="skda-eyebrow">Autoavaliação</span>
+          <h3>{assistedSelfAssessmentActive ? 'Autoavaliação Assistida em andamento' : 'Autoavaliação ainda não importada'}</h3>
+          <p>Você pode importar uma AA existente ou iniciar uma Autoavaliação Assistida. No modo assistido, o SPARKs usa as mesmas questões e evidências para explicar o padrão esperado da prática, apontar lacunas, solicitar complementos e orientar a construção segura da resposta da Organização.</p>
+        </div>
+        <div className="skda-aa-entry-actions">
+          {canRegisterEvidence && <button type="button" onClick={openSelfAssessmentImport}>Importar AA existente</button>}
+          {canManage && <button type="button" className="skda-primary" disabled={saving || assistedSelfAssessmentActive} onClick={() => void startAssistedSelfAssessment()}>{assistedSelfAssessmentActive ? 'AA Assistida iniciada' : 'Iniciar Autoavaliação Assistida'}</button>}
+        </div>
+      </div>}
       </>}
 
       {isOverview && <section className="skda-evolution-overview">
@@ -2794,7 +2797,7 @@ export function SkdaWorkspace(props: Props) {
         className="skda-workspace"
         primary={
           <div className="skda-dashboard-page">
-            {isOverview && <section className="skda-diagnosis-switcher">{primary}</section>}
+            {!selected && isOverview && <section className="skda-diagnosis-switcher">{primary}</section>}
             {secondary}
           </div>
         }
