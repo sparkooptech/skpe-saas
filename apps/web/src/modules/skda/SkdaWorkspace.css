@@ -2733,12 +2733,13 @@
   grid-template-rows: auto 1fr auto;
 }
 
-.skda-metrics-after-radars {
-  margin-top: 1rem;
+.skda-detail:has(.skda-journey-progress-card) {
+  gap: .8rem;
 }
 
+.skda-metrics-after-radars,
 .skda-findings-summary-card {
-  margin-top: .8rem;
+  margin-top: 0;
 }
 
 @media (max-width: 760px) {
