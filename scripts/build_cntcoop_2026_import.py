@@ -10,6 +10,12 @@ from pathlib import Path
 
 data = json.loads(Path(__file__).with_name("cntcoop-aa-2026-catalog-staging.json").read_text(encoding="utf-8-sig"))
 items = data["items"]
+official_metrics = data["official_metrics"]
+assert len(official_metrics) == 35
+assert sum(x["metric_kind"] == "overall_index" for x in official_metrics) == 2
+assert sum(x["metric_kind"] == "criterion" for x in official_metrics) == 15
+assert sum(x["metric_kind"] == "benchmark" for x in official_metrics) == 10
+assert sum(x["metric_kind"] == "history" for x in official_metrics) == 8
 assert len(items) == 70
 assert sum(x["axis"] == "Governança" for x in items) == 24
 assert sum(x["axis"] == "Gestão" for x in items) == 46
@@ -131,6 +137,57 @@ join public.skda_self_assessment_snapshots s
    case when i.item->>'axis'='Governança' then 'GOVERNANCA' else 'GESTAO' end
 on conflict (snapshot_id,question_id) do nothing;
 
+with metric_rows as (
+  select m.value as metric
+  from cntcoop_import_data d,
+  lateral jsonb_array_elements(d.payload->'official_metrics') m
+),
+snapshots as (
+  select metadata->>'block' as block_code,id
+  from public.skda_self_assessment_snapshots
+  where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724'
+    and assessment_cycle_year=2026
+)
+insert into public.skda_self_assessment_metrics
+(organization_id,diagnosis_id,snapshot_id,block_code,metric_kind,metric_code,metric_name,
+ reference_year,comparator_code,comparator_label,metric_value,unit,source_label,source_reference,
+ confidence_level,metadata)
+select
+ 'bd58a170-b5ef-4150-9b69-026afa138661'::uuid,
+ '79f8b0dc-371e-4483-bfad-542cdbb37724'::uuid,
+ case
+   when (r.metric->>'reference_year')::integer=2026
+    and r.metric->>'metric_kind' in ('overall_index','criterion','benchmark')
+   then s.id else null
+ end,
+ r.metric->>'block_code',
+ r.metric->>'metric_kind',
+ r.metric->>'metric_code',
+ r.metric->>'metric_name',
+ (r.metric->>'reference_year')::integer,
+ r.metric->>'comparator_code',
+ nullif(r.metric->>'comparator_label',''),
+ (r.metric->>'metric_value')::numeric,
+ coalesce(nullif(r.metric->>'unit',''),'percent'),
+ nullif(r.metric->>'source_label',''),
+ nullif(r.metric->>'source_reference',''),
+ coalesce(nullif(r.metric->>'confidence_level',''),'high'),
+ coalesce(r.metric->'metadata','{}'::jsonb)
+from metric_rows r
+left join snapshots s on s.block_code=r.metric->>'block_code'
+on conflict (diagnosis_id,block_code,metric_kind,metric_code,reference_year,comparator_code)
+do update set
+ snapshot_id=excluded.snapshot_id,
+ metric_name=excluded.metric_name,
+ comparator_label=excluded.comparator_label,
+ metric_value=excluded.metric_value,
+ unit=excluded.unit,
+ source_label=excluded.source_label,
+ source_reference=excluded.source_reference,
+ confidence_level=excluded.confidence_level,
+ metadata=public.skda_self_assessment_metrics.metadata || excluded.metadata,
+ updated_at=timezone('utc',now());
+
 do $verify$
 declare n integer; gov integer; ges integer; cat uuid;
 begin
@@ -150,7 +207,32 @@ begin
   if n<>70 or gov<>24 or ges<>46 then
     raise exception 'Expected 70 answers (24 GOV/46 GES), got % (%/%).',n,gov,ges;
   end if;
-  raise notice 'CNTCOOP 2026 imported: % catalog questions, 280 alternatives, % GOV + % GES declared answers',70,gov,ges;
+
+  select count(*) into n
+  from public.skda_self_assessment_metrics
+  where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724'
+    and metric_kind='overall_index' and reference_year=2026 and comparator_code='COOPERATIVA';
+  if n<>2 then raise exception 'Expected 2 official 2026 overall indices, got %',n; end if;
+
+  select count(*) into n
+  from public.skda_self_assessment_metrics
+  where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724'
+    and metric_kind='criterion' and reference_year=2026 and comparator_code='COOPERATIVA';
+  if n<>15 then raise exception 'Expected 15 official 2026 criterion metrics, got %',n; end if;
+
+  select count(*) into n
+  from public.skda_self_assessment_metrics
+  where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724'
+    and metric_kind='benchmark' and reference_year=2026;
+  if n<>10 then raise exception 'Expected 10 official 2026 benchmark metrics, got %',n; end if;
+
+  select count(*) into n
+  from public.skda_self_assessment_metrics
+  where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724'
+    and metric_kind='history' and reference_year in (2021,2023,2024,2025);
+  if n<>8 then raise exception 'Expected 8 historical block metrics for 2021/2023/2024/2025, got %',n; end if;
+
+  raise notice 'CNTCOOP 2026 imported completely: 70 declared answers, 2 overall indices, 15 criterion metrics, 10 benchmarks and 8 historical block metrics';
 end $verify$;
 commit;
 select 'CNTCOOP_2026_AA_IMPORTED' as status, count(*) as declared_answers

@@ -75,19 +75,6 @@ type AssessmentDraft = { classification: string; answerText: string; rationale: 
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
 type InitiativeOrigin = { initiative_id: string; source_entity_id: string }
 type LinkedInitiative = { id: string; code: string; name: string; initiative_class: string; status: string; progress: number; sourceFindingId: string }
-type EvolutionRow = {
-  diagnosis_id: string
-  diagnosis_code: string
-  reference_year: number | null
-  diagnosis_status: string
-  question_id: string
-  response_id: string | null
-  response_status: string | null
-  score: number | null
-  validated_practice_count: number
-  validated_evidence_count: number
-  open_gap_count: number
-}
 type JourneyExecutionAction = {
   id: string
   parent_action_id: string | null
@@ -501,7 +488,6 @@ export function SkdaWorkspace(props: Props) {
   const [assessmentDrafts, setAssessmentDrafts] = useState<Record<string,AssessmentDraft>>({})
   const [findings, setFindings] = useState<Finding[]>([])
   const [linkedInitiatives, setLinkedInitiatives] = useState<LinkedInitiative[]>([])
-  const [evolutionRows, setEvolutionRows] = useState<EvolutionRow[]>([])
   const [actionFollowup, setActionFollowup] = useState<ActionFollowup[]>([])
   const [journeyEap, setJourneyEap] = useState<JourneyExecutionAction[]>([])
   const [journeyArtifacts, setJourneyArtifacts] = useState<JourneyArtifact[]>([])
@@ -595,24 +581,13 @@ export function SkdaWorkspace(props: Props) {
   }, [questions, responses])
 
   const evolutionChartSeries = useMemo(() => {
-    const byYear = new Map<number, { diagnosisId:string; label:string; aaValues:number[]; daScore:number|null; current:boolean }>()
+    const byYear = new Map<number, { diagnosisId:string; label:string; current:boolean }>()
 
     for (const diagnosis of diagnoses) {
       if (!diagnosis.reference_year) continue
-      const metadata = diagnosis.metadata ?? {}
-      const aaValues = [metadata.governance_index,metadata.management_index]
-        .filter((value) => value !== null && value !== undefined && value !== '')
-        .map((value) => Number(value))
-        .filter((value) => Number.isFinite(value) && value >= 0 && value <= 100)
-      const validatedScores = evolutionRows
-        .filter((row) => row.diagnosis_id === diagnosis.id && row.response_status === 'validated' && row.score != null)
-        .map((row) => Number(row.score))
-        .filter((value) => Number.isFinite(value))
       byYear.set(diagnosis.reference_year,{
         diagnosisId:diagnosis.id,
         label:String(diagnosis.reference_year),
-        aaValues,
-        daScore:validatedScores.length > 0 ? validatedScores.reduce((sum,value)=>sum+value,0)/validatedScores.length : null,
         current:diagnosis.id===selectedId,
       })
     }
@@ -621,18 +596,9 @@ export function SkdaWorkspace(props: Props) {
       if (!metric.reference_year || metric.comparator_code!=='COOPERATIVA' || !['overall_index','history'].includes(metric.metric_kind)) continue
       if (!Number.isFinite(Number(metric.metric_value)) || Number(metric.metric_value) < 0 || Number(metric.metric_value) > 100) continue
       const current = byYear.get(metric.reference_year) ?? {
-        diagnosisId:`aa-history-${metric.reference_year}`,
+        diagnosisId:`metric-history-${metric.reference_year}`,
         label:String(metric.reference_year),
-        aaValues:[],
-        daScore:null,
         current:false,
-      }
-      const sourceKind = String(metric.metadata?.source_kind ?? '').toUpperCase()
-      // A source report from a prior DA is not an AA. Preserve the reported origin.
-      if (sourceKind === 'DA_REPORTED') {
-        current.daScore = current.daScore == null ? Number(metric.metric_value) : current.daScore
-      } else {
-        current.aaValues.push(Number(metric.metric_value))
       }
       if (selected?.reference_year===metric.reference_year) current.current=true
       byYear.set(metric.reference_year,current)
@@ -640,20 +606,14 @@ export function SkdaWorkspace(props: Props) {
 
     return [...byYear.entries()]
       .sort(([yearA],[yearB])=>yearA-yearB)
-      .map(([,item])=>({
-        diagnosisId:item.diagnosisId,
-        label:item.label,
-        aaScore:item.aaValues.length > 0 ? item.aaValues.reduce((sum,value)=>sum+value,0)/item.aaValues.length : null,
-        daScore:item.daScore,
-        current:item.current,
-      }))
-  }, [diagnoses,evolutionRows,selectedId,selected?.reference_year,selfAssessmentMetrics])
+      .map(([,item])=>item)
+  }, [diagnoses,selectedId,selected?.reference_year,selfAssessmentMetrics])
 
   const evolutionBenchmarks = useMemo(() => {
     const latest = new Map<string,SelfAssessmentMetric>()
     selfAssessmentMetrics.filter((metric) => metric.metric_kind === 'benchmark'
       && Number.isFinite(Number(metric.metric_value))
-      && /RAMO|NACIONAL|NATIONAL/.test(metric.comparator_code.toUpperCase()))
+      && ['BRASIL','RAMO_BRASIL'].includes(metric.comparator_code.toUpperCase()))
       .sort((a,b) => (a.reference_year ?? 0) - (b.reference_year ?? 0))
       .forEach((metric) => latest.set(metric.block_code + ':' + metric.comparator_code,metric))
     return [...latest.values()]
@@ -705,7 +665,11 @@ export function SkdaWorkspace(props: Props) {
   const selfAssessmentRadar = useMemo(() => {
     const metricsFor = (block: 'GOVERNANCA' | 'GESTAO') => selfAssessmentMetrics
       .filter((item) => item.block_code === block && item.metric_kind === 'criterion' && item.comparator_code === 'COOPERATIVA')
-      .sort((a,b) => a.metric_code.localeCompare(b.metric_code,'pt-BR'))
+      .sort((a,b) => {
+        const orderA = Number(a.metadata?.display_order ?? Number.MAX_SAFE_INTEGER)
+        const orderB = Number(b.metadata?.display_order ?? Number.MAX_SAFE_INTEGER)
+        return orderA === orderB ? a.metric_code.localeCompare(b.metric_code,'pt-BR') : orderA - orderB
+      })
       .map((item) => ({ axis:item.metric_name, score:Math.max(0,Math.min(100,Number(item.metric_value))) }))
 
     const normalized = {
@@ -1052,20 +1016,12 @@ export function SkdaWorkspace(props: Props) {
 
   useEffect(() => {
     const run = async () => {
-      const [evolutionResult, actionResult] = await Promise.all([
-        supabase
-          .from('skda_organization_evolution_matrix' as never)
-          .select('diagnosis_id,diagnosis_code,reference_year,diagnosis_status,question_id,response_id,response_status,score,validated_practice_count,validated_evidence_count,open_gap_count' as never)
-          .eq('organization_id', props.organizationId)
-          .order('reference_year', { ascending:true, nullsFirst:false }),
-        supabase
-          .from('skda_action_followup_longitudinal' as never)
-          .select('diagnosis_id,reference_year,finding_id,finding_title,cycle_number,initiative_id,initiative_name,initiative_status,initiative_progress,followup_state,execution_completed' as never)
-          .eq('organization_id', props.organizationId)
-          .order('reference_year', { ascending:true, nullsFirst:false }),
-      ])
-      setEvolutionRows((evolutionResult.data ?? []) as unknown as EvolutionRow[])
-      setActionFollowup((actionResult.data ?? []) as unknown as ActionFollowup[])
+      const { data } = await supabase
+        .from('skda_action_followup_longitudinal' as never)
+        .select('diagnosis_id,reference_year,finding_id,finding_title,cycle_number,initiative_id,initiative_name,initiative_status,initiative_progress,followup_state,execution_completed' as never)
+        .eq('organization_id', props.organizationId)
+        .order('reference_year', { ascending:true, nullsFirst:false })
+      setActionFollowup((data ?? []) as unknown as ActionFollowup[])
     }
     void run()
   }, [props.organizationId, selectedId, responses, findings, actionPlanAllocations, linkedInitiatives])
@@ -1996,7 +1952,7 @@ export function SkdaWorkspace(props: Props) {
         ].map(({ key,title,series,reference }) => <article key={key} className="skda-executive-card skda-radar-card">
           <div className="skda-executive-card-head">
             <div><span>Maturidade</span><h3>{title} · AA × DA</h3></div>
-            <strong>{series.baseline.length >= 3 ? 'Radar da AA' : reference.current && reference.current.reference_year === selected?.reference_year ? `AA ${Number(reference.current.metric_value).toFixed(2)}%` : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada' : 'AA a integrar'}</strong>
+            <strong>{reference.current && reference.current.reference_year === selected?.reference_year ? `AA ${Number(reference.current.metric_value).toFixed(2)}%` : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada parcialmente' : 'AA a integrar'}</strong>
           </div>
           {series.baseline.length === 0 ? (
             <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'Radar por critério: aguardando a integração das pontuações oficiais do relatório.' : 'Autoavaliação ainda não integrada.'}</p>

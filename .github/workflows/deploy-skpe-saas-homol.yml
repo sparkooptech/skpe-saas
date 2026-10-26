@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
       cntcoop_import_2026:
-        description: Import CNTCOOP 2026 AA declared answers into sparks_homol
+        description: Import complete CNTCOOP 2026 AA (declared answers + official metrics) into sparks_homol
         type: boolean
         default: false
       cntcoop_governance_index_2026:
@@ -267,7 +267,7 @@ jobs:
           commit;
           SQL
 
-      - name: Import CNTCOOP 2026 declared AA (explicit dispatch only)
+      - name: Import complete CNTCOOP 2026 AA (explicit dispatch only)
         if: ${{ inputs.cntcoop_import_2026 && inputs.database_only }}
         shell: bash
         run: |
