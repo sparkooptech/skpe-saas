@@ -2023,10 +2023,7 @@ export function SkdaWorkspace(props: Props) {
               <small>Índice atual</small>
               <strong>{reference.current && reference.current.reference_year === selected?.reference_year ? Number(reference.current.metric_value).toFixed(2)+'%' : 'Índice do ciclo não integrado'}</strong>
             </div>
-            <div className="skda-aa-benchmarks">
-              <small>Referenciais comparativos da AA</small>
-              <div>{reference.benchmarks.map((benchmark) => <span key={benchmark.id}><b>{benchmark.comparator_label || benchmark.comparator_code}</b> {Number(benchmark.metric_value).toFixed(2)}%</span>)}</div>
-            </div>
+
           </div>}
         </article>)}
       </div>
@@ -2035,7 +2032,7 @@ export function SkdaWorkspace(props: Props) {
       {isOverview && <section className="skda-evolution-overview">
         <div className="skda-phase-workspace-head">
           <div>
-            <span className="skda-eyebrow">Evolução contínua</span>
+            <span className="skda-eyebrow">Evolução da Maturidade</span>
             <h3>Trajetória da organização</h3>
             <small>Leitura gráfica da evolução entre a Autoavaliação de entrada e o Diagnóstico Assistido validado ao longo dos ciclos.</small>
           </div>
