@@ -3705,10 +3705,35 @@
   line-height: 1.4;
 }
 
+.skda-artifact-version-editor,
 .skda-artifact-status-editor {
   display: grid;
   gap: .55rem;
   margin-top: .75rem;
+}
+
+.skda-artifact-version-editor {
+  padding: .75rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 10px;
+  background: #fbfcfc;
+}
+
+.skda-artifact-version-editor label,
+.skda-artifact-status-editor label {
+  display: grid;
+  gap: .3rem;
+}
+
+.skda-artifact-version-editor label > span {
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.skda-artifact-version-editor textarea,
+.skda-artifact-version-editor input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .skda-artifact-status-editor label {
@@ -3744,6 +3769,25 @@
   border-radius: 7px;
   color: var(--skda-muted);
   font-size: .7rem;
+}
+
+.skda-priority-cycle-actions {
+  margin-top: .2rem;
+}
+
+.skda-priority-cycle-actions button.active {
+  border-color: var(--skda-primary);
+  background: color-mix(in srgb, var(--skda-primary) 10%, white);
+  color: var(--skda-primary);
+  font-weight: 800;
+}
+
+.skda-return-governance {
+  display: grid;
+  gap: .65rem;
+  margin-top: .8rem;
+  padding-top: .8rem;
+  border-top: 1px solid var(--skda-border);
 }
 
 @media (max-width: 760px) {

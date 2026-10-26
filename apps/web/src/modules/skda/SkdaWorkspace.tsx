@@ -457,6 +457,7 @@ export function SkdaWorkspace(props: Props) {
   const [showCreate, setShowCreate] = useState(false)
   const [showInterviewCreate, setShowInterviewCreate] = useState(false)
   const [showFindingCreate, setShowFindingCreate] = useState(false)
+  const [editingFindingId, setEditingFindingId] = useState<string | null>(null)
   const [validationFindingId, setValidationFindingId] = useState<string | null>(null)
   const [validationReason, setValidationReason] = useState('')
   const [showTacticalCreate, setShowTacticalCreate] = useState(false)
@@ -505,6 +506,8 @@ export function SkdaWorkspace(props: Props) {
     audit: Array<Record<string,unknown>>
   } | null>(null)
   const [artifactStatusReason, setArtifactStatusReason] = useState('')
+  const [artifactDraftContent, setArtifactDraftContent] = useState('')
+  const [artifactVersionSummary, setArtifactVersionSummary] = useState('')
   const [openingForm, setOpeningForm] = useState({
     referenceYear:String(new Date().getFullYear()),
     startedOn:'',
@@ -709,6 +712,10 @@ export function SkdaWorkspace(props: Props) {
   }, [actionFollowup])
 
   const phaseReadiness = useMemo(() => {
+    const recognizedContract = evidenceAssets.some((asset) => {
+      const version = evidenceVersionTexts.find((item) => item.evidence_asset_id === asset.id)
+      return Boolean(version?.extracted_text && parseContractIntakeProposal(asset,version.extracted_text,props.organizationName))
+    })
     const completedInterviews = interviews.filter((item) => ['completed','validated'].includes(item.status)).length
     const actionableFindings = findings.filter((item) => item.finding_type !== 'strength' && item.status !== 'dismissed')
     const recommendations = actionableFindings.filter((item) => Boolean(item.recommendation?.trim()))
@@ -722,6 +729,8 @@ export function SkdaWorkspace(props: Props) {
         { label:'Catálogo metodológico definido', ok:Boolean(selected?.catalog_version_id), critical:true },
         { label:'Período contratado configurado', ok:Boolean(selected?.started_on && selected?.planned_end_on), critical:true },
         { label:'Líder SPARKOOP definido', ok:Boolean(selected?.lead_user_id), critical:true },
+        { label:'Linha de base contratual ratificada', ok:!recognizedContract || selected?.metadata?.contractual_baseline_status === 'validated', critical:true },
+        { label:'Agenda contratual materializada', ok:!recognizedContract || interviews.length > 0, critical:false },
         { label:'Autoavaliação integrada', ok:selfAssessmentSnapshots.length > 0, critical:false },
         { label:'Fontes/evidências de entrada correlacionadas', ok:metrics.evidence > 0, critical:false },
       ],
@@ -754,7 +763,7 @@ export function SkdaWorkspace(props: Props) {
       },
     ])) as Record<string,{items:Array<{label:string;ok:boolean;critical:boolean}>;ready:boolean;completed:number;total:number}>
     return byPhase
-  }, [actionFollowup.length, actionPlanAllocations, findings, interviews, interviewQuestionFlow, journeyArtifacts, linkedInitiatives, metrics.evidence, selected?.catalog_version_id, selected?.lead_user_id, selected?.planned_end_on, selected?.started_on, selfAssessmentSnapshots.length])
+  }, [actionFollowup.length, actionPlanAllocations, evidenceAssets, evidenceVersionTexts, findings, interviews, interviewQuestionFlow, journeyArtifacts, linkedInitiatives, metrics.evidence, props.organizationName, selected?.catalog_version_id, selected?.lead_user_id, selected?.metadata, selected?.planned_end_on, selected?.started_on, selfAssessmentSnapshots.length])
 
   const selfAssessmentRadar = useMemo(() => {
     const metricsFor = (block: 'GOVERNANCA' | 'GESTAO') => selfAssessmentMetrics
@@ -848,6 +857,7 @@ export function SkdaWorkspace(props: Props) {
       setShowInterviewCreate(false)
       setShowEvidenceCreate(false)
       setShowFindingCreate(false)
+      setEditingFindingId(null)
       setShowTacticalCreate(false)
       setValidationFindingId(null)
     }
@@ -1310,6 +1320,62 @@ export function SkdaWorkspace(props: Props) {
     setActivePhaseCode(completing ? 'OVERVIEW' : nextPhase)
   }
 
+  const transitionJourneyStage = async (stage:JourneyExecutionAction, parent:JourneyExecutionAction | undefined, targetStatus:'in_progress'|'completed') => {
+    if (!canManage) return
+    setSaving(true)
+    setError('')
+    try {
+      if (targetStatus === 'in_progress' && parent?.status === 'planned') {
+        const { error: parentStartError } = await supabase.rpc(
+          'transition_sparks_initiative_action_lifecycle' as never,
+          {
+            target_action_id:parent.id,
+            target_status:'in_progress',
+            change_reason:`Início da MegaFase ${parent.code} pela execução de sua primeira etapa na Jornada DA.`,
+          } as never,
+        )
+        if (parentStartError) throw parentStartError
+      }
+      const { error: stageError } = await supabase.rpc(
+        'transition_sparks_initiative_action_lifecycle' as never,
+        {
+          target_action_id:stage.id,
+          target_status:targetStatus,
+          change_reason:targetStatus === 'completed'
+            ? `Conclusão da etapa ${stage.code} da Jornada DA após execução das atividades previstas.`
+            : `Início da etapa ${stage.code} da Jornada DA pelo responsável autorizado.`,
+        } as never,
+      )
+      if (stageError) throw stageError
+      const nextEap = journeyEap.map((item) => {
+        if (item.id === stage.id) return { ...item,status:targetStatus,progress:targetStatus === 'completed' ? 100 : item.progress }
+        if (item.id === parent?.id && targetStatus === 'in_progress' && item.status === 'planned') return { ...item,status:'in_progress' }
+        return item
+      })
+      if (targetStatus === 'completed' && parent) {
+        const siblings = nextEap.filter((item) => item.parent_action_id === parent.id)
+        if (siblings.length > 0 && siblings.every((item) => item.status === 'completed') && parent.status !== 'completed') {
+          const { error: parentCompleteError } = await supabase.rpc(
+            'transition_sparks_initiative_action_lifecycle' as never,
+            {
+              target_action_id:parent.id,
+              target_status:'completed',
+              change_reason:`Conclusão da MegaFase ${parent.code} após todas as suas etapas serem concluídas na Jornada DA.`,
+            } as never,
+          )
+          if (parentCompleteError) throw parentCompleteError
+          setJourneyEap(nextEap.map((item) => item.id === parent.id ? { ...item,status:'completed',progress:100 } : item))
+          return
+        }
+      }
+      setJourneyEap(nextEap)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Não foi possível atualizar a execução da etapa.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const openJourneyArtifact = async (artifact:JourneyArtifact) => {
     setSaving(true)
     setError('')
@@ -1329,14 +1395,52 @@ export function SkdaWorkspace(props: Props) {
       evidence_links?: Array<Record<string,unknown>>
       audit?: Array<Record<string,unknown>>
     }
+    const versions = detail.versions ?? []
     setArtifactDetail({
       artifact:detail.artifact,
-      versions:detail.versions ?? [],
+      versions,
       validations:detail.validations ?? [],
       evidence_links:detail.evidence_links ?? [],
       audit:detail.audit ?? [],
     })
+    const latest = versions[0]
+    const latestContent = latest && typeof latest.content_json === 'object' && latest.content_json
+      ? (latest.content_json as Record<string,unknown>).content
+      : ''
+    setArtifactDraftContent(typeof latestContent === 'string' ? latestContent : '')
+    setArtifactVersionSummary('')
     setArtifactStatusReason('')
+  }
+
+  const createJourneyArtifactVersion = async () => {
+    if (!artifactDetail) return
+    if (artifactDraftContent.trim().length < 10 || artifactVersionSummary.trim().length < 10) {
+      setError('Informe o conteúdo do entregável e um resumo da versão com pelo menos 10 caracteres.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { error: versionError } = await supabase.rpc(
+      'create_methodology_artifact_text_version' as never,
+      {
+        target_artifact_id:artifactDetail.artifact.id,
+        target_content_text:artifactDraftContent.trim(),
+        target_change_summary:artifactVersionSummary.trim(),
+      } as never,
+    )
+    setSaving(false)
+    if (versionError) {
+      setError(versionError.message)
+      return
+    }
+    setJourneyArtifacts((current) => current.map((item) => item.id === artifactDetail.artifact.id
+      ? { ...item,current_version_number:(item.current_version_number || 0) + 1,status:item.status === 'planned' ? 'in_preparation' : item.status }
+      : item))
+    await openJourneyArtifact({
+      ...artifactDetail.artifact,
+      current_version_number:(artifactDetail.artifact.current_version_number || 0) + 1,
+      status:artifactDetail.artifact.status === 'planned' ? 'in_preparation' : artifactDetail.artifact.status,
+    })
   }
 
   const updateJourneyArtifactStatus = async (targetStatus:string) => {
@@ -1383,6 +1487,154 @@ export function SkdaWorkspace(props: Props) {
       ].filter(Boolean).join('\n'),
     }))
     setAppliedContractAssetId(contractIntakeProposal.assetId)
+  }
+
+  const materializeContractSchedule = async () => {
+    if (!selected || !canEditInterviews || !contractIntakeProposal || contractIntakeProposal.meetings.length === 0) return
+    setSaving(true)
+    setError('')
+    try {
+      const existingCodes = new Set(interviews.map((item) => item.code.toUpperCase()))
+      for (let index = 0; index < contractIntakeProposal.meetings.length; index += 1) {
+        const meeting = contractIntakeProposal.meetings[index]
+        const code = 'ENT-' + String(index + 1).padStart(3,'0')
+        if (existingCodes.has(code)) continue
+        const start = new Date(`${meeting.date}T${meeting.start}:00`)
+        const end = new Date(start.getTime() + meeting.durationHours * 60 * 60 * 1000)
+        const location = (meeting.location ?? '').trim()
+        const normalizedLocation = location.toLocaleLowerCase('pt-BR')
+        const channel = normalizedLocation.includes('teams')
+          ? 'teams'
+          : normalizedLocation.includes('meet')
+            ? 'meet'
+            : location
+              ? 'presential'
+              : 'other'
+        const title = index === 0
+          ? 'Abertura da Jornada e início de Governança'
+          : 'Continuidade do Diagnóstico Assistido'
+        const { error: interviewError } = await supabase.rpc(
+          'create_skda_interview_with_event' as never,
+          {
+            target_diagnosis_id:selected.id,
+            target_code:code,
+            target_title:title,
+            target_channel:channel,
+            target_scheduled_start:start.toISOString(),
+            target_scheduled_end:end.toISOString(),
+            target_meeting_reference:location || null,
+            change_reason:'Materialização da agenda contratual ratificada para execução contínua da Jornada DA.',
+          } as never,
+        )
+        if (interviewError) throw interviewError
+      }
+      const nextMetadata = {
+        ...(selected.metadata ?? {}),
+        contracted_hours:contractIntakeProposal.contractedHours,
+        contractual_source_evidence_asset_id:contractIntakeProposal.assetId,
+        contractual_source_title:contractIntakeProposal.sourceTitle,
+        contractual_schedule_proposal:contractIntakeProposal.meetings,
+        contractual_intake_status:'schedule_materialized_pending_execution',
+        contractual_schedule_materialized_at:new Date().toISOString(),
+      }
+      const { error: metadataError } = await supabase
+        .from('skda_diagnoses' as never)
+        .update({ metadata:nextMetadata } as never)
+        .eq('id',selected.id)
+        .eq('organization_id',props.organizationId)
+      if (metadataError) throw metadataError
+      const { data } = await supabase
+        .from('skda_interviews' as never)
+        .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start,scheduled_end,actual_start,actual_end,event_id' as never)
+        .eq('diagnosis_id', selected.id)
+        .order('scheduled_start', { ascending:true, nullsFirst:false })
+      setInterviews((data ?? []) as unknown as Interview[])
+      setMetrics((current) => ({ ...current, interviews:(data ?? []).length }))
+      await loadDiagnoses()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Não foi possível materializar a agenda contratual.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const ratifyContractBaseline = async () => {
+    if (!selected || !canManage || !contractIntakeProposal) return
+    if (!openingForm.startedOn || !openingForm.plannedEndOn || !openingForm.leadUserId) {
+      setError('Defina início, conclusão prevista e Líder SPARKOOP antes de ratificar a linha de base contratual.')
+      return
+    }
+    if (openingForm.plannedEndOn < openingForm.startedOn) {
+      setError('A conclusão prevista não pode ser anterior ao início da Jornada.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { data:authData } = await supabase.auth.getUser()
+    const nextMetadata = {
+      ...(selected.metadata ?? {}),
+      scope_statement:openingForm.scopeStatement.trim() || null,
+      methodology_notes:openingForm.methodologyNotes.trim() || null,
+      diagnostic_sequence:['GOVERNANCA','GESTAO'],
+      contracted_hours:contractIntakeProposal.contractedHours,
+      contractual_source_evidence_asset_id:contractIntakeProposal.assetId,
+      contractual_source_title:contractIntakeProposal.sourceTitle,
+      contractual_schedule_proposal:contractIntakeProposal.meetings,
+      contractual_intake_status:'baseline_validated',
+      contractual_baseline_status:'validated',
+      contractual_baseline_validated_at:new Date().toISOString(),
+      contractual_baseline_validated_by:authData.user?.id ?? null,
+      contract_period_constraint:{ started_on:openingForm.startedOn,planned_end_on:openingForm.plannedEndOn },
+    }
+    const { error: baselineError } = await supabase
+      .from('skda_diagnoses' as never)
+      .update({
+        reference_year:openingForm.referenceYear ? Number(openingForm.referenceYear) : null,
+        started_on:openingForm.startedOn,
+        planned_end_on:openingForm.plannedEndOn,
+        lead_user_id:openingForm.leadUserId,
+        diagnosis_type:openingForm.diagnosisType,
+        metadata:nextMetadata,
+      } as never)
+      .eq('id',selected.id)
+      .eq('organization_id',props.organizationId)
+    setSaving(false)
+    if (baselineError) {
+      setError(baselineError.message)
+      return
+    }
+    await loadDiagnoses()
+  }
+
+  const prepareFindingFromQuestion = (question:Question) => {
+    setEditingFindingId(null)
+    const response = responses.find((item) => item.question_id === question.id)
+    const draft = assessmentDrafts[question.id]
+    const classification = response?.classification ?? draft?.classification ?? 'not_evaluated'
+    const findingType = classification === 'confirmed'
+      ? 'strength'
+      : classification === 'gap'
+        ? 'gap'
+        : classification === 'reported'
+          ? 'observation'
+          : 'opportunity'
+    const description = response?.rationale?.trim()
+      || response?.answer_text?.trim()
+      || draft?.rationale?.trim()
+      || draft?.answerText?.trim()
+      || ''
+    setFindingForm({
+      findingType,
+      title:`${question.code} · ${question.criterion_name || 'Achado do diagnóstico'}`,
+      description,
+      priority:findingType === 'gap' ? 'high' : 'medium',
+      recommendation:'',
+      questionId:question.id,
+      interviewId:'',
+      ownerUserId:'',
+      dueDate:'',
+    })
+    setShowFindingCreate(true)
   }
 
   const updateAssessmentDraft = (questionId: string, patch: Partial<AssessmentDraft>) => {
@@ -1800,6 +2052,28 @@ export function SkdaWorkspace(props: Props) {
     setTacticalForm((current) => ({ ...current, findingId:'' }))
   }
 
+  const openFindingEditor = (finding?:Finding) => {
+    if (!finding) {
+      setEditingFindingId(null)
+      setFindingForm({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'', interviewId:'', ownerUserId:'', dueDate:'' })
+      setShowFindingCreate(true)
+      return
+    }
+    setEditingFindingId(finding.id)
+    setFindingForm({
+      findingType:finding.finding_type,
+      title:finding.title,
+      description:finding.description,
+      priority:finding.priority,
+      recommendation:finding.recommendation ?? '',
+      questionId:finding.question_id ?? '',
+      interviewId:finding.interview_id ?? '',
+      ownerUserId:finding.owner_user_id ?? '',
+      dueDate:finding.due_date ?? '',
+    })
+    setShowFindingCreate(true)
+  }
+
   const createFinding = async () => {
     if (!selected || !findingForm.title.trim() || !findingForm.description.trim()) {
       setError('Informe título e descrição do achado.')
@@ -1808,31 +2082,46 @@ export function SkdaWorkspace(props: Props) {
 
     setSaving(true)
     setError('')
-    const { data, error: saveError } = await supabase
-      .from('skda_findings' as never)
-      .insert({
-        organization_id:props.organizationId,
-        diagnosis_id:selected.id,
-        question_id:findingForm.questionId || null,
-        interview_id:findingForm.interviewId || null,
-        owner_user_id:findingForm.ownerUserId || null,
-        due_date:findingForm.dueDate || null,
-        finding_type:findingForm.findingType,
-        title:findingForm.title.trim(),
-        description:findingForm.description.trim(),
-        priority:findingForm.priority,
-        status:'open',
-        recommendation:findingForm.recommendation.trim() || null,
-      } as never)
+    const payload = {
+      question_id:findingForm.questionId || null,
+      interview_id:findingForm.interviewId || null,
+      owner_user_id:findingForm.ownerUserId || null,
+      due_date:findingForm.dueDate || null,
+      finding_type:findingForm.findingType,
+      title:findingForm.title.trim(),
+      description:findingForm.description.trim(),
+      priority:findingForm.priority,
+      recommendation:findingForm.recommendation.trim() || null,
+    }
+    const request = editingFindingId
+      ? supabase
+          .from('skda_findings' as never)
+          .update(payload as never)
+          .eq('id',editingFindingId)
+          .eq('diagnosis_id',selected.id)
+      : supabase
+          .from('skda_findings' as never)
+          .insert({
+            organization_id:props.organizationId,
+            diagnosis_id:selected.id,
+            ...payload,
+            status:'open',
+          } as never)
+    const { data, error: saveError } = await request
       .select('id,finding_type,title,description,priority,status,recommendation,question_id,interview_id,owner_user_id,due_date' as never)
       .single()
 
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
 
-    const created = data as unknown as Finding
-    setFindings((current) => [created, ...current])
-    setMetrics((current) => ({ ...current, findings:current.findings + 1 }))
+    const savedFinding = data as unknown as Finding
+    if (editingFindingId) {
+      setFindings((current) => current.map((item) => item.id === editingFindingId ? savedFinding : item))
+    } else {
+      setFindings((current) => [savedFinding, ...current])
+      setMetrics((current) => ({ ...current, findings:current.findings + 1 }))
+    }
+    setEditingFindingId(null)
     setFindingForm({ findingType:'gap', title:'', description:'', priority:'medium', recommendation:'', questionId:'', interviewId:'', ownerUserId:'', dueDate:'' })
     setShowFindingCreate(false)
   }
@@ -2427,7 +2716,7 @@ export function SkdaWorkspace(props: Props) {
                     <div><strong>{megaphase.title}</strong>{phaseForMegaphase && <em>{phaseForMegaphase.title}</em>}<small>{megaphase.workPattern}</small></div>
                   </div>
                   <div className="skda-megaphase-summary-metrics">
-                    <span title={action?.baseline_start_date || action?.baseline_due_date ? formatRange(action?.baseline_start_date,action?.baseline_due_date) : 'Aguardando confirmação do cronograma da OS autorizadora.'}><small>LB0 contratual</small><b>{action?.metadata?.baseline_validation_status === 'validated' ? 'Validada' : 'A validar'}</b></span>
+                    <span title={action?.baseline_start_date || action?.baseline_due_date ? formatRange(action?.baseline_start_date,action?.baseline_due_date) : 'Aguardando confirmação do cronograma da OS autorizadora.'}><small>LB0 contratual</small><b>{selected.metadata?.contractual_baseline_status === 'validated' || action?.metadata?.baseline_validation_status === 'validated' ? 'Validada' : 'A validar'}</b></span>
                     <span><small>Plano</small><b>{formatRange(action?.planned_start_date,action?.planned_due_date)}</b></span>
                     <span><small>Realizado</small><b>{formatRange(actualStart,actualEnd)}</b></span>
                     <span><small>Responsável</small><b>{owner?.user_display_name || owner?.user_email || 'A definir'}</b></span>
@@ -2464,6 +2753,8 @@ export function SkdaWorkspace(props: Props) {
                           <span title="Abra a área de trabalho desta etapa para consultar e correlacionar evidências."><button type="button" onClick={() => setActivePhaseCode(['MF4','MF5','MF6','MF7'].includes(megaphase.code) ? 'DA-01' : 'DA-00')}>Acessar área de trabalho</button></span>
                           <span title="Consulte as evidências transversais da organização."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Consultar evidências</button></span>
                           {canRegisterEvidence && <span title="Registre uma nova evidência relacionada a esta etapa."><button type="button" onClick={() => {setEvidenceFile(null);setShowEvidenceCreate(true)}}>Adicionar evidência</button></span>}
+                          {canManage && stage.status === 'planned' && <span><button type="button" className="skda-primary" disabled={saving} onClick={() => void transitionJourneyStage(stage,action,'in_progress')}>Iniciar etapa</button></span>}
+                          {canManage && stage.status === 'in_progress' && <span><button type="button" className="skda-primary" disabled={saving} onClick={() => void transitionJourneyStage(stage,action,'completed')}>Concluir etapa</button></span>}
                         </div>
                       </article>
                     })}
@@ -2579,7 +2870,7 @@ export function SkdaWorkspace(props: Props) {
                 <article><small>Início sugerido</small><strong>{new Date(contractIntakeProposal.startedOn+'T00:00:00').toLocaleDateString('pt-BR')}</strong></article>
                 <article><small>Conclusão sugerida</small><strong>{new Date(contractIntakeProposal.plannedEndOn+'T00:00:00').toLocaleDateString('pt-BR')}</strong></article>
                 <article><small>Blocos contratados</small><strong>{contractIntakeProposal.meetings.length}</strong></article>
-                <article><small>Status</small><strong>{appliedContractAssetId === contractIntakeProposal.assetId ? 'Aplicada ao rascunho' : 'Aguardando análise'}</strong></article>
+                <article><small>Status</small><strong>{selected.metadata?.contractual_baseline_status === 'validated' ? 'Linha de base ratificada' : appliedContractAssetId === contractIntakeProposal.assetId ? 'Aplicada ao rascunho' : 'Aguardando análise'}</strong></article>
               </div>
               <div className="skda-contract-meeting-list">
                 {contractIntakeProposal.meetings.map((meeting, index) => <article key={meeting.date+'-'+meeting.start+'-'+index}>
@@ -2588,7 +2879,15 @@ export function SkdaWorkspace(props: Props) {
                 </article>)}
               </div>
               <div className="skda-evidence-loop-note"><strong>Regra de aprovação</strong><span>Esses dados foram extraídos do documento contratual e constituem uma proposta de linha de base. A Organização pode aprovar ou adequar datas, horários e distribuição antes da consolidação do cronograma.</span></div>
-              {canManage && <div className="skda-opening-actions"><button type="button" className="skda-primary" onClick={applyContractIntakeProposal}>Aplicar sugestão à abertura</button></div>}
+              {canManage && <div className="skda-opening-actions">
+                <button type="button" onClick={applyContractIntakeProposal}>Aplicar sugestão à abertura</button>
+                {canEditInterviews && <button type="button" disabled={saving || contractIntakeProposal.meetings.length === 0} onClick={() => void materializeContractSchedule()}>
+                  {interviews.some((item) => /^ENT-\d{3}$/.test(item.code)) ? 'Sincronizar blocos com a Agenda' : 'Criar blocos na Agenda'}
+                </button>}
+                <button type="button" className="skda-primary" disabled={saving || selected.metadata?.contractual_baseline_status === 'validated'} onClick={() => void ratifyContractBaseline()}>
+                  {selected.metadata?.contractual_baseline_status === 'validated' ? 'Linha de base ratificada' : 'Ratificar linha de base contratual'}
+                </button>
+              </div>}
             </div>}
             <div className="skda-opening-grid">
               <label className="skda-inline-field"><span>Ano de referência</span><input type="number" min="2000" max="2100" value={openingForm.referenceYear} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,referenceYear:e.target.value}))}/></label>
@@ -2814,19 +3113,20 @@ export function SkdaWorkspace(props: Props) {
                   <div className="skda-assessment-actions">
                     {canEditAssessment && <button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveAssessment(question)}>{saving?'Salvando...':response?.response_status === 'validated' ? 'Salvar e reabrir avaliação' : 'Salvar avaliação'}</button>}
                     {canValidateAssessment && response && response.response_status !== 'validated' && <button type="button" className="skda-secondary-action" disabled={saving} onClick={()=>void validateAssessment(question)}>Validar avaliação</button>}
+                    {canEditFindings && (response?.evaluated_at || draft.classification !== 'not_evaluated') && <button type="button" disabled={saving} onClick={() => prepareFindingFromQuestion(question)}>Registrar achado desta questão</button>}
                   </div>
                 </article>
               })}
             </div>}
           </div>}
           {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
-            <div className="skda-phase-workspace-head"><h4>Achados do diagnóstico</h4>{canEditFindings && <button type="button" className="skda-primary" onClick={() => setShowFindingCreate(true)}>Novo achado</button>}</div>
+            <div className="skda-phase-workspace-head"><h4>Achados do diagnóstico</h4>{canEditFindings && <button type="button" className="skda-primary" onClick={() => openFindingEditor()}>Novo achado</button>}</div>
             {findings.length === 0 ? <p className="skda-phase-empty">Nenhum achado registrado.</p> : <div className="skda-finding-list">
               {findings.map((finding) => {
                 const owner = organizationUsers.find((user) => user.user_id === finding.owner_user_id)
                 return <article key={finding.id}>
                   <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · Prioridade {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.description}</span></div>
-                  <div><b>{finding.status === 'open' ? 'Aberto' : finding.status}</b>{finding.question_id && <span>Origem: questão</span>}{finding.interview_id && <span>Origem: entrevista</span>}{owner && <span>Responsável: {owner.user_display_name || owner.user_email}</span>}{finding.due_date && <span>Prazo: {new Date(finding.due_date+'T00:00:00').toLocaleDateString('pt-BR')}</span>}</div>
+                  <div><b>{finding.status === 'open' ? 'Aberto' : finding.status}</b>{finding.question_id && <span>Origem: questão</span>}{finding.interview_id && <span>Origem: entrevista</span>}{owner && <span>Responsável: {owner.user_display_name || owner.user_email}</span>}{finding.due_date && <span>Prazo: {new Date(finding.due_date+'T00:00:00').toLocaleDateString('pt-BR')}</span>}{canEditFindings && finding.status === 'open' && <button type="button" onClick={() => openFindingEditor(finding)}>Editar / completar</button>}</div>
                 </article>
               })}
             </div>}
@@ -2839,7 +3139,12 @@ export function SkdaWorkspace(props: Props) {
                 <div className="skda-finding-actions">
                   <b>{finding.status === 'accepted' ? 'Aceita' : finding.status === 'in_action' ? 'Em ação' : 'Recomendação'}</b>
                   <span>Origem rastreável no achado</span>
+                  {canEditFindings && finding.status === 'open' && <button type="button" onClick={() => openFindingEditor(finding)}>Editar recomendação</button>}
                   {finding.status === 'open' && canValidateFindings && <button type="button" onClick={() => openValidation(finding)}>Aceitar recomendação</button>}
+                  {(finding.status === 'accepted' || finding.status === 'in_action') && <div className="skda-cycle-actions skda-priority-cycle-actions"><span>Priorizar em:</span>{[1,2,3].map((cycle) => {
+                    const allocation = actionPlanAllocations.find((item) => item.finding_id === finding.id)
+                    return <button type="button" key={cycle} className={allocation?.cycle_number === cycle ? 'active' : ''} disabled={saving} onClick={() => void assignActionCycle(finding.id,cycle)}>Ciclo {cycle}</button>
+                  })}</div>}
                   {finding.status === 'accepted' && canCreateTactical && <button type="button" className="skda-primary" onClick={() => openTacticalConversion(finding)}>Converter em iniciativa</button>}
                 </div>
               </article>)}
@@ -2902,6 +3207,18 @@ export function SkdaWorkspace(props: Props) {
                     </div>}
                   </section>
                 })}
+              </div>
+              <div className="skda-return-governance">
+                <div className="skda-phase-workspace-head">
+                  <div><h4>Devolutiva e encerramento</h4><small>A Jornada só é concluída quando a devolutiva e suas decisões estão formalmente registradas e validadas.</small></div>
+                  <span>{journeyArtifacts.filter((item) => item.macrophase_code === 'MF10' && ['validated','validated_with_reservations'].includes(item.status)).length}/3 validado(s)</span>
+                </div>
+                <div className="skda-artifact-grid">
+                  {journeyArtifacts.filter((item) => item.macrophase_code === 'MF10').map((artifact) => <article key={artifact.id}>
+                    <div><small>{artifact.artifact_code}</small><strong>{artifact.title}</strong><span>{artifact.purpose || 'Entregável de devolutiva e continuidade.'}</span><span><button type="button" onClick={() => void openJourneyArtifact(artifact)}>Abrir governança</button></span></div>
+                    <div className="skda-artifact-state"><b>{ARTIFACT_STATUS[artifact.status] ?? artifact.status}</b><span>v{artifact.current_version_number || 0}</span></div>
+                  </article>)}
+                </div>
               </div>
             </>}
           </div>}
@@ -3068,6 +3385,11 @@ export function SkdaWorkspace(props: Props) {
           <article><small>Registros de auditoria</small><strong>{artifactDetail.audit.length}</strong></article>
         </div>
         <div className="skda-artifact-governance-note"><strong>Ciclo de governança</strong><span>Planejado → Em preparação → Em validação → Submetido → Validado. A validação humana é obrigatória; produção de documento não equivale a aprovação nem institucionalização.</span></div>
+        {canManage && <div className="skda-artifact-version-editor">
+          <label><span>Conteúdo governado do entregável</span><textarea rows={12} value={artifactDraftContent} onChange={(e)=>setArtifactDraftContent(e.target.value)} placeholder="Estruture aqui o conteúdo-base do entregável em texto/Markdown. Cada gravação cria uma nova versão; não sobrescreve o histórico."/></label>
+          <label><span>Resumo / justificativa da nova versão *</span><input value={artifactVersionSummary} onChange={(e)=>setArtifactVersionSummary(e.target.value)} placeholder="Ex.: Consolidação após entrevistas de Governança e evidências complementares."/></label>
+          <div className="skda-artifact-status-actions"><button type="button" className="skda-primary" disabled={saving} onClick={() => void createJourneyArtifactVersion()}>{saving ? 'Gravando...' : 'Criar nova versão'}</button></div>
+        </div>}
         {canManage && <div className="skda-artifact-status-editor">
           <label><span>Justificativa da mudança *</span><textarea rows={3} value={artifactStatusReason} onChange={(e)=>setArtifactStatusReason(e.target.value)} placeholder="Registre o motivo, decisão ou evidência que sustenta a mudança de situação."/></label>
           <div className="skda-artifact-status-actions">
@@ -3118,7 +3440,7 @@ export function SkdaWorkspace(props: Props) {
     </div>}
     {showFindingCreate && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
-        <div className="skda-modal-head"><div><p className="skda-eyebrow">Entrevistas e diagnóstico</p><h2>Registrar achado</h2></div><button type="button" onClick={() => setShowFindingCreate(false)}>×</button></div>
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">Entrevistas e diagnóstico</p><h2>{editingFindingId ? 'Editar achado' : 'Registrar achado'}</h2></div><button type="button" onClick={() => {setShowFindingCreate(false);setEditingFindingId(null)}}>×</button></div>
         <div className="skda-form-grid">
           <label><span>Tipo</span><select value={findingForm.findingType} onChange={(e)=>setFindingForm(v=>({...v,findingType:e.target.value}))}>{Object.entries(FINDING_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>Prioridade</span><select value={findingForm.priority} onChange={(e)=>setFindingForm(v=>({...v,priority:e.target.value}))}>{Object.entries(PRIORITIES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
@@ -3131,7 +3453,7 @@ export function SkdaWorkspace(props: Props) {
           <label className="wide"><span>Recomendação</span><textarea rows={4} value={findingForm.recommendation} onChange={(e)=>setFindingForm(v=>({...v,recommendation:e.target.value}))} placeholder="Ação recomendada para tratar o achado"/></label>
         </div>
         {error && <div className="skda-alert">{error}</div>}
-        <div className="skda-modal-actions"><button type="button" onClick={() => setShowFindingCreate(false)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createFinding()}>{saving?'Salvando...':'Registrar achado'}</button></div>
+        <div className="skda-modal-actions"><button type="button" onClick={() => {setShowFindingCreate(false);setEditingFindingId(null)}}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createFinding()}>{saving?'Salvando...':editingFindingId ? 'Salvar alterações' : 'Registrar achado'}</button></div>
       </section>
     </div>}
     {showEvidenceCreate && selected && <div className="skda-modal-backdrop">
