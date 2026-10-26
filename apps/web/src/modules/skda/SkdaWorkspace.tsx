@@ -67,7 +67,7 @@ type EvidenceVersionText = { id: string; evidence_asset_id: string; extracted_te
 type ContractMeetingProposal = { date: string; start: string; durationHours: number; location: string | null }
 type ContractIntakeProposal = { assetId: string; sourceTitle: string; sourceText: string; startedOn: string; plannedEndOn: string; contractedHours: number; meetings: ContractMeetingProposal[]; scopeLabel: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
-type EvidenceQuestionIntelligence = { id:string; evidence_asset_id:string; question_id:string; document_intake_status:string; evidence_coverage_status:string; practice_state:string; relevance_score:number|null; adequacy_score:number|null; sufficiency_score:number|null; reliability_score:number|null; actuality_score:number|null; coverage_score:number|null; confidence_score:number|null; gap_description:string|null; complement_needed:string|null; improvement_suggestion:string|null; interview_question_suggestion:string|null; self_assessment_guidance:string|null; diagnostic_hypothesis:string|null; analysis_status:string; source_excerpt:string|null; source_locator:string|null }
+type EvidenceQuestionIntelligence = { id:string; evidence_asset_id:string; question_id:string; document_intake_status:string; evidence_coverage_status:string; practice_state:string; relevance_score:number|null; adequacy_score:number|null; sufficiency_score:number|null; reliability_score:number|null; actuality_score:number|null; coverage_score:number|null; confidence_score:number|null; gap_description:string|null; complement_needed:string|null; improvement_suggestion:string|null; interview_question_suggestion:string|null; self_assessment_guidance:string|null; diagnostic_hypothesis:string|null; analysis_status:string; source_excerpt:string|null; source_locator:string|null; metadata:Record<string,unknown> }
 type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_date: string | null; content_hash: string | null; metadata: Record<string, unknown> }
 type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null; metadata?:Record<string,unknown>|null }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
@@ -477,6 +477,8 @@ export function SkdaWorkspace(props: Props) {
     confidentialityLevel:'internal',
     referenceDate:'',
     interviewId:'',
+    externalUrl:'',
+    externalKey:'',
     changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
   })
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
@@ -484,6 +486,19 @@ export function SkdaWorkspace(props: Props) {
   const [appliedContractAssetId, setAppliedContractAssetId] = useState<string | null>(null)
   const [evidenceCorrelations, setEvidenceCorrelations] = useState<EvidenceCorrelation[]>([])
   const [evidenceQuestionIntelligence, setEvidenceQuestionIntelligence] = useState<EvidenceQuestionIntelligence[]>([])
+  const [intelligenceReviewId, setIntelligenceReviewId] = useState<string | null>(null)
+  const [intelligenceReviewNote, setIntelligenceReviewNote] = useState('')
+  const [intelligenceEditId, setIntelligenceEditId] = useState<string | null>(null)
+  const [intelligenceForm, setIntelligenceForm] = useState({
+    evidenceCoverageStatus:'under_analysis',
+    practiceState:'not_assessed',
+    diagnosticHypothesis:'',
+    interviewQuestionSuggestion:'',
+    gapDescription:'',
+    improvementSuggestion:'',
+    confidenceScore:'65',
+    reviewNote:'Análise técnica assistida da evidência frente aos requisitos da questão.',
+  })
   const [selfAssessmentSnapshots, setSelfAssessmentSnapshots] = useState<SelfAssessmentSnapshot[]>([])
   const [selfAssessmentMetrics, setSelfAssessmentMetrics] = useState<SelfAssessmentMetric[]>([])
   const [questionAlternatives, setQuestionAlternatives] = useState<QuestionAlternative[]>([])
@@ -604,6 +619,16 @@ export function SkdaWorkspace(props: Props) {
     })
     return counts
   }, [findings])
+
+  const organizationalIntelligenceSummary = useMemo(() => {
+    const total = evidenceQuestionIntelligence.length
+    const underAnalysis = evidenceQuestionIntelligence.filter((item) => ['pending','queued','processing','proposed'].includes(item.analysis_status)).length
+    const validated = evidenceQuestionIntelligence.filter((item) => item.analysis_status === 'validated').length
+    const rejected = evidenceQuestionIntelligence.filter((item) => item.analysis_status === 'rejected').length
+    const converted = evidenceQuestionIntelligence.filter((item) => typeof item.metadata?.finding_id === 'string').length
+    const interviewPrompts = evidenceQuestionIntelligence.filter((item) => item.analysis_status !== 'rejected' && Boolean(item.interview_question_suggestion?.trim())).length
+    return { total,underAnalysis,validated,rejected,converted,interviewPrompts }
+  }, [evidenceQuestionIntelligence])
 
   const maturityByAxis = useMemo(() => {
     const grouped = new Map<string, number[]>()
@@ -739,6 +764,8 @@ export function SkdaWorkspace(props: Props) {
         { label:'Governança percorrida integralmente', ok:interviewQuestionFlow.governance.length > 0 && interviewQuestionFlow.governanceTraversed === interviewQuestionFlow.governance.length, critical:true },
         { label:'Gestão percorrida integralmente', ok:interviewQuestionFlow.management.length > 0 && interviewQuestionFlow.managementTraversed === interviewQuestionFlow.management.length, critical:true },
         { label:'Ao menos uma entrevista realizada', ok:completedInterviews > 0, critical:true },
+        { label:'Hipóteses propostas revisadas', ok:evidenceQuestionIntelligence.every((item) => item.analysis_status !== 'proposed'), critical:true },
+        { label:'Fila de inteligência sem processamento pendente', ok:evidenceQuestionIntelligence.every((item) => !['queued','processing'].includes(item.analysis_status)), critical:false },
         { label:'Achados rastreáveis registrados', ok:findings.length > 0, critical:false },
       ],
       'DA-02':[
@@ -763,7 +790,7 @@ export function SkdaWorkspace(props: Props) {
       },
     ])) as Record<string,{items:Array<{label:string;ok:boolean;critical:boolean}>;ready:boolean;completed:number;total:number}>
     return byPhase
-  }, [actionFollowup.length, actionPlanAllocations, evidenceAssets, evidenceVersionTexts, findings, interviews, interviewQuestionFlow, journeyArtifacts, linkedInitiatives, metrics.evidence, props.organizationName, selected?.catalog_version_id, selected?.lead_user_id, selected?.metadata, selected?.planned_end_on, selected?.started_on, selfAssessmentSnapshots.length])
+  }, [actionFollowup.length, actionPlanAllocations, evidenceAssets, evidenceQuestionIntelligence, evidenceVersionTexts, findings, interviews, interviewQuestionFlow, journeyArtifacts, linkedInitiatives, metrics.evidence, props.organizationName, selected?.catalog_version_id, selected?.lead_user_id, selected?.metadata, selected?.planned_end_on, selected?.started_on, selfAssessmentSnapshots.length])
 
   const selfAssessmentRadar = useMemo(() => {
     const metricsFor = (block: 'GOVERNANCA' | 'GESTAO') => selfAssessmentMetrics
@@ -1004,7 +1031,7 @@ export function SkdaWorkspace(props: Props) {
           .eq('diagnosis_id', selectedId),
         supabase
           .from('skda_evidence_question_intelligence' as never)
-          .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator' as never)
+          .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator,metadata' as never)
           .eq('diagnosis_id', selectedId),
         supabase
           .from('skda_self_assessment_snapshots' as never)
@@ -1200,12 +1227,13 @@ export function SkdaWorkspace(props: Props) {
       const result = await Promise.all([
         supabase.from('skda_responses' as never).select('id' as never,{count:'exact',head:true}).eq('diagnosis_id',selectedId),
         supabase.from('skda_interviews' as never).select('id' as never,{count:'exact',head:true}).eq('diagnosis_id',selectedId),
-        supabase.from('skda_evidence_correlations' as never).select('id' as never,{count:'exact',head:true}).eq('diagnosis_id',selectedId),
+        supabase.from('skda_evidence_correlations' as never).select('evidence_asset_id' as never).eq('diagnosis_id',selectedId),
         supabase.from('skda_findings' as never).select('id' as never,{count:'exact',head:true}).eq('diagnosis_id',selectedId),
       ])
+      const distinctEvidence = new Set(((result[2].data ?? []) as unknown as Array<{evidence_asset_id:string}>).map((item) => item.evidence_asset_id)).size
       setMetrics({
         responses:result[0].count ?? 0, interviews:result[1].count ?? 0,
-        evidence:result[2].count ?? 0, findings:result[3].count ?? 0,
+        evidence:distinctEvidence, findings:result[3].count ?? 0,
       })
     }
     void run()
@@ -1446,6 +1474,22 @@ export function SkdaWorkspace(props: Props) {
   const updateJourneyArtifactStatus = async (targetStatus:string) => {
     if (!artifactDetail || artifactStatusReason.trim().length < 10) {
       setError('Informe uma justificativa com pelo menos 10 caracteres para alterar a situação do entregável.')
+      return
+    }
+    if (['in_review','submitted','validated','validated_with_reservations'].includes(targetStatus) && artifactDetail.versions.length === 0) {
+      setError('Crie ao menos uma versão governada do entregável antes de encaminhá-lo para revisão, submissão ou validação.')
+      return
+    }
+    const allowedTransitions:Record<string,string[]> = {
+      planned:['in_preparation'],
+      in_preparation:['in_review'],
+      in_review:['in_preparation','submitted'],
+      submitted:['in_review','validated','validated_with_reservations'],
+      validated_with_reservations:['in_preparation','validated'],
+      validated:['in_preparation'],
+    }
+    if (!(allowedTransitions[artifactDetail.artifact.status] ?? []).includes(targetStatus)) {
+      setError('A mudança solicitada não pertence ao fluxo governado do entregável.')
       return
     }
     setSaving(true)
@@ -1776,18 +1820,56 @@ export function SkdaWorkspace(props: Props) {
       .select('id,evidence_asset_id,usage_type,validation_status' as never)
       .single()
 
-    setSaving(false)
-    if (saveError) { setError(saveError.message); return }
+    if (saveError) { setSaving(false); setError(saveError.message); return }
 
+    const { error: transversalLinkError } = await supabase.rpc(
+      'link_sparks_evidence_module_context' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_evidence_asset_id:asset.id,
+        target_module_code:'SK-DA',
+        target_type:'diagnosis',
+        target_id:selected.id,
+        target_usage_purpose:'Inteligência organizacional e preparação do Diagnóstico Assistido.',
+        target_relevance_level:'important',
+        change_reason:'Evidência transversal associada à Jornada de Diagnóstico Assistido.',
+      } as never,
+    )
+    if (transversalLinkError) { setSaving(false); setError(transversalLinkError.message); return }
+
+    const { error: queueError } = await supabase.rpc(
+      'queue_skda_evidence_question_intelligence' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_diagnosis_id:selected.id,
+        target_evidence_asset_id:asset.id,
+      } as never,
+    )
+    if (!queueError) {
+      const { data:intelligenceData } = await supabase
+        .from('skda_evidence_question_intelligence' as never)
+        .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator,metadata' as never)
+        .eq('diagnosis_id',selected.id)
+        .eq('evidence_asset_id',asset.id)
+      const rows=(intelligenceData ?? []) as unknown as EvidenceQuestionIntelligence[]
+      setEvidenceQuestionIntelligence((current)=>[...current.filter((item)=>item.evidence_asset_id!==asset.id),...rows])
+    }
+
+    setSaving(false)
     const created = data as unknown as EvidenceCorrelation
     setEvidenceCorrelations((current) => [...current, created])
     setMetrics((current) => ({ ...current, evidence:current.evidence + 1 }))
+    if (queueError) setError(`Evidência vinculada, mas a inteligência por questão não pôde ser enfileirada: ${queueError.message}`)
   }
 
   const createAndLinkEvidence = async () => {
     if (!selected || !canRegisterEvidence) return
     if (!evidenceForm.title.trim() && !evidenceFile) {
       setError('Informe o título ou selecione o arquivo da evidência.')
+      return
+    }
+    if (evidenceForm.sourceType === 'external' && !evidenceFile && (!evidenceForm.externalUrl.trim() || !evidenceForm.externalKey.trim())) {
+      setError('Para uma referência externa sem upload, informe a URL e a chave externa estável do documento.')
       return
     }
     if (evidenceForm.changeReason.trim().length < 10) {
@@ -1834,34 +1916,59 @@ export function SkdaWorkspace(props: Props) {
     }
 
     if (!assetId) {
-      const { data: registeredAssetId, error: registerError } = await supabase.rpc(
-        'register_sparks_evidence_asset_for_module' as never,
-        {
-          target_organization_id:props.organizationId,
-          target_module_code:'SK-DA',
-          evidence_title:evidenceForm.title.trim() || evidenceFile?.name || 'Evidência',
-          evidence_description:evidenceForm.description.trim() || null,
-          target_evidence_type:evidenceForm.evidenceType,
-          target_source_type:evidenceForm.sourceType,
-          target_reference_date:evidenceForm.referenceDate || null,
-          target_validity_date:null,
-          target_confidentiality_level:evidenceForm.confidentialityLevel,
-          target_content_hash:contentHash,
-          target_file_name:evidenceFile?.name ?? null,
-          target_mime_type:evidenceFile?.type || null,
-          target_file_size_bytes:evidenceFile?.size ?? null,
-          target_storage_bucket:storagePath ? 'sparks-evidence' : null,
-          target_storage_path:storagePath,
-          change_reason:evidenceForm.changeReason.trim(),
-        } as never,
-      )
+      const isExternalReference = evidenceForm.sourceType === 'external' && !evidenceFile
+      const registration = isExternalReference
+        ? await supabase.rpc(
+            'register_external_sparks_evidence_asset' as never,
+            {
+              target_organization_id:props.organizationId,
+              evidence_title:evidenceForm.title.trim() || 'Evidência externa',
+              evidence_description:evidenceForm.description.trim() || null,
+              target_evidence_type:evidenceForm.evidenceType,
+              target_origin_module_code:null,
+              target_reference_date:evidenceForm.referenceDate || null,
+              target_external_origin:'Referência externa',
+              target_external_key:evidenceForm.externalKey.trim(),
+              target_source_locator:{
+                provider:'external',
+                web_url:evidenceForm.externalUrl.trim(),
+              },
+              target_file_name:null,
+              target_mime_type:null,
+              target_file_size_bytes:null,
+              target_content_hash:null,
+              target_extracted_text:null,
+              change_reason:evidenceForm.changeReason.trim(),
+            } as never,
+          )
+        : await supabase.rpc(
+            'register_sparks_evidence_asset_for_module' as never,
+            {
+              target_organization_id:props.organizationId,
+              target_module_code:'SK-DA',
+              evidence_title:evidenceForm.title.trim() || evidenceFile?.name || 'Evidência',
+              evidence_description:evidenceForm.description.trim() || null,
+              target_evidence_type:evidenceForm.evidenceType,
+              target_source_type:evidenceForm.sourceType,
+              target_reference_date:evidenceForm.referenceDate || null,
+              target_validity_date:null,
+              target_confidentiality_level:evidenceForm.confidentialityLevel,
+              target_content_hash:contentHash,
+              target_file_name:evidenceFile?.name ?? null,
+              target_mime_type:evidenceFile?.type || null,
+              target_file_size_bytes:evidenceFile?.size ?? null,
+              target_storage_bucket:storagePath ? 'sparks-evidence' : null,
+              target_storage_path:storagePath,
+              change_reason:evidenceForm.changeReason.trim(),
+            } as never,
+          )
 
-      if (registerError || !registeredAssetId) {
+      if (registration.error || !registration.data) {
         setSaving(false)
-        setError(registerError?.message ?? 'Não foi possível registrar a evidência no Core.')
+        setError(registration.error?.message ?? 'Não foi possível registrar a evidência no Core.')
         return
       }
-      assetId = registeredAssetId as unknown as string
+      assetId = registration.data as unknown as string
     }
 
     const { data: assetData, error: assetError } = await supabase
@@ -1912,6 +2019,29 @@ export function SkdaWorkspace(props: Props) {
       return
     }
 
+    const { error: transversalLinkError } = await supabase.rpc(
+      'link_sparks_evidence_module_context' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_evidence_asset_id:assetId,
+        target_module_code:'SK-DA',
+        target_type:targetInterview ? 'interview' : 'diagnosis',
+        target_id:targetInterview?.id ?? selected.id,
+        target_usage_purpose:targetInterview
+          ? 'Evidência surgida ou confirmada em entrevista do Diagnóstico Assistido.'
+          : 'Inteligência organizacional e preparação do Diagnóstico Assistido.',
+        target_relevance_level:'important',
+        change_reason:targetInterview
+          ? `Evidência transversal associada à entrevista ${targetInterview.code} da Jornada DA.`
+          : 'Evidência transversal associada à Jornada de Diagnóstico Assistido.',
+      } as never,
+    )
+    if (transversalLinkError) {
+      setSaving(false)
+      setError(`A evidência foi registrada no Core e correlacionada ao DA, mas o vínculo transversal do módulo falhou: ${transversalLinkError.message}`)
+      return
+    }
+
     const { error: queueError } = await supabase.rpc(
       'queue_skda_evidence_question_intelligence' as never,
       {
@@ -1924,7 +2054,7 @@ export function SkdaWorkspace(props: Props) {
     if (!queueError) {
       const { data: intelligenceData } = await supabase
         .from('skda_evidence_question_intelligence' as never)
-        .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator' as never)
+        .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator,metadata' as never)
         .eq('diagnosis_id', selected.id)
         .eq('evidence_asset_id', assetId)
       const queuedRows = (intelligenceData ?? []) as unknown as EvidenceQuestionIntelligence[]
@@ -1954,9 +2084,160 @@ export function SkdaWorkspace(props: Props) {
       confidentialityLevel:'internal',
       referenceDate:'',
       interviewId:'',
+      externalUrl:'',
+      externalKey:'',
       changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
     })
     setShowEvidenceCreate(false)
+  }
+
+  const openIntelligenceEditor = (item:EvidenceQuestionIntelligence) => {
+    setIntelligenceEditId(item.id)
+    setIntelligenceForm({
+      evidenceCoverageStatus:item.evidence_coverage_status || 'under_analysis',
+      practiceState:item.practice_state || 'not_assessed',
+      diagnosticHypothesis:item.diagnostic_hypothesis ?? '',
+      interviewQuestionSuggestion:item.interview_question_suggestion ?? '',
+      gapDescription:item.gap_description ?? '',
+      improvementSuggestion:item.improvement_suggestion ?? '',
+      confidenceScore:item.confidence_score != null ? String(item.confidence_score) : '65',
+      reviewNote:'Análise técnica assistida da evidência frente aos requisitos da questão.',
+    })
+    setError('')
+  }
+
+  const saveIntelligenceProposal = async () => {
+    if (!intelligenceEditId) return
+    const item=evidenceQuestionIntelligence.find((row)=>row.id===intelligenceEditId)
+    if (!item) return
+    if (intelligenceForm.diagnosticHypothesis.trim().length < 10) {
+      setError('Registre uma hipótese diagnóstica com pelo menos 10 caracteres.')
+      return
+    }
+    if (intelligenceForm.reviewNote.trim().length < 10) {
+      setError('Registre a justificativa da análise com pelo menos 10 caracteres.')
+      return
+    }
+    const confidence=Number(intelligenceForm.confidenceScore)
+    if (!Number.isFinite(confidence) || confidence < 0 || confidence > 100) {
+      setError('A confiança deve estar entre 0 e 100.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { error: proposalError } = await supabase.rpc(
+      'review_skda_evidence_intelligence' as never,
+      {
+        target_intelligence_id:item.id,
+        target_analysis_status:'proposed',
+        target_evidence_coverage_status:intelligenceForm.evidenceCoverageStatus,
+        target_practice_state:intelligenceForm.practiceState,
+        target_diagnostic_hypothesis:intelligenceForm.diagnosticHypothesis.trim(),
+        target_interview_question_suggestion:intelligenceForm.interviewQuestionSuggestion.trim() || null,
+        target_gap_description:intelligenceForm.gapDescription.trim() || null,
+        target_improvement_suggestion:intelligenceForm.improvementSuggestion.trim() || null,
+        target_confidence_score:confidence,
+        target_review_note:intelligenceForm.reviewNote.trim(),
+      } as never,
+    )
+    setSaving(false)
+    if (proposalError) {
+      setError(proposalError.message)
+      return
+    }
+    setEvidenceQuestionIntelligence((current)=>current.map((row)=>row.id===item.id ? {
+      ...row,
+      analysis_status:'proposed',
+      evidence_coverage_status:intelligenceForm.evidenceCoverageStatus,
+      practice_state:intelligenceForm.practiceState,
+      diagnostic_hypothesis:intelligenceForm.diagnosticHypothesis.trim(),
+      interview_question_suggestion:intelligenceForm.interviewQuestionSuggestion.trim() || null,
+      gap_description:intelligenceForm.gapDescription.trim() || null,
+      improvement_suggestion:intelligenceForm.improvementSuggestion.trim() || null,
+      confidence_score:confidence,
+    } : row))
+    setIntelligenceEditId(null)
+  }
+
+  const reviewIntelligence = async (item:EvidenceQuestionIntelligence, targetStatus:'validated'|'rejected') => {
+    if (intelligenceReviewNote.trim().length < 10) {
+      setError('Registre uma justificativa com pelo menos 10 caracteres para validar ou refutar a hipótese.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { error: reviewError } = await supabase.rpc(
+      'review_skda_evidence_intelligence' as never,
+      {
+        target_intelligence_id:item.id,
+        target_analysis_status:targetStatus,
+        target_evidence_coverage_status:item.evidence_coverage_status,
+        target_practice_state:item.practice_state,
+        target_diagnostic_hypothesis:item.diagnostic_hypothesis,
+        target_interview_question_suggestion:item.interview_question_suggestion,
+        target_gap_description:item.gap_description,
+        target_improvement_suggestion:item.improvement_suggestion,
+        target_confidence_score:item.confidence_score,
+        target_review_note:intelligenceReviewNote.trim(),
+      } as never,
+    )
+    setSaving(false)
+    if (reviewError) {
+      setError(reviewError.message)
+      return
+    }
+    setEvidenceQuestionIntelligence((current) => current.map((row) => row.id === item.id ? { ...row,analysis_status:targetStatus } : row))
+    setIntelligenceReviewId(null)
+    setIntelligenceReviewNote('')
+  }
+
+  const convertIntelligenceToFinding = async (item:EvidenceQuestionIntelligence) => {
+    if (item.analysis_status !== 'validated' || typeof item.metadata?.finding_id === 'string') return
+    const question = questions.find((row) => row.id === item.question_id)
+    const findingType = item.evidence_coverage_status === 'covers' && ['applied','recurrent','broad','controlled','result_oriented','learning_improvement'].includes(item.practice_state)
+      ? 'strength'
+      : item.evidence_coverage_status === 'does_not_cover' || item.evidence_coverage_status === 'needs_complement'
+        ? 'gap'
+        : item.practice_state === 'exists'
+          ? 'opportunity'
+          : 'observation'
+    const title = `${question?.code ?? 'DA'} · ${question?.criterion_name || 'Inteligência organizacional'}`
+    const description = item.diagnostic_hypothesis?.trim()
+      || item.gap_description?.trim()
+      || 'Inteligência validada a partir de evidência da Organização.'
+    const priority = findingType === 'gap' ? 'high' : 'medium'
+    setSaving(true)
+    setError('')
+    const { data, error: convertError } = await supabase.rpc(
+      'convert_skda_intelligence_to_finding' as never,
+      {
+        target_intelligence_id:item.id,
+        target_finding_type:findingType,
+        target_title:title,
+        target_description:description,
+        target_priority:priority,
+        target_recommendation:item.improvement_suggestion?.trim() || null,
+        target_owner_user_id:null,
+        target_due_date:null,
+      } as never,
+    )
+    setSaving(false)
+    if (convertError || !data) {
+      setError(convertError?.message ?? 'Não foi possível converter a inteligência em achado.')
+      return
+    }
+    const findingId = data as unknown as string
+    const { data:findingData } = await supabase
+      .from('skda_findings' as never)
+      .select('id,finding_type,title,description,priority,status,recommendation,question_id,interview_id,owner_user_id,due_date' as never)
+      .eq('id',findingId)
+      .single()
+    if (findingData) {
+      const finding = findingData as unknown as Finding
+      setFindings((current) => [finding,...current.filter((row) => row.id !== finding.id)])
+      setMetrics((current) => ({ ...current,findings:current.findings + (current.findings > 0 && findings.some((row) => row.id === finding.id) ? 0 : 1) }))
+    }
+    setEvidenceQuestionIntelligence((current) => current.map((row) => row.id === item.id ? { ...row,metadata:{ ...row.metadata,finding_id:findingId } } : row))
   }
 
   const openValidation = (finding: Finding) => {
@@ -2549,9 +2830,17 @@ export function SkdaWorkspace(props: Props) {
       </div>
       <article className="skda-executive-card skda-findings-summary-card">
         <div className="skda-executive-card-head">
-          <div><span>Achados</span><h3>Distribuição atual</h3></div>
+          <div><span>Inteligência organizacional</span><h3>Hipóteses → achados formalizados</h3></div>
           <strong>{metrics.findings}</strong>
         </div>
+        <div className="skda-intelligence-summary-grid">
+          <div><span>Hipóteses em análise</span><b>{organizationalIntelligenceSummary.underAnalysis}</b></div>
+          <div><span>Validadas</span><b>{organizationalIntelligenceSummary.validated}</b></div>
+          <div><span>Refutadas</span><b>{organizationalIntelligenceSummary.rejected}</b></div>
+          <div><span>Convertidas em achados</span><b>{organizationalIntelligenceSummary.converted}</b></div>
+          <div><span>Perguntas para entrevistas</span><b>{organizationalIntelligenceSummary.interviewPrompts}</b></div>
+        </div>
+        <div className="skda-findings-subhead"><span>Achados formais do DA</span><strong>{metrics.findings}</strong></div>
         <div className="skda-finding-bars">
           {Object.entries(FINDING_TYPES).map(([type,label]) => {
             const value = findingsByType[type] ?? 0
@@ -3063,6 +3352,7 @@ export function SkdaWorkspace(props: Props) {
                   <small>Próxima questão · {interviewQuestionFlow.current.block === 'GOVERNANCA' ? 'Governança' : interviewQuestionFlow.current.block === 'GESTAO' ? 'Gestão' : 'Outras'}</small>
                   <strong>{interviewQuestionFlow.current.question.code} · {interviewQuestionFlow.current.question.question_text}</strong>
                   {interviewQuestionFlow.current.question.criterion_name && <span>{interviewQuestionFlow.current.question.criterion_name}</span>}
+                  {evidenceQuestionIntelligence.filter((item) => item.question_id === interviewQuestionFlow.current?.question.id && item.analysis_status !== 'rejected' && Boolean(item.interview_question_suggestion?.trim())).slice(0,3).map((item) => <span key={item.id} className="skda-interview-intelligence-prompt"><b>Inteligência:</b> {item.interview_question_suggestion}</span>)}
                 </div>
                 <button type="button" className="skda-primary" onClick={() => document.getElementById('skda-question-'+interviewQuestionFlow.current?.question.id)?.scrollIntoView({ behavior:'smooth', block:'start' })}>Retomar nesta questão</button>
               </div> : <div className="skda-interview-current-question is-complete"><div><small>Roteiro concluído</small><strong>Todas as questões da Jornada foram percorridas no DA.</strong><span>A validação final pode prosseguir sem perder a rastreabilidade das entrevistas.</span></div></div>}
@@ -3099,7 +3389,7 @@ export function SkdaWorkspace(props: Props) {
               {questions.map((question) => {
                 const response = responses.find((item) => item.question_id === question.id)
                 const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.question_id === question.id)
-                const proposedRows = intelligenceRows.filter((item) => item.analysis_status === 'proposed' || item.analysis_status === 'validated')
+                const reviewedRows = intelligenceRows.filter((item) => ['proposed','validated','rejected'].includes(item.analysis_status))
                 const queuedRows = intelligenceRows.filter((item) => item.analysis_status === 'queued' || item.analysis_status === 'processing' || item.analysis_status === 'pending')
                 const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', alternativeId:'' }
                 const alternatives = questionAlternatives.filter((item) => item.question_id === question.id)
@@ -3112,9 +3402,15 @@ export function SkdaWorkspace(props: Props) {
                   {intelligenceRows.length > 0 && <div className="skda-question-intelligence">
                     <div className="skda-question-intelligence-head">
                       <strong>Inteligência de evidências</strong>
-                      <span>{intelligenceRows.length} evidência(s) · {queuedRows.length} em análise · {proposedRows.length} proposta(s)</span>
+                      <span>{intelligenceRows.length} evidência(s) · {queuedRows.length} em análise · {reviewedRows.filter((item)=>item.analysis_status==='proposed').length} proposta(s) · {reviewedRows.filter((item)=>item.analysis_status==='validated').length} validada(s) · {reviewedRows.filter((item)=>item.analysis_status==='rejected').length} refutada(s)</span>
                     </div>
-                    {proposedRows.length === 0 ? <p>As evidências vinculadas estão na fila de análise por requisitos desta questão.</p> : proposedRows.map((item) => <article key={item.id}>
+                    {queuedRows.length > 0 && canEditAssessment && <div className="skda-intelligence-queue">
+                      {queuedRows.map((item) => {
+                        const asset=evidenceAssets.find((row)=>row.id===item.evidence_asset_id)
+                        return <span key={item.id}><b>{asset?.title || 'Evidência vinculada'}</b><button type="button" disabled={saving} onClick={()=>openIntelligenceEditor(item)}>Analisar</button></span>
+                      })}
+                    </div>}
+                    {reviewedRows.length === 0 ? <p>As evidências vinculadas ainda não possuem hipótese proposta para esta questão.</p> : reviewedRows.map((item) => <article key={item.id}>
                       <div className="skda-question-intelligence-state">
                         <b>{item.evidence_coverage_status === 'covers' ? 'Contempla' : item.evidence_coverage_status === 'partially_covers' ? 'Contempla parcialmente' : item.evidence_coverage_status === 'does_not_cover' ? 'Não contempla' : item.evidence_coverage_status === 'needs_complement' ? 'Necessita complemento' : 'Em análise'}</b>
                         {item.confidence_score != null && <span>Confiança {Number(item.confidence_score).toFixed(0)}%</span>}
@@ -3125,6 +3421,18 @@ export function SkdaWorkspace(props: Props) {
                       {item.improvement_suggestion && <p><strong>Melhoria sugerida:</strong> {item.improvement_suggestion}</p>}
                       {assistedSelfAssessmentActive && item.self_assessment_guidance && <p><strong>Orientação para AA:</strong> {item.self_assessment_guidance}</p>}
                       {item.interview_question_suggestion && <p><strong>Pergunta sugerida para entrevista:</strong> {item.interview_question_suggestion}</p>}
+                      <div className="skda-intelligence-actions">
+                        {item.analysis_status === 'proposed' && canEditAssessment && <button type="button" disabled={saving} onClick={()=>openIntelligenceEditor(item)}>Editar análise</button>}
+                        {item.analysis_status === 'proposed' && canValidateAssessment && <>
+                          {intelligenceReviewId === item.id ? <div className="skda-intelligence-review">
+                            <textarea rows={2} value={intelligenceReviewNote} onChange={(e)=>setIntelligenceReviewNote(e.target.value)} placeholder="Justifique a validação ou refutação desta hipótese." />
+                            <div><button type="button" disabled={saving} onClick={() => void reviewIntelligence(item,'validated')}>Validar hipótese</button><button type="button" disabled={saving} onClick={() => void reviewIntelligence(item,'rejected')}>Refutar</button><button type="button" onClick={() => {setIntelligenceReviewId(null);setIntelligenceReviewNote('')}}>Cancelar</button></div>
+                          </div> : <button type="button" onClick={() => {setIntelligenceReviewId(item.id);setIntelligenceReviewNote('Validação técnica da hipótese a partir das evidências disponíveis e do contexto da questão.')}}>Revisar hipótese</button>}
+                        </>}
+                        {item.analysis_status === 'validated' && typeof item.metadata?.finding_id !== 'string' && canEditFindings && <button type="button" className="skda-primary" disabled={saving} onClick={() => void convertIntelligenceToFinding(item)}>Converter em achado</button>}
+                        {typeof item.metadata?.finding_id === 'string' && <span>Incorporada ao achado</span>}
+                        {item.analysis_status === 'rejected' && <span>Hipótese refutada</span>}
+                      </div>
                     </article>)}
                   </div>}
                   <div className="skda-assessment-fields">
@@ -3157,6 +3465,15 @@ export function SkdaWorkspace(props: Props) {
           </div>}
           {activePhase.code === 'DA-02' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><h4>Recomendações para devolutiva</h4><span>{findings.filter((finding) => Boolean(finding.recommendation)).length} recomendação(ões)</span></div>
+            {findings.filter((finding) => finding.finding_type !== 'strength' && finding.status !== 'dismissed' && !finding.recommendation?.trim()).length > 0 && <div className="skda-action-plan-unallocated">
+              <div className="skda-phase-workspace-head"><h4>Recomendações a completar</h4><span>Necessárias para concluir a fase</span></div>
+              <div className="skda-finding-list">
+                {findings.filter((finding) => finding.finding_type !== 'strength' && finding.status !== 'dismissed' && !finding.recommendation?.trim()).map((finding) => <article key={'missing-rec-'+finding.id}>
+                  <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.description}</span></div>
+                  <div className="skda-finding-actions"><b>Recomendação pendente</b>{canEditFindings && <button type="button" className="skda-primary" onClick={() => openFindingEditor(finding)}>Completar recomendação</button>}</div>
+                </article>)}
+              </div>
+            </div>}
             {findings.filter((finding) => Boolean(finding.recommendation)).length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação registrada nos achados.</p> : <div className="skda-finding-list">
               {findings.filter((finding) => Boolean(finding.recommendation)).map((finding) => <article key={finding.id}>
                 <div><small>{FINDING_TYPES[finding.finding_type] ?? finding.finding_type} · {PRIORITIES[finding.priority] ?? finding.priority}</small><strong>{finding.title}</strong><span>{finding.recommendation}</span></div>
@@ -3396,6 +3713,31 @@ export function SkdaWorkspace(props: Props) {
         }
       />
     </ApplicationShell>
+    {intelligenceEditId && (() => {
+      const item=evidenceQuestionIntelligence.find((row)=>row.id===intelligenceEditId)
+      const question=item ? questions.find((row)=>row.id===item.question_id) : null
+      const asset=item ? evidenceAssets.find((row)=>row.id===item.evidence_asset_id) : null
+      if (!item) return null
+      return <div className="skda-modal-backdrop">
+        <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
+          <div className="skda-modal-head"><div><p className="skda-eyebrow">Inteligência organizacional</p><h2>Analisar evidência × questão</h2></div><button type="button" onClick={()=>setIntelligenceEditId(null)}>×</button></div>
+          <div className="skda-intelligence-editor-context"><span><b>Questão:</b> {question?.code ?? '—'} · {question?.question_text ?? 'Questão não localizada'}</span><span><b>Evidência:</b> {asset?.title ?? 'Ativo do Core'}</span></div>
+          <div className="skda-form-grid">
+            <label><span>Cobertura da evidência</span><select value={intelligenceForm.evidenceCoverageStatus} onChange={(e)=>setIntelligenceForm((v)=>({...v,evidenceCoverageStatus:e.target.value}))}><option value="under_analysis">Em análise</option><option value="covers">Contempla</option><option value="partially_covers">Contempla parcialmente</option><option value="does_not_cover">Não contempla</option><option value="needs_complement">Necessita complemento</option><option value="not_applicable">Não aplicável</option></select></label>
+            <label><span>Estado da prática</span><select value={intelligenceForm.practiceState} onChange={(e)=>setIntelligenceForm((v)=>({...v,practiceState:e.target.value}))}><option value="not_assessed">Não avaliada</option><option value="exists">Existe / estruturada</option><option value="applied">Aplicada</option><option value="recurrent">Recorrente</option><option value="broad">Abrangente</option><option value="controlled">Controlada</option><option value="result_oriented">Orientada a resultados</option><option value="learning_improvement">Aprendizado e melhoria</option></select></label>
+            <label><span>Confiança (0–100)</span><input type="number" min="0" max="100" value={intelligenceForm.confidenceScore} onChange={(e)=>setIntelligenceForm((v)=>({...v,confidenceScore:e.target.value}))}/></label>
+            <label className="wide"><span>Hipótese diagnóstica *</span><textarea rows={4} value={intelligenceForm.diagnosticHypothesis} onChange={(e)=>setIntelligenceForm((v)=>({...v,diagnosticHypothesis:e.target.value}))} placeholder="O que esta evidência sugere, sem confundir existência de artefato com implantação ou efetividade."/></label>
+            <label className="wide"><span>Lacuna / ponto a confirmar</span><textarea rows={3} value={intelligenceForm.gapDescription} onChange={(e)=>setIntelligenceForm((v)=>({...v,gapDescription:e.target.value}))}/></label>
+            <label className="wide"><span>Pergunta sugerida para entrevista</span><textarea rows={3} value={intelligenceForm.interviewQuestionSuggestion} onChange={(e)=>setIntelligenceForm((v)=>({...v,interviewQuestionSuggestion:e.target.value}))} placeholder="Pergunta que confirme, aprofunde ou refute a hipótese."/></label>
+            <label className="wide"><span>Melhoria sugerida</span><textarea rows={3} value={intelligenceForm.improvementSuggestion} onChange={(e)=>setIntelligenceForm((v)=>({...v,improvementSuggestion:e.target.value}))}/></label>
+            <label className="wide"><span>Justificativa da análise *</span><textarea rows={3} value={intelligenceForm.reviewNote} onChange={(e)=>setIntelligenceForm((v)=>({...v,reviewNote:e.target.value}))}/></label>
+          </div>
+          <div className="skda-evidence-loop-note"><strong>Regra metodológica</strong><span>Esta etapa cria ou revisa uma hipótese. Ela ainda não é um achado formal. A hipótese precisa ser validada ou refutada e somente uma inteligência validada pode ser convertida em achado.</span></div>
+          {error && <div className="skda-alert">{error}</div>}
+          <div className="skda-modal-actions"><button type="button" onClick={()=>setIntelligenceEditId(null)}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveIntelligenceProposal()}>{saving?'Salvando...':'Salvar hipótese proposta'}</button></div>
+        </section>
+      </div>
+    })()}
     {artifactDetail && <div className="skda-modal-backdrop">
       <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
         <div className="skda-modal-head"><div><p className="skda-eyebrow">{artifactDetail.artifact.macrophase_code || 'Jornada DA'} · {artifactDetail.artifact.artifact_code}</p><h2>{artifactDetail.artifact.title}</h2></div><button type="button" onClick={() => setArtifactDetail(null)}>×</button></div>
@@ -3509,6 +3851,10 @@ export function SkdaWorkspace(props: Props) {
           <label><span>Tipo</span><select value={evidenceForm.evidenceType} onChange={(e)=>setEvidenceForm(v=>({...v,evidenceType:e.target.value}))}>{Object.entries(EVIDENCE_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>Origem</span><select value={evidenceForm.sourceType} onChange={(e)=>setEvidenceForm(v=>({...v,sourceType:e.target.value}))}>{Object.entries(EVIDENCE_SOURCE_TYPES).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>Confidencialidade</span><select value={evidenceForm.confidentialityLevel} onChange={(e)=>setEvidenceForm(v=>({...v,confidentialityLevel:e.target.value}))}>{Object.entries(EVIDENCE_CONFIDENTIALITY).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          {evidenceForm.sourceType === 'external' && !evidenceFile && <>
+            <label className="wide"><span>URL da fonte externa *</span><input value={evidenceForm.externalUrl} onChange={(e)=>setEvidenceForm(v=>({...v,externalUrl:e.target.value}))} placeholder="Link do SharePoint, Drive, portal ou repositório autorizado"/></label>
+            <label className="wide"><span>Chave externa estável *</span><input value={evidenceForm.externalKey} onChange={(e)=>setEvidenceForm(v=>({...v,externalKey:e.target.value}))} placeholder="Ex.: sharepoint:<item-id>, drive:<file-id> ou outra chave persistente"/></label>
+          </>}
           <label><span>Data de referência</span><input type="date" value={evidenceForm.referenceDate} onChange={(e)=>setEvidenceForm(v=>({...v,referenceDate:e.target.value}))}/></label>
           <label className="wide"><span>Entrevista de origem</span><select value={evidenceForm.interviewId} onChange={(e)=>setEvidenceForm(v=>({...v,interviewId:e.target.value}))}><option value="">Não surgiu de entrevista específica</option>{interviews.map((interview)=><option key={interview.id} value={interview.id}>{interview.code} · {interview.title}</option>)}</select></label>
           <label className="wide"><span>Descrição / contexto</span><textarea rows={4} value={evidenceForm.description} onChange={(e)=>setEvidenceForm(v=>({...v,description:e.target.value}))} placeholder="O que esta evidência demonstra, como surgiu e por que é relevante para o diagnóstico."/></label>

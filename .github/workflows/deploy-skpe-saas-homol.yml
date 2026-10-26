@@ -77,6 +77,8 @@ jobs:
           cp supabase/migrations/20261023113000_prepare_skda_pdgc_cycle_import.sql "${release_root}/"
           cp supabase/migrations/20261026004500_govern_skda_assessment_instrument_and_leadership.sql "${release_root}/"
           cp supabase/migrations/20261026043000_enable_skda_artifact_text_versions.sql "${release_root}/"
+          cp supabase/migrations/20261026103000_operationalize_skda_organizational_intelligence.sql "${release_root}/"
+          cp supabase/migrations/20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -209,7 +211,9 @@ jobs:
             20261022192348_add_skda_evidence_intelligence_engine.sql \
             20261023113000_prepare_skda_pdgc_cycle_import.sql \
             20261026004500_govern_skda_assessment_instrument_and_leadership.sql \
-            20261026043000_enable_skda_artifact_text_versions.sql
+            20261026043000_enable_skda_artifact_text_versions.sql \
+            20261026103000_operationalize_skda_organizational_intelligence.sql \
+            20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql
           do
             echo "Applying ${migration_file}"
             ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
