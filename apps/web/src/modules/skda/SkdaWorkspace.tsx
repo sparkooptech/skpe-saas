@@ -497,6 +497,14 @@ export function SkdaWorkspace(props: Props) {
   const [actionFollowup, setActionFollowup] = useState<ActionFollowup[]>([])
   const [journeyEap, setJourneyEap] = useState<JourneyExecutionAction[]>([])
   const [journeyArtifacts, setJourneyArtifacts] = useState<JourneyArtifact[]>([])
+  const [artifactDetail, setArtifactDetail] = useState<{
+    artifact: JourneyArtifact & { artifact_type_name?: string; category?: string; requires_validation?: boolean }
+    versions: Array<Record<string,unknown>>
+    validations: Array<Record<string,unknown>>
+    evidence_links: Array<Record<string,unknown>>
+    audit: Array<Record<string,unknown>>
+  } | null>(null)
+  const [artifactStatusReason, setArtifactStatusReason] = useState('')
   const [openingForm, setOpeningForm] = useState({
     referenceYear:String(new Date().getFullYear()),
     startedOn:'',
@@ -699,6 +707,54 @@ export function SkdaWorkspace(props: Props) {
     })
     return counts
   }, [actionFollowup])
+
+  const phaseReadiness = useMemo(() => {
+    const completedInterviews = interviews.filter((item) => ['completed','validated'].includes(item.status)).length
+    const actionableFindings = findings.filter((item) => item.finding_type !== 'strength' && item.status !== 'dismissed')
+    const recommendations = actionableFindings.filter((item) => Boolean(item.recommendation?.trim()))
+    const validatedRecommendations = recommendations.filter((item) => ['accepted','in_action','resolved'].includes(item.status))
+    const approvedFindings = findings.filter((item) => ['accepted','in_action','resolved'].includes(item.status))
+    const allocatedFindingIds = new Set(actionPlanAllocations.map((item) => item.finding_id))
+    const linkedFindingIds = new Set(linkedInitiatives.map((item) => item.sourceFindingId))
+    const returnValidation = journeyArtifacts.find((item) => item.artifact_code === 'MF10-A02')
+    const items = {
+      'DA-00':[
+        { label:'Catálogo metodológico definido', ok:Boolean(selected?.catalog_version_id), critical:true },
+        { label:'Período contratado configurado', ok:Boolean(selected?.started_on && selected?.planned_end_on), critical:true },
+        { label:'Líder SPARKOOP definido', ok:Boolean(selected?.lead_user_id), critical:true },
+        { label:'Autoavaliação integrada', ok:selfAssessmentSnapshots.length > 0, critical:false },
+        { label:'Fontes/evidências de entrada correlacionadas', ok:metrics.evidence > 0, critical:false },
+      ],
+      'DA-01':[
+        { label:'Questões do instrumento preparadas', ok:interviewQuestionFlow.rows.length > 0, critical:true },
+        { label:'Governança percorrida integralmente', ok:interviewQuestionFlow.governance.length > 0 && interviewQuestionFlow.governanceTraversed === interviewQuestionFlow.governance.length, critical:true },
+        { label:'Gestão percorrida integralmente', ok:interviewQuestionFlow.management.length > 0 && interviewQuestionFlow.managementTraversed === interviewQuestionFlow.management.length, critical:true },
+        { label:'Ao menos uma entrevista realizada', ok:completedInterviews > 0, critical:true },
+        { label:'Achados rastreáveis registrados', ok:findings.length > 0, critical:false },
+      ],
+      'DA-02':[
+        { label:'Achados acionáveis com recomendação', ok:actionableFindings.length === recommendations.length, critical:true },
+        { label:'Recomendações deliberadas/aceitas', ok:recommendations.length > 0 && recommendations.length === validatedRecommendations.length, critical:true },
+        { label:'Priorização 80×20 iniciada', ok:actionPlanAllocations.some((item) => item.cycle_number === 1), critical:false },
+      ],
+      'DA-03':[
+        { label:'Recomendações aprovadas distribuídas nos ciclos', ok:approvedFindings.length > 0 && approvedFindings.every((item) => allocatedFindingIds.has(item.id)), critical:true },
+        { label:'Ações priorizadas convertidas em iniciativas', ok:approvedFindings.length > 0 && approvedFindings.every((item) => linkedFindingIds.has(item.id)), critical:true },
+        { label:'Registro da devolutiva validado', ok:Boolean(returnValidation && ['validated','validated_with_reservations'].includes(returnValidation.status)), critical:true },
+        { label:'Governança de follow-up ativada', ok:actionFollowup.length > 0, critical:false },
+      ],
+    }
+    const byPhase = Object.fromEntries(Object.entries(items).map(([code,rows]) => [
+      code,
+      {
+        items:rows,
+        ready:rows.filter((item) => item.critical).every((item) => item.ok),
+        completed:rows.filter((item) => item.ok).length,
+        total:rows.length,
+      },
+    ])) as Record<string,{items:Array<{label:string;ok:boolean;critical:boolean}>;ready:boolean;completed:number;total:number}>
+    return byPhase
+  }, [actionFollowup.length, actionPlanAllocations, findings, interviews, interviewQuestionFlow, journeyArtifacts, linkedInitiatives, metrics.evidence, selected?.catalog_version_id, selected?.lead_user_id, selected?.planned_end_on, selected?.started_on, selfAssessmentSnapshots.length])
 
   const selfAssessmentRadar = useMemo(() => {
     const metricsFor = (block: 'GOVERNANCA' | 'GESTAO') => selfAssessmentMetrics
@@ -1205,6 +1261,108 @@ export function SkdaWorkspace(props: Props) {
     await loadDiagnoses()
   }
 
+  const advanceJourneyPhase = async (phaseCode:string) => {
+    if (!selected || !canManage) return
+    const readiness = phaseReadiness[phaseCode]
+    if (!readiness?.ready) {
+      setError('Ainda existem requisitos críticos pendentes para concluir esta fase.')
+      return
+    }
+    const flow = ['DA-00','DA-01','DA-02','DA-03']
+    const index = flow.indexOf(phaseCode)
+    if (index < 0) return
+    const completing = phaseCode === 'DA-03'
+    const nextPhase = completing ? 'DA-03' : flow[index + 1]
+    const nextMegaphase = completing ? 'MF10' : nextPhase === 'DA-01' ? 'MF4' : nextPhase === 'DA-02' ? 'MF8' : nextPhase === 'DA-03' ? 'MF9' : 'MF0'
+    const nextProgress = completing ? 100 : [25,50,75][index] ?? Number(selected.progress)
+    const nextStatus = completing ? 'completed' : nextPhase === 'DA-01' ? 'interviews' : 'validation'
+    const nextMetadata = {
+      ...(selected.metadata ?? {}),
+      phase_history:[
+        ...(Array.isArray(selected.metadata?.phase_history) ? selected.metadata.phase_history : []),
+        {
+          phase_code:phaseCode,
+          completed_at:new Date().toISOString(),
+          readiness:readiness.items.map((item) => ({ label:item.label,ok:item.ok,critical:item.critical })),
+        },
+      ],
+    }
+    setSaving(true)
+    setError('')
+    const { error: phaseError } = await supabase
+      .from('skda_diagnoses' as never)
+      .update({
+        current_phase_code:nextPhase,
+        current_megaphase_code:nextMegaphase,
+        progress:nextProgress,
+        status:nextStatus,
+        completed_at:completing ? new Date().toISOString() : null,
+        metadata:nextMetadata,
+      } as never)
+      .eq('id',selected.id)
+      .eq('organization_id',props.organizationId)
+    setSaving(false)
+    if (phaseError) {
+      setError(phaseError.message)
+      return
+    }
+    await loadDiagnoses()
+    setActivePhaseCode(completing ? 'OVERVIEW' : nextPhase)
+  }
+
+  const openJourneyArtifact = async (artifact:JourneyArtifact) => {
+    setSaving(true)
+    setError('')
+    const { data, error: detailError } = await supabase.rpc(
+      'get_methodology_artifact_detail' as never,
+      { target_artifact_id:artifact.id } as never,
+    )
+    setSaving(false)
+    if (detailError) {
+      setError(detailError.message)
+      return
+    }
+    const detail = data as unknown as {
+      artifact: JourneyArtifact & { artifact_type_name?: string; category?: string; requires_validation?: boolean }
+      versions?: Array<Record<string,unknown>>
+      validations?: Array<Record<string,unknown>>
+      evidence_links?: Array<Record<string,unknown>>
+      audit?: Array<Record<string,unknown>>
+    }
+    setArtifactDetail({
+      artifact:detail.artifact,
+      versions:detail.versions ?? [],
+      validations:detail.validations ?? [],
+      evidence_links:detail.evidence_links ?? [],
+      audit:detail.audit ?? [],
+    })
+    setArtifactStatusReason('')
+  }
+
+  const updateJourneyArtifactStatus = async (targetStatus:string) => {
+    if (!artifactDetail || artifactStatusReason.trim().length < 10) {
+      setError('Informe uma justificativa com pelo menos 10 caracteres para alterar a situação do entregável.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { error: statusError } = await supabase.rpc(
+      'update_methodology_artifact_status' as never,
+      {
+        target_artifact_id:artifactDetail.artifact.id,
+        target_status:targetStatus,
+        target_reason:artifactStatusReason.trim(),
+      } as never,
+    )
+    setSaving(false)
+    if (statusError) {
+      setError(statusError.message)
+      return
+    }
+    setJourneyArtifacts((current) => current.map((item) => item.id === artifactDetail.artifact.id ? { ...item,status:targetStatus } : item))
+    await openJourneyArtifact({ ...artifactDetail.artifact,status:targetStatus })
+  }
+
   const applyContractIntakeProposal = () => {
     if (!contractIntakeProposal) return
     setOpeningForm((current) => ({
@@ -1276,8 +1434,17 @@ export function SkdaWorkspace(props: Props) {
     setSaving(false)
     if (saveError) { setError(saveError.message); return }
     const saved = data as unknown as Response
-    setResponses((current) => [...current.filter((item) => item.question_id !== question.id), saved])
+    const nextResponses = [...responses.filter((item) => item.question_id !== question.id), saved]
+    setResponses(nextResponses)
     setMetrics((current) => ({ ...current, responses:hadResponse ? current.responses : current.responses + 1 }))
+    if (activePhaseCode === 'DA-01') {
+      const ordered = [...questions].sort((a,b) => a.display_order - b.display_order)
+      const currentIndex = ordered.findIndex((item) => item.id === question.id)
+      const nextQuestion = ordered.slice(currentIndex + 1).find((item) => !nextResponses.some((response) => response.question_id === item.id && Boolean(response.evaluated_at)))
+      if (nextQuestion) {
+        window.setTimeout(() => document.getElementById('skda-question-'+nextQuestion.id)?.scrollIntoView({ behavior:'smooth',block:'start' }),80)
+      }
+    }
   }
 
   const validateAssessment = async (question: Question) => {
@@ -2278,7 +2445,7 @@ export function SkdaWorkspace(props: Props) {
                         <span title="Cadastre ou consulte as Autoavaliações e respectivas evidências."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Autoavaliações disponíveis</button></span>
                         <span title="Acesse o inventário de evidências e documentos da organização."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Fontes e contexto inicial</button></span>
                       </>}
-                      {inheritedArtifacts.map((artifact) => <span key={artifact.id} title="Entregável cadastrado. A abertura do documento depende de uma versão vinculada ao repositório."><button type="button" disabled>{artifact.title}</button></span>)}
+                      {inheritedArtifacts.map((artifact) => <span key={artifact.id} title="Entregável herdado da MegaFase anterior."><button type="button" onClick={() => void openJourneyArtifact(artifact)}>{artifact.title}</button></span>)}
                       <span title="Acesse o repositório transversal para cadastrar, consultar e correlacionar evidências desta Jornada."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Consultar evidências</button></span>
                       {canRegisterEvidence && <span title="Abra o cadastro de evidências da organização; disponível em todas as MegaFases."><button type="button" onClick={() => {setEvidenceFile(null);setShowEvidenceCreate(true)}}>Adicionar evidência</button></span>}
                     </div>
@@ -2302,16 +2469,10 @@ export function SkdaWorkspace(props: Props) {
                     })}
                   </section>
                   <section className="skda-artifact-list">
-                    <div className="skda-megaphase-subhead"><span>KIT de condução da MegaFase</span><strong>Pacote metodológico previsto · não gerado</strong></div>
-                    <div className="skda-input-chips">
-                      {['Apresentação da MegaFase (PPTX)','Roteiro detalhado por slide e perguntas de facilitação','Prompt completo para AI','Instrumentos, formulários e matrizes de trabalho','Checklist de evidências e critérios de aceite','Relatório, decisões e pendências','Plano de Ação 5W2H e follow-up entre ciclos','Pacote de entrega e handoff à próxima MegaFase'].map((item) =>
-                        <span key={item} title="Ainda não disponível. É necessário gerar o artefato, vinculá-lo à MegaFase e registrar sua versão antes de abrir."><button type="button" disabled>{item}</button></span>
-                      )}
-                    </div>
-                    <p>Este é o contrato mínimo do KIT, ainda pendente de geração, vinculação documental, versionamento e aprovação. Os artefatos efetivamente cadastrados aparecem abaixo.</p>
-                    <div className="skda-megaphase-subhead"><span>Artefatos e entregáveis cadastrados</span><strong>{artifacts.length} previsto(s)</strong></div>
+                    <div className="skda-megaphase-subhead"><span>KIT governado da MegaFase</span><strong>{artifacts.length} entregável(is) estruturado(s)</strong></div>
+                    <p>Os entregáveis abaixo integram o ciclo governado da Jornada: planejamento, preparação, validação, aprovação, institucionalização, execução, evidência e avaliação. Nenhum artefato é considerado aprovado sem validação humana explícita.</p>
                     {artifacts.length === 0 ? <p>Entregáveis metodológicos ainda não estruturados.</p> : <div className="skda-artifact-grid">{artifacts.map((artifact) => <article key={artifact.id}>
-                      <div><small>{artifact.artifact_code}</small><strong>{artifact.title}</strong><span>{artifact.purpose || 'Entregável metodológico da Jornada.'}</span><span title="A validar: vincule uma versão documental ao entregável para habilitar sua abertura."><button type="button" disabled>Abrir entregável</button></span></div>
+                      <div><small>{artifact.artifact_code}</small><strong>{artifact.title}</strong><span>{artifact.purpose || 'Entregável metodológico da Jornada.'}</span><span><button type="button" onClick={() => void openJourneyArtifact(artifact)}>Abrir governança do entregável</button></span></div>
                       <div className="skda-artifact-state"><b>{ARTIFACT_STATUS[artifact.status] ?? artifact.status}</b><span>v{artifact.current_version_number || 0}</span>{artifact.planned_due_date && <small>Previsto: {new Date(artifact.planned_due_date+'T00:00:00').toLocaleDateString('pt-BR')}</small>}</div>
                     </article>)}</div>}
                   </section>
@@ -2330,7 +2491,7 @@ export function SkdaWorkspace(props: Props) {
         </div>
         {actionFollowupSummary.total === 0 ? (
           <p>Nenhuma ação longitudinal registrada ainda. O acompanhamento será ativado quando recomendações validadas forem priorizadas e acompanhadas nos ciclos seguintes.</p>
-        ) : (
+        ) : <>
           <div className="skda-followup-grid">
             <div><span>Concluídas</span><strong>{actionFollowupSummary.completed}</strong></div>
             <div><span>Em andamento</span><strong>{actionFollowupSummary.inProgress}</strong></div>
@@ -2339,7 +2500,14 @@ export function SkdaWorkspace(props: Props) {
             <div><span>Bloqueadas</span><strong>{actionFollowupSummary.blocked}</strong></div>
             <div><span>Aguardando conversão</span><strong>{actionFollowupSummary.awaitingConversion}</strong></div>
           </div>
-        )}
+          <div className="skda-followup-list">
+            {actionFollowup.slice(0,8).map((item) => <article key={item.finding_id+'-'+String(item.initiative_id)}>
+              <div><small>Ciclo {item.cycle_number ?? '—'} · {item.followup_state === 'completed' ? 'Concluída' : item.followup_state === 'in_progress' ? 'Em andamento' : item.followup_state === 'overdue' ? 'Vencida' : item.followup_state === 'blocked' ? 'Bloqueada' : item.followup_state === 'awaiting_conversion' ? 'Aguardando iniciativa' : 'Não iniciada'}</small><strong>{item.finding_title}</strong><span>{item.initiative_name || 'Ação ainda sem iniciativa transversal vinculada'}</span></div>
+              <div className="skda-followup-progress"><b>{Math.round(Number(item.initiative_progress ?? 0))}%</b><span><i style={{width:`${Math.max(0,Math.min(100,Number(item.initiative_progress ?? 0)))}%`}} /></span></div>
+            </article>)}
+          </div>
+          <div className="skda-followup-actions"><button type="button" onClick={() => setActivePhaseCode('DA-03')}>Abrir Plano de Ação e follow-up</button></div>
+        </>}
       </section>}
 
       {isAgenda && <section className="skda-agenda-host">
@@ -2379,10 +2547,24 @@ export function SkdaWorkspace(props: Props) {
           </div>}
           <div className="skda-phase-summary">
             {activePhase.code === 'DA-00' && <><span>Preparação</span><strong>{selfAssessmentSnapshots.length} AA · {metrics.evidence} evidência(s)</strong></>}
-            {activePhase.code === 'DA-01' && <><span>Entrevistas e diagnóstico</span><strong>{metrics.interviews} entrevista(s) · {metrics.responses} questão(ões) · {metrics.findings} achado(s)</strong></>}
+            {activePhase.code === 'DA-01' && <><span>Entrevistas e diagnóstico</span><strong>{metrics.interviews} entrevista(s) · {interviewQuestionFlow.traversed}/{interviewQuestionFlow.rows.length} questão(ões) percorrida(s) · {metrics.findings} achado(s)</strong></>}
             {activePhase.code === 'DA-02' && <><span>Recomendações e priorização</span><strong>{findings.filter((finding) => Boolean(finding.recommendation)).length} recomendação(ões)</strong></>}
             {activePhase.code === 'DA-03' && <><span>Plano de Ação e devolutiva</span><strong>Ciclos 1 · 2 · 3</strong></>}
           </div>
+          {phaseReadiness[activePhase.code] && <div className="skda-phase-readiness">
+            <div className="skda-phase-readiness-head">
+              <div><span>Gate de avanço</span><strong>{phaseReadiness[activePhase.code].ready ? 'Fase apta para conclusão' : 'Pendências antes de avançar'}</strong></div>
+              <b>{phaseReadiness[activePhase.code].completed}/{phaseReadiness[activePhase.code].total}</b>
+            </div>
+            <div className="skda-phase-readiness-items">
+              {phaseReadiness[activePhase.code].items.map((item) => <span key={item.label} className={item.ok ? 'is-ok' : item.critical ? 'is-critical' : 'is-pending'}><i>{item.ok ? '✓' : item.critical ? '!' : '·'}</i>{item.label}{!item.critical && <small>recomendado</small>}</span>)}
+            </div>
+            {canManage && <div className="skda-phase-readiness-actions">
+              <button type="button" className="skda-primary" disabled={saving || !phaseReadiness[activePhase.code].ready || selected.status === 'completed'} onClick={() => void advanceJourneyPhase(activePhase.code)}>
+                {activePhase.code === 'DA-03' ? 'Concluir Jornada' : 'Concluir fase e avançar'}
+              </button>
+            </div>}
+          </div>}
           {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><div><h4>Configuração da Jornada DA</h4><small>Defina o ciclo, escopo, metodologia, responsável e catálogo da jornada.</small></div><span>{selectedCatalog ? selectedCatalog.framework_code : 'Não definido'}</span></div>
             {contractIntakeProposal && <div className="skda-contract-intake">
@@ -2873,6 +3055,36 @@ export function SkdaWorkspace(props: Props) {
         }
       />
     </ApplicationShell>
+    {artifactDetail && <div className="skda-modal-backdrop">
+      <section className="skda-modal skda-modal-wide" role="dialog" aria-modal="true">
+        <div className="skda-modal-head"><div><p className="skda-eyebrow">{artifactDetail.artifact.macrophase_code || 'Jornada DA'} · {artifactDetail.artifact.artifact_code}</p><h2>{artifactDetail.artifact.title}</h2></div><button type="button" onClick={() => setArtifactDetail(null)}>×</button></div>
+        <p>{artifactDetail.artifact.purpose || 'Entregável metodológico governado da Jornada DA.'}</p>
+        <div className="skda-artifact-detail-grid">
+          <article><small>Situação</small><strong>{ARTIFACT_STATUS[artifactDetail.artifact.status] ?? artifactDetail.artifact.status}</strong></article>
+          <article><small>Versão atual</small><strong>v{artifactDetail.artifact.current_version_number || 0}</strong></article>
+          <article><small>Versões registradas</small><strong>{artifactDetail.versions.length}</strong></article>
+          <article><small>Validações</small><strong>{artifactDetail.validations.length}</strong></article>
+          <article><small>Evidências vinculadas</small><strong>{artifactDetail.evidence_links.length}</strong></article>
+          <article><small>Registros de auditoria</small><strong>{artifactDetail.audit.length}</strong></article>
+        </div>
+        <div className="skda-artifact-governance-note"><strong>Ciclo de governança</strong><span>Planejado → Em preparação → Em validação → Submetido → Validado. A validação humana é obrigatória; produção de documento não equivale a aprovação nem institucionalização.</span></div>
+        {canManage && <div className="skda-artifact-status-editor">
+          <label><span>Justificativa da mudança *</span><textarea rows={3} value={artifactStatusReason} onChange={(e)=>setArtifactStatusReason(e.target.value)} placeholder="Registre o motivo, decisão ou evidência que sustenta a mudança de situação."/></label>
+          <div className="skda-artifact-status-actions">
+            {[
+              ['in_preparation','Iniciar preparação'],
+              ['in_review','Enviar para validação'],
+              ['submitted','Registrar submissão'],
+              ['validated','Validar'],
+              ['validated_with_reservations','Validar com ressalvas'],
+            ].filter(([status]) => status !== artifactDetail.artifact.status).map(([status,label]) => <button type="button" key={status} disabled={saving} onClick={() => void updateJourneyArtifactStatus(status)}>{label}</button>)}
+          </div>
+        </div>}
+        {artifactDetail.audit.length > 0 && <div className="skda-artifact-audit"><strong>Últimos registros</strong>{artifactDetail.audit.slice(0,5).map((row,index) => <span key={String(row.id ?? index)}>{String(row.action_description ?? row.action_code ?? 'Alteração registrada')}</span>)}</div>}
+        {error && <div className="skda-alert">{error}</div>}
+        <div className="skda-modal-actions"><button type="button" onClick={() => setArtifactDetail(null)}>Fechar</button></div>
+      </section>
+    </div>}
     {validationFindingId && <div className="skda-modal-backdrop">
       <section className="skda-modal" role="dialog" aria-modal="true">
         <div className="skda-modal-head"><div><p className="skda-eyebrow">Recomendações e priorização</p><h2>Aceitar recomendação</h2></div><button type="button" onClick={() => setValidationFindingId(null)}>×</button></div>

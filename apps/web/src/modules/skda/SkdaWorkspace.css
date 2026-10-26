@@ -3515,3 +3515,244 @@
   line-height: 1.2;
 }
 .skda-artifact-grid[hidden] { display: none !important; }
+
+/* Jornada DA — gates, governança de entregáveis e follow-up operacional */
+.skda-phase-readiness {
+  display: grid;
+  gap: .65rem;
+  padding: .8rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 12px;
+  background: #fbfcfc;
+}
+
+.skda-phase-readiness-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.skda-phase-readiness-head > div {
+  display: grid;
+  gap: .12rem;
+}
+
+.skda-phase-readiness-head span,
+.skda-phase-readiness-items small {
+  color: var(--skda-muted);
+  font-size: .67rem;
+}
+
+.skda-phase-readiness-head strong {
+  color: var(--skda-text);
+  font-size: .86rem;
+}
+
+.skda-phase-readiness-head > b {
+  color: var(--skda-primary);
+  font-size: 1rem;
+}
+
+.skda-phase-readiness-items {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: .4rem;
+}
+
+.skda-phase-readiness-items > span {
+  display: flex;
+  align-items: center;
+  gap: .42rem;
+  min-height: 34px;
+  padding: .4rem .55rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--skda-muted);
+  font-size: .72rem;
+}
+
+.skda-phase-readiness-items > span i {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.skda-phase-readiness-items > span.is-ok i {
+  background: #e8f7ef;
+  color: #047857;
+}
+
+.skda-phase-readiness-items > span.is-critical i {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.skda-phase-readiness-items > span.is-pending i {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.skda-phase-readiness-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.skda-followup-list {
+  display: grid;
+  gap: .45rem;
+  margin-top: .7rem;
+}
+
+.skda-followup-list article {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 150px;
+  gap: .8rem;
+  align-items: center;
+  padding: .6rem .7rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.skda-followup-list article > div:first-child {
+  display: grid;
+  gap: .12rem;
+}
+
+.skda-followup-list small,
+.skda-followup-list span {
+  color: var(--skda-muted);
+  font-size: .68rem;
+}
+
+.skda-followup-list strong {
+  color: var(--skda-text);
+  font-size: .76rem;
+}
+
+.skda-followup-progress {
+  display: grid;
+  gap: .2rem;
+  text-align: right;
+}
+
+.skda-followup-progress > span {
+  display: block;
+  overflow: hidden;
+  height: 6px;
+  border-radius: 999px;
+  background: #edf1ef;
+}
+
+.skda-followup-progress > span > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--skda-primary);
+}
+
+.skda-followup-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: .55rem;
+}
+
+.skda-artifact-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: .55rem;
+}
+
+.skda-artifact-detail-grid article {
+  display: grid;
+  gap: .18rem;
+  padding: .65rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.skda-artifact-detail-grid small {
+  color: var(--skda-muted);
+  font-size: .67rem;
+}
+
+.skda-artifact-detail-grid strong {
+  color: var(--skda-text);
+  font-size: .86rem;
+}
+
+.skda-artifact-governance-note {
+  display: grid;
+  gap: .2rem;
+  margin-top: .75rem;
+  padding: .7rem .8rem;
+  border-left: 4px solid var(--skda-primary);
+  border-radius: 8px;
+  background: #f5f9f7;
+}
+
+.skda-artifact-governance-note span {
+  color: var(--skda-muted);
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.skda-artifact-status-editor {
+  display: grid;
+  gap: .55rem;
+  margin-top: .75rem;
+}
+
+.skda-artifact-status-editor label {
+  display: grid;
+  gap: .3rem;
+}
+
+.skda-artifact-status-editor label > span {
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.skda-artifact-status-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.skda-artifact-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.skda-artifact-audit {
+  display: grid;
+  gap: .3rem;
+  margin-top: .75rem;
+}
+
+.skda-artifact-audit > span {
+  padding: .42rem .55rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 7px;
+  color: var(--skda-muted);
+  font-size: .7rem;
+}
+
+@media (max-width: 760px) {
+  .skda-phase-readiness-items,
+  .skda-artifact-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skda-followup-list article {
+    grid-template-columns: 1fr;
+  }
+}
