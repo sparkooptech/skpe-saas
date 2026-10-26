@@ -425,6 +425,133 @@
   gap: 3px;
 }
 
+.skda-interview-flow {
+  display: grid;
+  gap: .65rem;
+  padding: .85rem;
+  border: 1px solid color-mix(in srgb, var(--skda-primary) 24%, var(--skda-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--skda-primary) 3%, #fff);
+}
+
+.skda-interview-flow-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.skda-interview-flow-head > div {
+  display: grid;
+  gap: .18rem;
+}
+
+.skda-interview-flow-head span,
+.skda-interview-current-question small {
+  color: var(--skda-primary);
+  font-size: .67rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+}
+
+.skda-interview-flow-head strong {
+  color: var(--skda-text);
+  font-size: .92rem;
+}
+
+.skda-interview-flow-head small {
+  max-width: 110ch;
+  color: var(--skda-muted);
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.skda-interview-flow-head > b {
+  flex: 0 0 auto;
+  color: var(--skda-primary);
+  font-size: 1.05rem;
+}
+
+.skda-interview-flow-blocks {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: .5rem;
+}
+
+.skda-interview-flow-blocks > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .55rem .65rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.skda-interview-flow-blocks > div.active {
+  border-color: color-mix(in srgb, var(--skda-primary) 50%, var(--skda-border));
+  background: color-mix(in srgb, var(--skda-primary) 7%, #fff);
+}
+
+.skda-interview-flow-blocks span {
+  color: var(--skda-muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.skda-interview-flow-blocks strong {
+  color: var(--skda-text);
+  font-size: .78rem;
+}
+
+.skda-interview-current-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: .65rem;
+  border-top: 1px solid var(--skda-border);
+}
+
+.skda-interview-current-question > div {
+  display: grid;
+  gap: .18rem;
+  min-width: 0;
+}
+
+.skda-interview-current-question strong {
+  color: var(--skda-text);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.skda-interview-current-question span {
+  color: var(--skda-muted);
+  font-size: .7rem;
+}
+
+.skda-interview-current-question.is-complete {
+  justify-content: flex-start;
+}
+
+.skda-assessment-card {
+  scroll-margin-top: 1rem;
+}
+
+@media (max-width: 760px) {
+  .skda-interview-flow-head,
+  .skda-interview-current-question {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .skda-interview-flow-blocks {
+    grid-template-columns: 1fr;
+  }
+}
+
 .skda-interview-list article > div:last-child,
 .skda-evidence-list article > div:last-child,
 .skda-finding-list article > div:last-child {
@@ -2737,9 +2864,21 @@
   gap: .8rem;
 }
 
+.skda-detail:has(.skda-journey-progress-card) > .skda-executive-grid,
+.skda-detail:has(.skda-journey-progress-card) > .skda-metrics-after-radars,
+.skda-detail:has(.skda-journey-progress-card) > .skda-findings-summary-card,
+.skda-detail:has(.skda-journey-progress-card) > .skda-aa-entry-callout,
+.skda-detail:has(.skda-journey-progress-card) > .skda-evolution-overview {
+  margin-block: 0 !important;
+}
+
+.skda-executive-grid {
+  row-gap: .8rem;
+}
+
 .skda-metrics-after-radars,
 .skda-findings-summary-card {
-  margin-top: 0;
+  margin: 0 !important;
 }
 
 @media (max-width: 760px) {
@@ -3366,4 +3505,13 @@
 .skda-evolution-value-labels { grid-column: 2; grid-row: 1; position: relative; height: 260px; pointer-events: none; z-index: 2; }
 .skda-evolution-chart > svg { grid-column: 2; grid-row: 1; }
 .skda-evolution-value-labels > span { font-size: .7rem; white-space: nowrap; background: rgba(255,255,255,.88); padding: 1px 3px; border-radius: 3px; }
+.skda-evolution-value-labels > .skda-benchmark-line-label {
+  z-index: 3;
+  padding: 2px 5px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  background: rgba(255,255,255,.96);
+  font-size: .66rem;
+  line-height: 1.2;
+}
 .skda-artifact-grid[hidden] { display: none !important; }

@@ -558,6 +558,32 @@ export function SkdaWorkspace(props: Props) {
     [assessedResponses.length, questions.length],
   )
 
+  const interviewQuestionFlow = useMemo(() => {
+    const blockOf = (question:Question) => /governan/i.test(question.axis_name ?? '') ? 'GOVERNANCA' : /gest/i.test(question.axis_name ?? '') ? 'GESTAO' : 'OUTRO'
+    const rows = questions.map((question,index) => {
+      const response = responses.find((item) => item.question_id === question.id)
+      return {
+        question,
+        index:index + 1,
+        block:blockOf(question),
+        traversed:Boolean(response?.evaluated_at),
+        validated:response?.response_status === 'validated',
+      }
+    })
+    const governance = rows.filter((row) => row.block === 'GOVERNANCA')
+    const management = rows.filter((row) => row.block === 'GESTAO')
+    const current = rows.find((row) => !row.traversed) ?? null
+    return {
+      rows,
+      governance,
+      management,
+      current,
+      traversed:rows.filter((row) => row.traversed).length,
+      governanceTraversed:governance.filter((row) => row.traversed).length,
+      managementTraversed:management.filter((row) => row.traversed).length,
+    }
+  }, [questions,responses])
+
   const findingsByType = useMemo(() => {
     const counts: Record<string, number> = {
       strength:0, gap:0, opportunity:0, risk:0, observation:0,
@@ -624,6 +650,12 @@ export function SkdaWorkspace(props: Props) {
       .forEach((metric) => latest.set(metric.block_code + ':' + metric.comparator_code,metric))
     return [...latest.values()]
   },[selfAssessmentMetrics])
+
+  const evolutionBenchmarkColor = (benchmark:SelfAssessmentMetric) => {
+    const comparator = benchmark.comparator_code.toUpperCase()
+    if (benchmark.block_code === 'GOVERNANCA') return comparator.includes('RAMO') ? '#b7791f' : '#0f766e'
+    return comparator.includes('RAMO') ? '#dc2626' : '#7c3aed'
+  }
 
   const evolutionChartPoint = (index: number, score: number | null) => {
     const count = Math.max(1,evolutionChartSeries.length)
@@ -2082,7 +2114,7 @@ export function SkdaWorkspace(props: Props) {
                 {[100,90,80,70,60,50,40,30,20,10,0].map((tick) => <line key={tick} x1="5" x2="95" y1={92 - tick * .78} y2={92 - tick * .78} className="skda-evolution-gridline" />)}
                 {evolutionBenchmarks.map((benchmark) => {
                   const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
-                  return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed'} strokeWidth=".35" strokeDasharray="7 4" strokeLinecap="butt" />
+                  return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={evolutionBenchmarkColor(benchmark)} strokeWidth=".32" strokeDasharray="6 4" strokeLinecap="butt" />
                 })}
                 {evolutionBlockSeries.map((series) => {
                   const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
@@ -2101,6 +2133,25 @@ export function SkdaWorkspace(props: Props) {
 
               </svg>
               <div className="skda-evolution-value-labels">
+                {evolutionBenchmarks.map((benchmark) => {
+                  const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
+                  if (y == null) return null
+                  const isGovernance = benchmark.block_code === 'GOVERNANCA'
+                  const isBranch = benchmark.comparator_code.toUpperCase().includes('RAMO')
+                  const label = isBranch ? 'Ramo Brasil' : 'Brasil'
+                  return <span
+                    key={'benchmark-'+benchmark.id}
+                    className="skda-benchmark-line-label"
+                    style={{
+                      position:'absolute',
+                      left:isGovernance ? '32%' : '68%',
+                      top:`calc(${y}% - 18px)`,
+                      transform:'translateX(-50%)',
+                      color:evolutionBenchmarkColor(benchmark),
+                    }}
+                    title={benchmark.source_reference ?? undefined}
+                  ><b>{isGovernance ? 'Gov.' : 'Gest.'} · {label} {Number(benchmark.metric_value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></span>
+                })}
                 {evolutionBlockSeries.flatMap((series) => series.values.filter((point) => point.score != null).map((point) => {
                   const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
                   const offset = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? -12 : 12) : (series.kind === 'AA' ? -12 : 12)
@@ -2118,7 +2169,7 @@ export function SkdaWorkspace(props: Props) {
               <span><b style={{color:'#047857'}}>■</b> Governança · DA</span>
               <span><b style={{color:'#9333ea'}}>◆</b> Gestão · AA</span>
               <span><b style={{color:'#d97706'}}>▲</b> Gestão · DA</span>
-              {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed' }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code} ({benchmark.reference_year ?? 's/ano'}): {Number(benchmark.metric_value).toFixed(2)}%</span>)}
+              {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:evolutionBenchmarkColor(benchmark) }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code}</span>)}
               {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
             </div>
             <div className="skda-artifact-grid" hidden>
@@ -2489,6 +2540,28 @@ export function SkdaWorkspace(props: Props) {
               <div><h4>Entrevistas do diagnóstico</h4><small>Entrevistas são eventos da Agenda da Organização. Participantes planejados e presença efetiva são geridos pelo mesmo motor transversal do PE.</small></div>
               {canEditInterviews && <button type="button" className="skda-primary" onClick={() => setShowInterviewCreate(true)}>Nova entrevista</button>}
             </div>
+            <div className="skda-interview-flow">
+              <div className="skda-interview-flow-head">
+                <div>
+                  <span>Roteiro contínuo da Jornada</span>
+                  <strong>Governança → Gestão, questão a questão</strong>
+                  <small>No primeiro encontro realiza-se a abertura e inicia-se Governança. Cada encontro seguinte retoma automaticamente da primeira questão ainda não percorrida, até concluir Governança e então avançar para Gestão.</small>
+                </div>
+                <b>{interviewQuestionFlow.traversed}/{interviewQuestionFlow.rows.length}</b>
+              </div>
+              <div className="skda-interview-flow-blocks">
+                <div className={interviewQuestionFlow.current?.block === 'GOVERNANCA' ? 'active' : ''}><span>Governança</span><strong>{interviewQuestionFlow.governanceTraversed}/{interviewQuestionFlow.governance.length}</strong></div>
+                <div className={interviewQuestionFlow.current?.block === 'GESTAO' ? 'active' : ''}><span>Gestão</span><strong>{interviewQuestionFlow.managementTraversed}/{interviewQuestionFlow.management.length}</strong></div>
+              </div>
+              {interviewQuestionFlow.current ? <div className="skda-interview-current-question">
+                <div>
+                  <small>Próxima questão · {interviewQuestionFlow.current.block === 'GOVERNANCA' ? 'Governança' : interviewQuestionFlow.current.block === 'GESTAO' ? 'Gestão' : 'Outras'}</small>
+                  <strong>{interviewQuestionFlow.current.question.code} · {interviewQuestionFlow.current.question.question_text}</strong>
+                  {interviewQuestionFlow.current.question.criterion_name && <span>{interviewQuestionFlow.current.question.criterion_name}</span>}
+                </div>
+                <button type="button" className="skda-primary" onClick={() => document.getElementById('skda-question-'+interviewQuestionFlow.current?.question.id)?.scrollIntoView({ behavior:'smooth', block:'start' })}>Retomar nesta questão</button>
+              </div> : <div className="skda-interview-current-question is-complete"><div><small>Roteiro concluído</small><strong>Todas as questões da Jornada foram percorridas no DA.</strong><span>A validação final pode prosseguir sem perder a rastreabilidade das entrevistas.</span></div></div>}
+            </div>
             <div className="skda-evidence-loop-note"><strong>Aprendizado contínuo</strong><span>Uma entrevista pode revelar evidências que não estavam disponíveis no levantamento inicial. Novas evidências podem ser incluídas no Core e correlacionadas ao DA, reabrindo a análise quando necessário.</span></div>
             {interviews.length === 0 ? <p className="skda-phase-empty">Nenhuma entrevista registrada.</p> : <div className="skda-interview-list">
               {interviews.map((interview) => <article key={interview.id}>
@@ -2526,7 +2599,7 @@ export function SkdaWorkspace(props: Props) {
                 const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', alternativeId:'' }
                 const alternatives = questionAlternatives.filter((item) => item.question_id === question.id)
                 const aaAnswer = selfAssessmentAnswers.find((item) => item.question_id === question.id)
-                return <article key={question.id} className="skda-assessment-card">
+                return <article id={'skda-question-'+question.id} key={question.id} className="skda-assessment-card">
                   <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
                   {aaAnswer && <div className="skda-aa-guidance"><strong>Autoavaliação importada · {aaAnswer.declared_code ?? 'sem alternativa'}</strong><span>{aaAnswer.declared_text ?? 'Resposta declarada importada sem texto descritivo.'}</span></div>}
                   {assistedSelfAssessmentActive && question.guidance && <div className="skda-aa-guidance"><strong>Orientação metodológica da questão</strong><span>{question.guidance}</span></div>}
