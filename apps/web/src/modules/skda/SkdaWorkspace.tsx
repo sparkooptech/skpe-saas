@@ -72,7 +72,7 @@ type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_
 type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null; metadata?:Record<string,unknown>|null }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; guidance: string | null; display_order: number }
-type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; declared_alternative_id: string | null; evidenced_alternative_id: string | null; validated_alternative_id: string | null; evaluated_at: string | null; validated_at: string | null }
+type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; declared_alternative_id: string | null; evidenced_alternative_id: string | null; validated_alternative_id: string | null; evaluated_at: string | null; validated_at: string | null; metadata: Record<string,unknown> }
 type QuestionAlternative = { id:string; question_id:string; code:string; alternative_text:string; progression_order:number; score_value:number|null }
 type SelfAssessmentAnswer = { id:string; snapshot_id:string; question_id:string; declared_alternative_id:string|null; declared_code:string|null; declared_text:string|null; rationale:string|null; metadata:Record<string,unknown> }
 type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; alternativeId: string }
@@ -953,7 +953,7 @@ export function SkdaWorkspace(props: Props) {
           .order('display_order', { ascending:true }),
         supabase
           .from('skda_responses' as never)
-          .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at' as never)
+          .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at,metadata' as never)
           .eq('diagnosis_id', selected.id),
       ])
       const loadedQuestions = (questionsResult.data ?? []) as unknown as Question[]
@@ -1630,7 +1630,7 @@ export function SkdaWorkspace(props: Props) {
       priority:findingType === 'gap' ? 'high' : 'medium',
       recommendation:'',
       questionId:question.id,
-      interviewId:'',
+      interviewId:typeof response?.metadata?.last_interview_id === 'string' ? response.metadata.last_interview_id : '',
       ownerUserId:'',
       dueDate:'',
     })
@@ -1659,7 +1659,24 @@ export function SkdaWorkspace(props: Props) {
     if (!draft) return
     setSaving(true)
     setError('')
-    const hadResponse = responses.some((item) => item.question_id === question.id)
+    const previousResponse = responses.find((item) => item.question_id === question.id)
+    const hadResponse = Boolean(previousResponse)
+    const activeInterview = interviews.find((item) => item.status === 'in_progress') ?? null
+    const previousMetadata = previousResponse?.metadata ?? {}
+    const previousTrace = Array.isArray(previousMetadata.interview_trace)
+      ? previousMetadata.interview_trace.filter((item) => item && typeof item === 'object')
+      : []
+    const interviewTrace = activeInterview
+      ? [
+          ...previousTrace.filter((item) => (item as Record<string,unknown>).interview_id !== activeInterview.id),
+          {
+            interview_id:activeInterview.id,
+            interview_code:activeInterview.code,
+            event_id:activeInterview.event_id,
+            captured_at:new Date().toISOString(),
+          },
+        ]
+      : previousTrace
     const { data: authData } = await supabase.auth.getUser()
     const userId = authData.user?.id ?? null
     const { data, error: saveError } = await supabase
@@ -1675,12 +1692,19 @@ export function SkdaWorkspace(props: Props) {
         evidenced_alternative_id:draft.alternativeId || null,
         confidence_level:draft.confidenceLevel,
         response_status:'draft',
+        metadata:{
+          ...previousMetadata,
+          interview_trace:interviewTrace,
+          last_interview_id:activeInterview?.id ?? previousMetadata.last_interview_id ?? null,
+          last_interview_code:activeInterview?.code ?? previousMetadata.last_interview_code ?? null,
+          last_interview_event_id:activeInterview?.event_id ?? previousMetadata.last_interview_event_id ?? null,
+        },
         evaluated_at:new Date().toISOString(),
         evaluated_by:userId,
         validated_at:null,
         validated_by:null,
       } as never, { onConflict:'diagnosis_id,question_id' })
-      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at' as never)
+      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at,metadata' as never)
       .single()
 
     setSaving(false)
@@ -1722,7 +1746,7 @@ export function SkdaWorkspace(props: Props) {
       .eq('id', response.id)
       .eq('diagnosis_id', selected.id)
       .eq('organization_id', props.organizationId)
-      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at' as never)
+      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at,metadata' as never)
       .single()
 
     setSaving(false)
@@ -3084,7 +3108,7 @@ export function SkdaWorkspace(props: Props) {
                   <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
                   {aaAnswer && <div className="skda-aa-guidance"><strong>Autoavaliação importada · {aaAnswer.declared_code ?? 'sem alternativa'}</strong><span>{aaAnswer.declared_text ?? 'Resposta declarada importada sem texto descritivo.'}</span></div>}
                   {assistedSelfAssessmentActive && question.guidance && <div className="skda-aa-guidance"><strong>Orientação metodológica da questão</strong><span>{question.guidance}</span></div>}
-                  <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>
+                  <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{typeof response?.metadata?.last_interview_code === 'string' && <small>Encontro: {response.metadata.last_interview_code}</small>}{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>
                   {intelligenceRows.length > 0 && <div className="skda-question-intelligence">
                     <div className="skda-question-intelligence-head">
                       <strong>Inteligência de evidências</strong>
