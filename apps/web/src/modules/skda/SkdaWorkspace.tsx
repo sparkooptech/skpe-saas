@@ -46,6 +46,7 @@ type Diagnosis = {
   execution_initiative_id: string | null
   metadata: Record<string, unknown>
   created_at: string
+  created_by: string | null
 }
 
 type OrganizationUser = {
@@ -70,8 +71,10 @@ type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_
 type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null; metadata?:Record<string,unknown>|null }
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; guidance: string | null; display_order: number }
-type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; evaluated_at: string | null; validated_at: string | null }
-type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; score: string }
+type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; declared_alternative_id: string | null; evidenced_alternative_id: string | null; validated_alternative_id: string | null; evaluated_at: string | null; validated_at: string | null }
+type QuestionAlternative = { id:string; question_id:string; code:string; alternative_text:string; progression_order:number; score_value:number|null }
+type SelfAssessmentAnswer = { id:string; snapshot_id:string; question_id:string; declared_alternative_id:string|null; declared_code:string|null; declared_text:string|null; rationale:string|null; metadata:Record<string,unknown> }
+type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; alternativeId: string }
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
 type InitiativeOrigin = { initiative_id: string; source_entity_id: string }
 type LinkedInitiative = { id: string; code: string; name: string; initiative_class: string; status: string; progress: number; sourceFindingId: string }
@@ -481,6 +484,8 @@ export function SkdaWorkspace(props: Props) {
   const [evidenceQuestionIntelligence, setEvidenceQuestionIntelligence] = useState<EvidenceQuestionIntelligence[]>([])
   const [selfAssessmentSnapshots, setSelfAssessmentSnapshots] = useState<SelfAssessmentSnapshot[]>([])
   const [selfAssessmentMetrics, setSelfAssessmentMetrics] = useState<SelfAssessmentMetric[]>([])
+  const [questionAlternatives, setQuestionAlternatives] = useState<QuestionAlternative[]>([])
+  const [selfAssessmentAnswers, setSelfAssessmentAnswers] = useState<SelfAssessmentAnswer[]>([])
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
   const [organizationUsers, setOrganizationUsers] = useState<OrganizationUser[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
@@ -767,7 +772,7 @@ export function SkdaWorkspace(props: Props) {
     setError('')
     const { data, error: loadError } = await supabase
       .from('skda_diagnoses' as never)
-      .select('id,code,name,description,diagnosis_type,catalog_version_id,reference_year,status,current_phase_code,current_megaphase_code,progress,started_on,planned_end_on,lead_user_id,execution_initiative_id,metadata,created_at' as never)
+      .select('id,code,name,description,diagnosis_type,catalog_version_id,reference_year,status,current_phase_code,current_megaphase_code,progress,started_on,planned_end_on,lead_user_id,execution_initiative_id,metadata,created_at,created_by' as never)
       .eq('organization_id', props.organizationId)
       .is('archived_at', null)
       .order('created_at', { ascending:false })
@@ -820,7 +825,7 @@ export function SkdaWorkspace(props: Props) {
       startedOn:selected.started_on ?? '',
       plannedEndOn:selected.planned_end_on ?? '',
       diagnosisType:selected.diagnosis_type,
-      leadUserId:selected.lead_user_id ?? '',
+      leadUserId:selected.lead_user_id ?? selected.created_by ?? '',
       scopeStatement:typeof metadata.scope_statement === 'string' ? metadata.scope_statement : '',
       methodologyNotes:typeof metadata.methodology_notes === 'string' ? metadata.methodology_notes : '',
     })
@@ -849,10 +854,16 @@ export function SkdaWorkspace(props: Props) {
           .order('display_order', { ascending:true }),
         supabase
           .from('skda_responses' as never)
-          .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,evaluated_at,validated_at' as never)
+          .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at' as never)
           .eq('diagnosis_id', selected.id),
       ])
-      setQuestions((questionsResult.data ?? []) as unknown as Question[])
+      const loadedQuestions = (questionsResult.data ?? []) as unknown as Question[]
+      loadedQuestions.sort((a,b) => {
+        const blockRank = (item:Question) => /governan/i.test(item.axis_name ?? '') ? 0 : /gest/i.test(item.axis_name ?? '') ? 1 : 2
+        const rankDiff = blockRank(a) - blockRank(b)
+        return rankDiff !== 0 ? rankDiff : a.display_order - b.display_order
+      })
+      setQuestions(loadedQuestions)
       setResponses((responsesResult.data ?? []) as unknown as Response[])
     }
     void run()
@@ -866,16 +877,17 @@ export function SkdaWorkspace(props: Props) {
     const next: Record<string,AssessmentDraft> = {}
     questions.forEach((question) => {
       const response = responses.find((item) => item.question_id === question.id)
+      const aaAnswer = selfAssessmentAnswers.find((item) => item.question_id === question.id)
       next[question.id] = {
-        classification:response?.classification ?? 'not_evaluated',
-        answerText:response?.answer_text ?? '',
+        classification:response?.classification ?? (aaAnswer ? 'reported' : 'not_evaluated'),
+        answerText:response?.answer_text ?? aaAnswer?.declared_text ?? '',
         rationale:response?.rationale ?? '',
         confidenceLevel:response?.confidence_level ?? 'not_assessed',
-        score:response?.score == null ? '' : String(response.score),
+        alternativeId:response?.validated_alternative_id ?? response?.evidenced_alternative_id ?? aaAnswer?.declared_alternative_id ?? '',
       }
     })
     setAssessmentDrafts(next)
-  }, [questions, responses])
+  }, [questions, responses, selfAssessmentAnswers])
 
   useEffect(() => {
     const run = async () => {
@@ -925,6 +937,34 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [selectedId, props.organizationId])
+
+  useEffect(() => {
+    const run = async () => {
+      if (questions.length === 0) {
+        setQuestionAlternatives([])
+        setSelfAssessmentAnswers([])
+        return
+      }
+      const questionIds = questions.map((question) => question.id)
+      const snapshotIds = selfAssessmentSnapshots.map((snapshot) => snapshot.id)
+      const [alternativesResult, answersResult] = await Promise.all([
+        supabase
+          .from('skda_question_alternatives' as never)
+          .select('id,question_id,code,alternative_text,progression_order,score_value' as never)
+          .in('question_id', questionIds)
+          .order('progression_order', { ascending:true }),
+        snapshotIds.length > 0
+          ? supabase
+              .from('skda_self_assessment_answers' as never)
+              .select('id,snapshot_id,question_id,declared_alternative_id,declared_code,declared_text,rationale,metadata' as never)
+              .in('snapshot_id', snapshotIds)
+          : Promise.resolve({ data:[], error:null }),
+      ])
+      setQuestionAlternatives((alternativesResult.data ?? []) as unknown as QuestionAlternative[])
+      setSelfAssessmentAnswers((answersResult.data ?? []) as unknown as SelfAssessmentAnswer[])
+    }
+    void run()
+  }, [questions, selfAssessmentSnapshots])
 
   useEffect(() => {
     const run = async () => {
@@ -1157,7 +1197,7 @@ export function SkdaWorkspace(props: Props) {
         answerText:'',
         rationale:'',
         confidenceLevel:'not_assessed',
-        score:'',
+        alternativeId:'',
       }
       return {
         ...current,
@@ -1170,12 +1210,6 @@ export function SkdaWorkspace(props: Props) {
     if (!selected || !canEditAssessment) return
     const draft = assessmentDrafts[question.id]
     if (!draft) return
-    const score = draft.score.trim() === '' ? null : Number(draft.score)
-    if (score != null && (!Number.isFinite(score) || score < 0 || score > 100)) {
-      setError('A nota da avaliação deve estar entre 0 e 100.')
-      return
-    }
-
     setSaving(true)
     setError('')
     const hadResponse = responses.some((item) => item.question_id === question.id)
@@ -1190,7 +1224,8 @@ export function SkdaWorkspace(props: Props) {
         classification:draft.classification,
         answer_text:draft.answerText.trim() || null,
         rationale:draft.rationale.trim() || null,
-        score,
+        score:null,
+        evidenced_alternative_id:draft.alternativeId || null,
         confidence_level:draft.confidenceLevel,
         response_status:'draft',
         evaluated_at:new Date().toISOString(),
@@ -1198,7 +1233,7 @@ export function SkdaWorkspace(props: Props) {
         validated_at:null,
         validated_by:null,
       } as never, { onConflict:'diagnosis_id,question_id' })
-      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,evaluated_at,validated_at' as never)
+      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at' as never)
       .single()
 
     setSaving(false)
@@ -1224,13 +1259,14 @@ export function SkdaWorkspace(props: Props) {
       .from('skda_responses' as never)
       .update({
         response_status:'validated',
+        validated_alternative_id:response.evidenced_alternative_id,
         validated_at:new Date().toISOString(),
         validated_by:userId,
       } as never)
       .eq('id', response.id)
       .eq('diagnosis_id', selected.id)
       .eq('organization_id', props.organizationId)
-      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,evaluated_at,validated_at' as never)
+      .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at' as never)
       .single()
 
     setSaving(false)
@@ -1833,6 +1869,33 @@ export function SkdaWorkspace(props: Props) {
     }
     return null
   }, [evidenceAssets, evidenceVersionTexts, props.organizationName])
+  useEffect(() => {
+    if (!selected || !contractIntakeProposal) return
+    setOpeningForm((current) => {
+      const nextLead = current.leadUserId || selected.lead_user_id || selected.created_by || ''
+      const nextStartedOn = current.startedOn || contractIntakeProposal.startedOn
+      const nextPlannedEndOn = current.plannedEndOn || contractIntakeProposal.plannedEndOn
+      if (
+        nextLead === current.leadUserId
+        && nextStartedOn === current.startedOn
+        && nextPlannedEndOn === current.plannedEndOn
+      ) return current
+      return {
+        ...current,
+        leadUserId:nextLead,
+        startedOn:nextStartedOn,
+        plannedEndOn:nextPlannedEndOn,
+      }
+    })
+    setAppliedContractAssetId((current) => current ?? contractIntakeProposal.assetId)
+  }, [
+    selected?.id,
+    selected?.lead_user_id,
+    selected?.created_by,
+    contractIntakeProposal?.assetId,
+    contractIntakeProposal?.startedOn,
+    contractIntakeProposal?.plannedEndOn,
+  ])
   const catalogLocked = metrics.responses > 0
   const currentMegaphaseCode = selected?.current_megaphase_code ?? 'MF0'
   const workloadLevelCode = normalizePdgcWorkloadCode(
@@ -2006,7 +2069,7 @@ export function SkdaWorkspace(props: Props) {
                 {[100,90,80,70,60,50,40,30,20,10,0].map((tick) => <line key={tick} x1="5" x2="95" y1={92 - tick * .78} y2={92 - tick * .78} className="skda-evolution-gridline" />)}
                 {evolutionBenchmarks.map((benchmark) => {
                   const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
-                  return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed'} strokeWidth=".35" strokeDasharray="2 1.5" />
+                  return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={benchmark.comparator_code.toUpperCase().includes('RAMO') ? '#b7791f' : '#7c3aed'} strokeWidth=".35" strokeDasharray="7 4" strokeLinecap="butt" />
                 })}
                 {evolutionBlockSeries.map((series) => {
                   const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
@@ -2286,7 +2349,7 @@ export function SkdaWorkspace(props: Props) {
               <label className="skda-inline-field"><span>Tipo de diagnóstico</span><select value={openingForm.diagnosisType} disabled={!canManage || saving || catalogLocked} onChange={(e)=>setOpeningForm(v=>({...v,diagnosisType:e.target.value}))}>{Object.entries(TYPES).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
               <label className="skda-inline-field"><span>Início da jornada</span><input type="date" value={openingForm.startedOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,startedOn:e.target.value}))}/></label>
               <label className="skda-inline-field"><span>Conclusão prevista</span><input type="date" value={openingForm.plannedEndOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,plannedEndOn:e.target.value}))}/></label>
-              <label className="skda-inline-field skda-opening-wide"><span>Responsável pela jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving || organizationUsers.length === 0} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Não definido</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.job_title ? ' · '+user.job_title : ''}</option>)}</select>{organizationUsers.length === 0 && <small>A lista de usuários não está disponível para este perfil. O responsável pode ser definido posteriormente.</small>}</label>
+              <label className="skda-inline-field skda-opening-wide"><span>Líder SPARKOOP da jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving || organizationUsers.length === 0} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Não definido</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.job_title ? ' · '+user.job_title : ''}</option>)}</select><small>Sugestão inicial: usuário que iniciou a Jornada. Pode ser substituído antes da ratificação.</small>{organizationUsers.length === 0 && <small>A lista de usuários não está disponível para este perfil. O líder pode ser definido posteriormente.</small>}</label>
               <label className="skda-inline-field skda-opening-wide"><span>Escopo da jornada</span><textarea rows={4} value={openingForm.scopeStatement} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,scopeStatement:e.target.value}))} placeholder="Unidades, temas, processos, públicos e limites que serão considerados no diagnóstico."/></label>
               <label className="skda-inline-field skda-opening-wide"><span>Orientações metodológicas</span><textarea rows={4} value={openingForm.methodologyNotes} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,methodologyNotes:e.target.value}))} placeholder="Premissas, critérios de aplicação, adaptações e observações metodológicas específicas desta jornada."/></label>
             </div>
@@ -2439,17 +2502,20 @@ export function SkdaWorkspace(props: Props) {
             </div>}
           </div>}
           {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
-            <div className="skda-phase-workspace-head"><div><h4>Avaliação por questão</h4><small>Registre a constatação, classifique, atribua nota e confiança e submeta à validação conforme o papel.</small></div><span>{selectedCatalog ? selectedCatalog.name : 'Catálogo não definido'}</span></div>
-            <div className="skda-assessment-method-note"><strong>Maturidade</strong><span>A escala de maturidade não está publicada no catálogo atual. O campo não será preenchido artificialmente; quando a escala metodológica estiver no catálogo, a avaliação passará a derivá-la daqui.</span></div>
+            <div className="skda-phase-workspace-head"><div><h4>Avaliação por questão</h4><small>Parta da Autoavaliação importada, ratifique ou revise a alternativa do instrumento, complemente a constatação e registre confiança e fundamentação.</small></div><span>{selectedCatalog ? selectedCatalog.name : 'Catálogo não definido'}</span></div>
+            <div className="skda-assessment-method-note"><strong>Escala do instrumento</strong><span>No PDGC, a avaliação da questão usa as alternativas oficiais A–D. O DA não converte artificialmente A–D em nota de 0 a 100; percentuais permanecem restritos aos índices e resultados oficiais fornecidos pelo próprio instrumento.</span></div>
             {!selected.catalog_version_id ? <p className="skda-phase-empty">Defina o catálogo na fase DA-00 antes de iniciar a avaliação.</p> : questions.length === 0 ? <p className="skda-phase-empty">O catálogo selecionado ainda não possui questões disponíveis.</p> : <div className="skda-question-list skda-assessment-list">
               {questions.map((question) => {
                 const response = responses.find((item) => item.question_id === question.id)
                 const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.question_id === question.id)
                 const proposedRows = intelligenceRows.filter((item) => item.analysis_status === 'proposed' || item.analysis_status === 'validated')
                 const queuedRows = intelligenceRows.filter((item) => item.analysis_status === 'queued' || item.analysis_status === 'processing' || item.analysis_status === 'pending')
-                const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', score:'' }
+                const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', alternativeId:'' }
+                const alternatives = questionAlternatives.filter((item) => item.question_id === question.id)
+                const aaAnswer = selfAssessmentAnswers.find((item) => item.question_id === question.id)
                 return <article key={question.id} className="skda-assessment-card">
                   <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
+                  {aaAnswer && <div className="skda-aa-guidance"><strong>Autoavaliação importada · {aaAnswer.declared_code ?? 'sem alternativa'}</strong><span>{aaAnswer.declared_text ?? 'Resposta declarada importada sem texto descritivo.'}</span></div>}
                   {assistedSelfAssessmentActive && question.guidance && <div className="skda-aa-guidance"><strong>Orientação metodológica da questão</strong><span>{question.guidance}</span></div>}
                   <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>
                   {intelligenceRows.length > 0 && <div className="skda-question-intelligence">
@@ -2473,7 +2539,7 @@ export function SkdaWorkspace(props: Props) {
                   <div className="skda-assessment-fields">
                     <label className="wide"><span>Constatação / resposta</span><textarea rows={3} value={draft.answerText} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{answerText:e.target.value})}/></label>
                     <label><span>Classificação</span><select value={draft.classification} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{classification:e.target.value})}>{Object.entries(CLASSIFICATION).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-                    <label><span>Nota (0–100)</span><input type="number" min="0" max="100" step="0.01" value={draft.score} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{score:e.target.value})}/></label>
+                    <label><span>Alternativa do DA</span><select value={draft.alternativeId} disabled={!canEditAssessment || saving || alternatives.length === 0} onChange={(e)=>updateAssessmentDraft(question.id,{alternativeId:e.target.value})}><option value="">Não definida</option>{alternatives.map((alternative)=><option key={alternative.id} value={alternative.id}>{alternative.code} — {alternative.alternative_text}</option>)}</select></label>
                     <label><span>Confiança</span><select value={draft.confidenceLevel} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{confidenceLevel:e.target.value})}>{Object.entries(CONFIDENCE_LEVELS).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
                     <label className="wide"><span>Fundamentação</span><textarea rows={2} value={draft.rationale} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{rationale:e.target.value})}/></label>
                   </div>
