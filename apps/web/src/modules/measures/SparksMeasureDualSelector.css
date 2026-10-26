@@ -271,12 +271,12 @@
 }
 
 .sparks-measure-dual-selector__pane .wx-row {
-  min-height: 42px !important;
+  min-height: 36px !important;
 }
 
 .sparks-measure-dual-selector__pane .wx-cell {
-  padding-top: 0.48rem !important;
-  padding-bottom: 0.48rem !important;
+  padding-top: 0.32rem !important;
+  padding-bottom: 0.32rem !important;
 }
 
 .sparks-measure-dual-selector__actions {
