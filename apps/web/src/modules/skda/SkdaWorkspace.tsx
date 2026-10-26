@@ -1967,7 +1967,7 @@ export function SkdaWorkspace(props: Props) {
       <div className="skda-executive-grid">
         <article className="skda-executive-card skda-journey-progress-card">
           <div className="skda-executive-card-head skda-journey-progress-head">
-            <div><span>{TYPES[selected.diagnosis_type] ?? selected.diagnosis_type}</span><h3>Evolução da Jornada {selected.reference_year ?? ''}</h3></div>
+            <div><h3>Evolução da Jornada {selected.reference_year ?? ''}</h3></div>
             <div className="skda-journey-progress-actions">
               {diagnoses.length > 1 && <label className="skda-cycle-selector"><span>Ciclo</span><select value={selectedId ?? ''} onChange={(event)=>setSelectedId(event.target.value)}>{diagnoses.map((item)=><option key={item.id} value={item.id}>{formatDiagnosisBusinessTitle(item)}</option>)}</select></label>}
               <strong>{Number(selected.progress).toFixed(0)}%</strong>
@@ -1975,9 +1975,6 @@ export function SkdaWorkspace(props: Props) {
           </div>
           <div className="skda-progress-track" aria-label="Progresso do diagnóstico">
             <span style={{ width: `${Math.max(0, Math.min(100, Number(selected.progress) || 0))}%` }} />
-          </div>
-          <div className="skda-progress-meta">
-            <span>Fase atual</span><b>{PHASES.find((phase) => phase.code === normalizeJourneyPhaseCode(selected.current_phase_code))?.title ?? 'Preparação e abertura'} · {STATUS[selected.status] ?? selected.status}</b>
           </div>
           <div className="skda-phase-strip" aria-label="Etapas da Jornada DA">
             {PHASES.map((phase) => (
