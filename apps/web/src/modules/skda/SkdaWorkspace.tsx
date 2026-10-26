@@ -20,6 +20,7 @@ type Props = {
   onSwitchModule?: (moduleCode:string) => void | Promise<void>
   userRoleCode: string
   userRoleName: string
+  userId: string
   userDisplayName: string
   userEmail: string
   userAvatarUrl: string | null
@@ -716,7 +717,7 @@ export function SkdaWorkspace(props: Props) {
     return values.map((rawValue, index) => {
       const value = rawValue == null ? 0 : Math.max(0, Math.min(100, rawValue))
       const angle = (-Math.PI / 2) + (index * 2 * Math.PI / values.length)
-      const radius = 72 * (value / 100)
+      const radius = 78 * (value / 100)
       return `${100 + Math.cos(angle) * radius},${100 + Math.sin(angle) * radius}`
     }).join(' ')
   }
@@ -825,7 +826,7 @@ export function SkdaWorkspace(props: Props) {
       startedOn:selected.started_on ?? '',
       plannedEndOn:selected.planned_end_on ?? '',
       diagnosisType:selected.diagnosis_type,
-      leadUserId:selected.lead_user_id ?? selected.created_by ?? '',
+      leadUserId:selected.lead_user_id ?? selected.created_by ?? props.userId ?? '',
       scopeStatement:typeof metadata.scope_statement === 'string' ? metadata.scope_statement : '',
       methodologyNotes:typeof metadata.methodology_notes === 'string' ? metadata.methodology_notes : '',
     })
@@ -1139,6 +1140,10 @@ export function SkdaWorkspace(props: Props) {
       ...(selected.metadata ?? {}),
       scope_statement:openingForm.scopeStatement.trim() || null,
       methodology_notes:openingForm.methodologyNotes.trim() || null,
+      diagnostic_sequence:['GOVERNANCA','GESTAO'],
+      contract_period_constraint:openingForm.startedOn && openingForm.plannedEndOn
+        ? { started_on:openingForm.startedOn, planned_end_on:openingForm.plannedEndOn }
+        : null,
       ...(contractIntakeProposal && appliedContractAssetId === contractIntakeProposal.assetId ? {
         contracted_hours:contractIntakeProposal.contractedHours,
         contractual_source_evidence_asset_id:contractIntakeProposal.assetId,
@@ -1872,7 +1877,7 @@ export function SkdaWorkspace(props: Props) {
   useEffect(() => {
     if (!selected || !contractIntakeProposal) return
     setOpeningForm((current) => {
-      const nextLead = current.leadUserId || selected.lead_user_id || selected.created_by || ''
+      const nextLead = current.leadUserId || selected.lead_user_id || selected.created_by || props.userId || ''
       const nextStartedOn = current.startedOn || contractIntakeProposal.startedOn
       const nextPlannedEndOn = current.plannedEndOn || contractIntakeProposal.plannedEndOn
       if (
@@ -2020,17 +2025,25 @@ export function SkdaWorkspace(props: Props) {
           {series.baseline.length === 0 ? (
             <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'Radar por critério: aguardando a integração das pontuações oficiais do relatório.' : 'Autoavaliação ainda não integrada.'}</p>
           ) : <div className="skda-radar-wrap">
-            <svg viewBox="0 0 200 200" role="img" aria-label={`Comparação entre Autoavaliação e Diagnóstico Assistido · ${title}`}>
-              <circle cx="100" cy="100" r="72" className="skda-radar-grid" />
-              <circle cx="100" cy="100" r="48" className="skda-radar-grid" />
-              <circle cx="100" cy="100" r="24" className="skda-radar-grid" />
-              <polygon points={series.aaPoints} className="skda-radar-value-aa" />
-              {series.daAvailable && <polygon points={series.daPoints} className="skda-radar-value-da" />}
-            </svg>
-            <div className="skda-radar-detail">
+            <div className="skda-radar-visual">
+              <svg viewBox="0 0 200 200" role="img" aria-label={`Comparação entre Autoavaliação e Diagnóstico Assistido · ${title}`}>
+                <circle cx="100" cy="100" r="78" className="skda-radar-grid" />
+                <circle cx="100" cy="100" r="52" className="skda-radar-grid" />
+                <circle cx="100" cy="100" r="26" className="skda-radar-grid" />
+                <polygon points={series.aaPoints} className="skda-radar-value-aa" />
+                {series.daAvailable && <polygon points={series.daPoints} className="skda-radar-value-da" />}
+              </svg>
               <div className="skda-radar-legend"><span><i className="aa" />Autoavaliação</span><span><i className="da" />Diagnóstico Assistido</span></div>
-              <dl>{series.baseline.map((item, index) => <div key={item.axis}><dt>{item.axis}</dt><dd><b>{item.score.toFixed(0)}%</b><span>{series.diagnosis[index]?.score == null ? 'DA —' : 'DA ' + series.diagnosis[index]?.score + '%'}</span></dd></div>)}</dl>
-              {!series.daAvailable && <p>O DA ainda não possui pontuação validada para este eixo. A AA permanece como baseline até a validação das questões.</p>}
+            </div>
+            <div className="skda-radar-detail">
+              <div className="skda-radar-table-head"><span>Critério</span><span>AA</span><span>DA</span></div>
+              <div className="skda-radar-table-body">
+                {series.baseline.map((item, index) => <div key={item.axis} className="skda-radar-table-row">
+                  <span>{item.axis}</span>
+                  <b>{item.score.toFixed(0)}%</b>
+                  <b>{series.diagnosis[index]?.score == null ? '—' : series.diagnosis[index]?.score + '%'}</b>
+                </div>)}
+              </div>
             </div>
           </div>}
           {(reference.current || reference.history.length > 0 || reference.benchmarks.length > 0) && <div className="skda-aa-reference">
@@ -2349,7 +2362,7 @@ export function SkdaWorkspace(props: Props) {
               <label className="skda-inline-field"><span>Tipo de diagnóstico</span><select value={openingForm.diagnosisType} disabled={!canManage || saving || catalogLocked} onChange={(e)=>setOpeningForm(v=>({...v,diagnosisType:e.target.value}))}>{Object.entries(TYPES).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
               <label className="skda-inline-field"><span>Início da jornada</span><input type="date" value={openingForm.startedOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,startedOn:e.target.value}))}/></label>
               <label className="skda-inline-field"><span>Conclusão prevista</span><input type="date" value={openingForm.plannedEndOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,plannedEndOn:e.target.value}))}/></label>
-              <label className="skda-inline-field skda-opening-wide"><span>Líder SPARKOOP da jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving || organizationUsers.length === 0} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Não definido</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.job_title ? ' · '+user.job_title : ''}</option>)}</select><small>Sugestão inicial: usuário que iniciou a Jornada. Pode ser substituído antes da ratificação.</small>{organizationUsers.length === 0 && <small>A lista de usuários não está disponível para este perfil. O líder pode ser definido posteriormente.</small>}</label>
+              <label className="skda-inline-field skda-opening-wide"><span>Líder SPARKOOP da jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Não definido</option>{props.userId && !organizationUsers.some((user)=>user.user_id === props.userId) && <option value={props.userId}>{props.userDisplayName || props.userEmail} · usuário que iniciou a Jornada</option>}{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.user_id === selected.created_by ? ' · usuário que iniciou a Jornada' : user.job_title ? ' · '+user.job_title : ''}</option>)}</select><small>Preenchido inicialmente com o usuário que iniciou a Jornada. Pode ser substituído antes da ratificação.</small></label>
               <label className="skda-inline-field skda-opening-wide"><span>Escopo da jornada</span><textarea rows={4} value={openingForm.scopeStatement} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,scopeStatement:e.target.value}))} placeholder="Unidades, temas, processos, públicos e limites que serão considerados no diagnóstico."/></label>
               <label className="skda-inline-field skda-opening-wide"><span>Orientações metodológicas</span><textarea rows={4} value={openingForm.methodologyNotes} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,methodologyNotes:e.target.value}))} placeholder="Premissas, critérios de aplicação, adaptações e observações metodológicas específicas desta jornada."/></label>
             </div>

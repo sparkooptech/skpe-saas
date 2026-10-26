@@ -1958,6 +1958,7 @@ function App() {
         onSwitchModule={handleSwitchWorkspaceModule}
         userRoleCode={openedModule.role_code}
         userRoleName={openedModule.role_name}
+        userId={session?.user.id ?? ''}
         userDisplayName={userDisplayName || session?.user.email || 'Usuário'}
         userEmail={session?.user.email ?? ''}
         userAvatarUrl={userAvatarUrl}
