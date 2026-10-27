@@ -793,9 +793,15 @@ export function SkdaWorkspace(props: Props) {
           && ['history','overall_index'].includes(item.metric_kind)
           && (String(item.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED') === (kind === 'DA'))
         const score = metric && Number.isFinite(Number(metric.metric_value)) ? Number(metric.metric_value) : null
-        return { ...evolutionChartPoint(index,score),score }
+        return { ...evolutionChartPoint(index,score),score,year:Number(cycle.label) }
       }),
     })))
+
+  const evolutionEndLabels = evolutionBlockSeries.flatMap((series) => {
+    const visible=series.values.filter((point)=>point.score!=null)
+    const point=visible.at(-1)
+    return point ? [{ ...series,point }] : []
+  })
 
   const actionFollowupSummary = useMemo(() => {
     const counts = {
@@ -2968,55 +2974,42 @@ export function SkdaWorkspace(props: Props) {
           <>
             <div className="skda-evolution-chart">
               <div className="skda-evolution-axis">
-                {[100,90,80,70,60,50,40,30,20,10,0].map((tick) => <span key={tick} style={{position:'absolute',top:`${92 - tick * .78}%`,right:0,transform:'translateY(-50%)'}}>{tick}%</span>)}
+                {[100,80,60,40,20,0].map((tick) => <span key={tick} style={{position:'absolute',top:`${92 - tick * .78}%`,right:0,transform:'translateY(-50%)'}}>{tick}%</span>)}
               </div>
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Evolução da Autoavaliação e do Diagnóstico Assistido por ciclo">
-                {[100,90,80,70,60,50,40,30,20,10,0].map((tick) => <line key={tick} x1="5" x2="95" y1={92 - tick * .78} y2={92 - tick * .78} className="skda-evolution-gridline" />)}
+                {[100,80,60,40,20,0].map((tick) => <line key={tick} x1="5" x2="95" y1={92 - tick * .78} y2={92 - tick * .78} className="skda-evolution-gridline" />)}
                 {evolutionBenchmarks.map((benchmark) => {
                   const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
-                  return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={evolutionBenchmarkColor(benchmark)} strokeWidth=".32" strokeDasharray="6 4" strokeLinecap="butt" />
+                  return y == null ? null : <line key={benchmark.id} x1="5" x2="95" y1={y} y2={y} stroke={evolutionBenchmarkColor(benchmark)} strokeOpacity=".42" strokeWidth=".22" strokeDasharray="2.5 3.5" strokeLinecap="round" />
                 })}
                 {evolutionBlockSeries.map((series) => {
                   const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
-                  const points = series.values.filter((point) => point.score != null).map((point) => `${point.x},${point.y}`).join(' ')
+                  const visible = series.values.filter((point) => point.score != null)
+                  const points = visible.map((point) => `${point.x},${point.y}`).join(' ')
+                  const isAA = series.kind === 'AA'
                   return <g key={`${series.block}-${series.kind}`}>
-                    {series.values.filter((point) => point.score != null).length > 1 && <polyline points={points} fill="none" stroke={color} strokeWidth=".55" vectorEffect="non-scaling-stroke" />}
-                    {series.values.filter((point) => point.score != null).map((point) => <g key={`${point.x}-${point.y}`}>
-                      {series.block === 'GOVERNANCA' && series.kind === 'AA' && <circle cx={point.x} cy={point.y!} r="1.1" fill={color} />}
-                      {series.block === 'GOVERNANCA' && series.kind === 'DA' && <rect x={point.x-1.1} y={point.y!-1.1} width="2.2" height="2.2" fill={color} />}
-                      {series.block === 'GESTAO' && series.kind === 'AA' && <polygon points={`${point.x},${point.y!-1.5} ${point.x+1.5},${point.y!} ${point.x},${point.y!+1.5} ${point.x-1.5},${point.y!}`} fill={color} />}
-                      {series.block === 'GESTAO' && series.kind === 'DA' && <polygon points={`${point.x},${point.y!-1.5} ${point.x+1.5},${point.y!+1.2} ${point.x-1.5},${point.y!+1.2}`} fill={color} />}
-                      <title>{`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind}: ${point.score?.toFixed(2)}%`}</title>
+                    {visible.length > 1 && <polyline points={points} fill="none" stroke={color} strokeOpacity={isAA ? .82 : .58} strokeWidth={isAA ? ".62" : ".38"} strokeDasharray={isAA ? undefined : "2.5 2.2"} vectorEffect="non-scaling-stroke" />}
+                    {visible.map((point) => <g key={`${point.x}-${point.y}`}>
+                      {isAA
+                        ? <circle cx={point.x} cy={point.y!} r=".9" fill="#fff" stroke={color} strokeWidth=".55" vectorEffect="non-scaling-stroke" />
+                        : <circle cx={point.x} cy={point.y!} r="1.3" fill={color} stroke="#fff" strokeWidth=".45" vectorEffect="non-scaling-stroke" />}
+                      <title>{`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind} · ${point.year}: ${point.score?.toFixed(2)}%`}</title>
                     </g>)}
                   </g>
                 })}
 
               </svg>
               <div className="skda-evolution-value-labels">
-                {evolutionBenchmarks.map((benchmark) => {
-                  const y = evolutionChartPoint(0,Number(benchmark.metric_value)).y
-                  if (y == null) return null
-                  const isGovernance = benchmark.block_code === 'GOVERNANCA'
-                  const isBranch = benchmark.comparator_code.toUpperCase().includes('RAMO')
-                  const label = isBranch ? 'Ramo Brasil' : 'Brasil'
+                {evolutionEndLabels.filter((series) => series.kind === 'AA').map((series) => {
+                  const color = series.block === 'GOVERNANCA' ? '#2563eb' : '#9333ea'
+                  const offset = series.block === 'GOVERNANCA' ? -10 : 10
                   return <span
-                    key={'benchmark-'+benchmark.id}
-                    className="skda-benchmark-line-label"
-                    style={{
-                      position:'absolute',
-                      left:isGovernance ? '32%' : '68%',
-                      top:`calc(${y}% - 18px)`,
-                      transform:'translateX(-50%)',
-                      color:evolutionBenchmarkColor(benchmark),
-                    }}
-                    title={benchmark.source_reference ?? undefined}
-                  ><b>{isGovernance ? 'Gov.' : 'Gest.'} · {label} {Number(benchmark.metric_value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></span>
+                    key={`${series.block}-${series.kind}-end`}
+                    className="skda-evolution-end-label"
+                    style={{left:`${Math.min(97,series.point.x+1.6)}%`,top:`calc(${series.point.y}% + ${offset}px)`,color}}
+                    title={`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · AA · ${series.point.year}`}
+                  ><b>{series.point.score!.toFixed(2)}%</b></span>
                 })}
-                {evolutionBlockSeries.flatMap((series) => series.values.filter((point) => point.score != null).map((point) => {
-                  const color = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? '#2563eb' : '#047857') : (series.kind === 'AA' ? '#9333ea' : '#d97706')
-                  const offset = series.block === 'GOVERNANCA' ? (series.kind === 'AA' ? -12 : 12) : (series.kind === 'AA' ? -12 : 12)
-                  return <span key={`${series.block}-${series.kind}-${point.x}`} style={{position:'absolute',left:`${point.x}%`,top:`calc(${point.y}% + ${offset}px)`,transform:'translateX(-50%)',color}} title={`${series.block === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · ${series.kind}`}><b>{point.score!.toFixed(2)}%</b></span>
-                }))}
               </div>
               <div className="skda-evolution-labels">
                 {evolutionChartSeries.map((item,index) => <div key={item.diagnosisId} className={item.current ? 'is-current' : ''} style={{position:'absolute',left:`${evolutionChartPoint(index,null).x}%`,transform:'translateX(-50%)'}}>
@@ -3025,12 +3018,25 @@ export function SkdaWorkspace(props: Props) {
               </div>
             </div>
             <div className="skda-evolution-legend">
-              <span><b style={{color:'#2563eb'}}>●</b> Governança · AA</span>
-              <span><b style={{color:'#047857'}}>■</b> Governança · DA</span>
-              <span><b style={{color:'#9333ea'}}>◆</b> Gestão · AA</span>
-              <span><b style={{color:'#d97706'}}>▲</b> Gestão · DA</span>
-              {evolutionBenchmarks.map((benchmark) => <span key={benchmark.id} title={benchmark.source_reference ?? undefined}><i style={{ background:evolutionBenchmarkColor(benchmark) }} />{benchmark.block_code === 'GOVERNANCA' ? 'Governança' : 'Gestão'} · {benchmark.comparator_label || benchmark.comparator_code}</span>)}
-              {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
+              <div className="skda-evolution-legend-group">
+                <strong>Organização</strong>
+                <span><i className="skda-legend-line aa-governance" />Governança · AA</span>
+                <span><i className="skda-legend-dot da-governance" />Governança · DA</span>
+                <span><i className="skda-legend-line aa-management" />Gestão · AA</span>
+                <span><i className="skda-legend-dot da-management" />Gestão · DA</span>
+              </div>
+              <div className="skda-evolution-legend-group skda-evolution-benchmarks">
+                <strong>Referências</strong>
+                {evolutionBenchmarks.map((benchmark) => {
+                  const isBranch=benchmark.comparator_code.toUpperCase().includes('RAMO')
+                  return <span key={benchmark.id} title={benchmark.source_reference ?? undefined}>
+                    <i className="skda-legend-reference" style={{borderTopColor:evolutionBenchmarkColor(benchmark)}} />
+                    {benchmark.block_code === 'GOVERNANCA' ? 'Gov.' : 'Gest.'} · {isBranch ? 'Ramo Brasil' : 'Brasil'}
+                    <b>{Number(benchmark.metric_value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b>
+                  </span>
+                })}
+                {evolutionBenchmarks.length === 0 && <span>BMKs do ramo e nacional: aguardando fontes oficiais e ano de referência</span>}
+              </div>
             </div>
             <div className="skda-artifact-grid" hidden>
               {(['GOVERNANCA','GESTAO'] as const).map((block) => <article key={block}>

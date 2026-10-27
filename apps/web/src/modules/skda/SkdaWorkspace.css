@@ -2426,27 +2426,89 @@
 .skda-evolution-labels > div.is-current strong { color: var(--skda-primary); }
 
 .skda-evolution-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1.25fr);
+  gap: .7rem;
   color: var(--skda-muted);
-  font-size: .76rem;
+  font-size: .7rem;
+}
+
+.skda-evolution-legend-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .45rem .8rem;
+  min-width: 0;
+  padding: .5rem .6rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.skda-evolution-legend-group > strong {
+  color: var(--skda-text);
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
 }
 
 .skda-evolution-legend span {
   display: inline-flex;
   align-items: center;
-  gap: .35rem;
+  gap: .3rem;
+  white-space: nowrap;
+}
+
+.skda-evolution-legend span > b {
+  color: var(--skda-text);
+  font-size: .68rem;
 }
 
 .skda-evolution-legend i {
-  width: .75rem;
-  height: .75rem;
-  border-radius: 2px;
+  display: inline-block;
+  flex: 0 0 auto;
 }
 
-.skda-evolution-legend i.aa { background: #2563eb; }
-.skda-evolution-legend i.da { background: var(--skda-primary); }
+.skda-legend-line {
+  width: 1.15rem;
+  height: 0;
+  border-top: 2px solid currentColor;
+}
+
+.skda-legend-dot {
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+}
+
+.skda-legend-reference {
+  width: 1.05rem;
+  height: 0;
+  border-top: 1px dashed currentColor;
+  opacity: .75;
+}
+
+.skda-legend-line.aa-governance { color: #2563eb; }
+.skda-legend-line.aa-management { color: #9333ea; }
+.skda-legend-dot.da-governance { background: #047857; }
+.skda-legend-dot.da-management { background: #d97706; }
+
+.skda-evolution-end-label {
+  position: absolute;
+  transform: translateY(-50%);
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(255,255,255,.9);
+  font-size: .7rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .skda-evolution-legend {
+    grid-template-columns: 1fr;
+  }
+}
 
 .skda-evolution-overview .skda-evolution-message {
   display: block;
