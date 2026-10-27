@@ -536,6 +536,122 @@
   justify-content: flex-start;
 }
 
+.skda-intelligent-agenda {
+  display: grid;
+  gap: .55rem;
+  padding: .7rem;
+  border: 1px solid color-mix(in srgb, var(--skda-primary) 24%, var(--skda-border));
+  border-radius: 10px;
+  background: #fff;
+}
+
+.skda-intelligent-agenda-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .8rem;
+}
+
+.skda-intelligent-agenda-head > div:first-child {
+  display: grid;
+  gap: .18rem;
+}
+
+.skda-intelligent-agenda-head > div:first-child span {
+  color: var(--skda-primary);
+  font-size: .67rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.skda-intelligent-agenda-head > div:first-child strong {
+  color: var(--skda-text);
+  font-size: .82rem;
+}
+
+.skda-intelligent-agenda-head > div:first-child small {
+  color: var(--skda-muted);
+  font-size: .69rem;
+  line-height: 1.4;
+}
+
+.skda-intelligent-agenda-head > div:last-child {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: .16rem .35rem;
+  align-items: baseline;
+}
+
+.skda-intelligent-agenda-head > div:last-child b {
+  color: var(--skda-primary);
+  font-size: .9rem;
+}
+
+.skda-intelligent-agenda-head > div:last-child span {
+  color: var(--skda-muted);
+  font-size: .65rem;
+}
+
+.skda-intelligent-agenda-list {
+  display: grid;
+  gap: .38rem;
+}
+
+.skda-intelligent-agenda-list article {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: .6rem;
+  padding: .48rem .55rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 8px;
+  background: #fbfcfc;
+}
+
+.skda-intelligent-agenda-list article > div:nth-child(2) {
+  display: grid;
+  gap: .12rem;
+  min-width: 0;
+}
+
+.skda-intelligent-agenda-list small,
+.skda-intelligent-agenda-list span,
+.skda-intelligent-agenda-more {
+  color: var(--skda-muted);
+  font-size: .65rem;
+  line-height: 1.35;
+}
+
+.skda-intelligent-agenda-list strong {
+  color: var(--skda-text);
+  font-size: .73rem;
+  line-height: 1.35;
+}
+
+.skda-intelligent-agenda-rank {
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--skda-primary) 10%, white);
+  color: var(--skda-primary);
+  font-size: .7rem;
+  font-weight: 850;
+}
+
+@media (max-width: 760px) {
+  .skda-intelligent-agenda-head,
+  .skda-intelligent-agenda-list article {
+    grid-template-columns: 1fr;
+  }
+
+  .skda-intelligent-agenda-head {
+    flex-direction: column;
+  }
+}
+
 .skda-assessment-card {
   scroll-margin-top: 1rem;
 }

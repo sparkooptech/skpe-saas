@@ -642,6 +642,76 @@ export function SkdaWorkspace(props: Props) {
     return { total,underAnalysis,validated,rejected,converted,interviewPrompts }
   }, [evidenceQuestionIntelligence])
 
+  const intelligentInterviewAgenda = useMemo(() => {
+    const normalizePrompt = (value:string) => value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLocaleLowerCase('pt-BR')
+      .replace(/[^a-z0-9]+/g,' ')
+      .trim()
+    const blockOf = (question:Question | undefined) => /governan/i.test(question?.axis_name ?? '') ? 'GOVERNANCA' : /gest/i.test(question?.axis_name ?? '') ? 'GESTAO' : 'OUTRO'
+    const groups = new Map<string,{
+      key:string
+      prompt:string
+      items:EvidenceQuestionIntelligence[]
+      questionIds:Set<string>
+      questionCodes:Set<string>
+      evidenceIds:Set<string>
+      criteria:Set<string>
+      block:'GOVERNANCA'|'GESTAO'|'OUTRO'
+      maxConfidence:number
+      urgency:number
+    }>()
+
+    evidenceQuestionIntelligence
+      .filter((item) => item.analysis_status === 'proposed' && Boolean(item.interview_question_suggestion?.trim()))
+      .forEach((item) => {
+        const prompt=item.interview_question_suggestion!.trim()
+        const key=normalizePrompt(prompt)
+        if (!key) return
+        const question=questions.find((row)=>row.id===item.question_id)
+        const existing=groups.get(key) ?? {
+          key,prompt,items:[],questionIds:new Set<string>(),questionCodes:new Set<string>(),evidenceIds:new Set<string>(),criteria:new Set<string>(),
+          block:blockOf(question),maxConfidence:0,urgency:0,
+        }
+        existing.items.push(item)
+        existing.questionIds.add(item.question_id)
+        if (question?.code) existing.questionCodes.add(question.code)
+        if (question?.criterion_name) existing.criteria.add(question.criterion_name)
+        existing.evidenceIds.add(item.evidence_asset_id)
+        existing.maxConfidence=Math.max(existing.maxConfidence,Number(item.confidence_score ?? 0))
+        existing.urgency+=item.evidence_coverage_status === 'does_not_cover' || item.evidence_coverage_status === 'needs_complement' ? 3
+          : item.evidence_coverage_status === 'partially_covers' ? 2 : 1
+        groups.set(key,existing)
+      })
+
+    const rows=[...groups.values()]
+      .map((group) => ({
+        ...group,
+        firstQuestion:questions
+          .filter((question)=>group.questionIds.has(question.id))
+          .sort((a,b)=>a.display_order-b.display_order)[0] ?? null,
+        affectedQuestions:group.questionIds.size,
+        affectedEvidence:group.evidenceIds.size,
+        criterionLabels:[...group.criteria].slice(0,3),
+        questionCodes:[...group.questionCodes].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true})),
+      }))
+      .sort((a,b) => {
+        const blockOrder={GOVERNANCA:0,GESTAO:1,OUTRO:2}
+        if (blockOrder[a.block] !== blockOrder[b.block]) return blockOrder[a.block]-blockOrder[b.block]
+        if (b.urgency !== a.urgency) return b.urgency-a.urgency
+        if (b.affectedQuestions !== a.affectedQuestions) return b.affectedQuestions-a.affectedQuestions
+        return b.maxConfidence-a.maxConfidence
+      })
+
+    return {
+      rows,
+      rawPrompts:evidenceQuestionIntelligence.filter((item)=>item.analysis_status==='proposed' && Boolean(item.interview_question_suggestion?.trim())).length,
+      governance:rows.filter((row)=>row.block==='GOVERNANCA'),
+      management:rows.filter((row)=>row.block==='GESTAO'),
+    }
+  }, [evidenceQuestionIntelligence,questions])
+
   const maturityByAxis = useMemo(() => {
     const grouped = new Map<string, number[]>()
     questions.forEach((question) => {
@@ -3368,12 +3438,35 @@ export function SkdaWorkspace(props: Props) {
                 <div className={interviewQuestionFlow.current?.block === 'GOVERNANCA' ? 'active' : ''}><span>Governança</span><strong>{interviewQuestionFlow.governanceTraversed}/{interviewQuestionFlow.governance.length}</strong></div>
                 <div className={interviewQuestionFlow.current?.block === 'GESTAO' ? 'active' : ''}><span>Gestão</span><strong>{interviewQuestionFlow.managementTraversed}/{interviewQuestionFlow.management.length}</strong></div>
               </div>
+              {intelligentInterviewAgenda.rows.length > 0 && <div className="skda-intelligent-agenda">
+                <div className="skda-intelligent-agenda-head">
+                  <div>
+                    <span>Agenda inteligente da entrevista</span>
+                    <strong>{intelligentInterviewAgenda.rows.length} pergunta(s) executiva(s) consolidam {intelligentInterviewAgenda.rawPrompts} hipótese(s)</strong>
+                    <small>As perguntas repetidas foram agrupadas sem eliminar nenhum vínculo com as questões oficiais ou evidências de origem.</small>
+                  </div>
+                  <div><b>{intelligentInterviewAgenda.governance.length}</b><span>Governança</span><b>{intelligentInterviewAgenda.management.length}</b><span>Gestão</span></div>
+                </div>
+                <div className="skda-intelligent-agenda-list">
+                  {intelligentInterviewAgenda.rows.slice(0,8).map((row,index) => <article key={row.key}>
+                    <div className="skda-intelligent-agenda-rank">{index+1}</div>
+                    <div>
+                      <small>{row.block === 'GOVERNANCA' ? 'Governança' : row.block === 'GESTAO' ? 'Gestão' : 'Transversal'} · {row.affectedQuestions} questão(ões) · {row.affectedEvidence} evidência(s)</small>
+                      <strong>{row.prompt}</strong>
+                      <span>{row.questionCodes.slice(0,8).join(' · ')}{row.questionCodes.length > 8 ? ' +' + (row.questionCodes.length-8) : ''}</span>
+                      {row.criterionLabels.length > 0 && <span>{row.criterionLabels.join(' · ')}</span>}
+                    </div>
+                    {row.firstQuestion && <button type="button" onClick={() => document.getElementById('skda-question-'+row.firstQuestion?.id)?.scrollIntoView({ behavior:'smooth', block:'start' })}>Abrir questões</button>}
+                  </article>)}
+                </div>
+                {intelligentInterviewAgenda.rows.length > 8 && <small className="skda-intelligent-agenda-more">+ {intelligentInterviewAgenda.rows.length-8} pergunta(s) consolidada(s) adicional(is), preservadas na sequência metodológica.</small>}
+              </div>}
               {interviewQuestionFlow.current ? <div className="skda-interview-current-question">
                 <div>
                   <small>Próxima questão · {interviewQuestionFlow.current.block === 'GOVERNANCA' ? 'Governança' : interviewQuestionFlow.current.block === 'GESTAO' ? 'Gestão' : 'Outras'}</small>
                   <strong>{interviewQuestionFlow.current.question.code} · {interviewQuestionFlow.current.question.question_text}</strong>
                   {interviewQuestionFlow.current.question.criterion_name && <span>{interviewQuestionFlow.current.question.criterion_name}</span>}
-                  {evidenceQuestionIntelligence.filter((item) => item.question_id === interviewQuestionFlow.current?.question.id && item.analysis_status !== 'rejected' && Boolean(item.interview_question_suggestion?.trim())).slice(0,3).map((item) => <span key={item.id} className="skda-interview-intelligence-prompt"><b>Inteligência:</b> {item.interview_question_suggestion}</span>)}
+                  {intelligentInterviewAgenda.rows.filter((row)=>row.questionIds.has(interviewQuestionFlow.current?.question.id ?? '')).slice(0,3).map((row) => <span key={row.key} className="skda-interview-intelligence-prompt"><b>Inteligência:</b> {row.prompt}</span>)}
                 </div>
                 <button type="button" className="skda-primary" onClick={() => document.getElementById('skda-question-'+interviewQuestionFlow.current?.question.id)?.scrollIntoView({ behavior:'smooth', block:'start' })}>Retomar nesta questão</button>
               </div> : <div className="skda-interview-current-question is-complete"><div><small>Roteiro concluído</small><strong>Todas as questões da Jornada foram percorridas no DA.</strong><span>A validação final pode prosseguir sem perder a rastreabilidade das entrevistas.</span></div></div>}
