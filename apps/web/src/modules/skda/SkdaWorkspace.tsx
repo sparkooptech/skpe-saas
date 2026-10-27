@@ -1039,7 +1039,7 @@ export function SkdaWorkspace(props: Props) {
       startedOn:selected.started_on ?? '',
       plannedEndOn:selected.planned_end_on ?? '',
       diagnosisType:selected.diagnosis_type,
-      leadUserId:selected.lead_user_id ?? selected.created_by ?? props.userId ?? '',
+      leadUserId:selected.lead_user_id ?? '',
       scopeStatement:typeof metadata.scope_statement === 'string' ? metadata.scope_statement : '',
       methodologyNotes:typeof metadata.methodology_notes === 'string' ? metadata.methodology_notes : '',
     })
@@ -1343,6 +1343,10 @@ export function SkdaWorkspace(props: Props) {
 
   const saveOpeningConfiguration = async () => {
     if (!selected || !canManage) return
+    if (openingForm.leadUserId && !organizationUsers.some((user) => user.user_id === openingForm.leadUserId)) {
+      setError('Selecione como Líder SPARKOOP um usuário ativo associado à Organização.')
+      return
+    }
     if (openingForm.startedOn && openingForm.plannedEndOn && openingForm.plannedEndOn < openingForm.startedOn) {
       setError('A data prevista de conclusão não pode ser anterior à data de início.')
       return
@@ -1601,22 +1605,26 @@ export function SkdaWorkspace(props: Props) {
 
   const applyContractIntakeProposal = () => {
     if (!contractIntakeProposal) return
+    const displayNameKey = normalizeSearchText(props.userDisplayName || '')
+    const displayNameCandidates = organizationUsers.filter((user) => {
+      const candidate = normalizeSearchText(user.user_display_name || '')
+      return displayNameKey && (candidate === displayNameKey || candidate.startsWith(displayNameKey + ' '))
+    })
+    const associatedLead = organizationUsers.find((user) => user.user_id === selected?.lead_user_id)
+      ?? organizationUsers.find((user) => user.user_id === props.userId)
+      ?? organizationUsers.find((user) => normalizeSearchText(user.user_email) === normalizeSearchText(props.userEmail))
+      ?? (displayNameCandidates.length === 1 ? displayNameCandidates[0] : null)
+    const year = contractIntakeProposal.startedOn
+      ? contractIntakeProposal.startedOn.slice(0,4)
+      : openingForm.referenceYear
     setOpeningForm((current) => ({
       ...current,
-      referenceYear:contractIntakeProposal.startedOn
-        ? contractIntakeProposal.startedOn.slice(0,4)
-        : current.referenceYear,
-      startedOn:contractIntakeProposal.startedOn || current.startedOn,
-      plannedEndOn:contractIntakeProposal.plannedEndOn || current.plannedEndOn,
-      scopeStatement:contractIntakeProposal.scopeLabel
-        ? `${contractIntakeProposal.scopeLabel}. ${current.scopeStatement}`.trim()
-        : current.scopeStatement,
-      methodologyNotes:[
-        current.methodologyNotes,
-        `Fonte contratual identificada automaticamente: ${contractIntakeProposal.sourceTitle}.`,
-        `Carga contratada identificada: ${contractIntakeProposal.contractedHours}h.`,
-        'Datas e blocos abaixo são proposta de linha de base e permanecem sujeitos à aprovação/adequação da Organização.',
-      ].filter(Boolean).join('\n'),
+      referenceYear:year,
+      startedOn:contractIntakeProposal.startedOn,
+      plannedEndOn:contractIntakeProposal.plannedEndOn,
+      leadUserId:associatedLead?.user_id ?? '',
+      scopeStatement:current.scopeStatement.trim() || `Realizar a Jornada de Diagnóstico Assistido da ${props.organizationName} no ciclo ${year}, integrando Autoavaliação, histórico, evidências e entrevistas de Governança e Gestão para consolidar achados, prioridades 80×20, Plano de Ação e devolutiva.`,
+      methodologyNotes:current.methodologyNotes.trim() || `Conduzir o DA como processo de desenvolvimento organizacional, não auditoria; utilizar a Autoavaliação como baseline declarado; preservar a linha histórica; aprofundar Governança antes de Gestão; confrontar declarações com evidências; distinguir hipótese de achado; avaliar implantação, recorrência, abrangência, controle, resultados e aprendizado; registrar confiança e lacunas; tratar impacto de pontuação somente como potencial estimado. Fonte contratual: ${contractIntakeProposal.sourceTitle}, ${contractIntakeProposal.contractedHours}h, de ${new Date(contractIntakeProposal.startedOn+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(contractIntakeProposal.plannedEndOn+'T00:00:00').toLocaleDateString('pt-BR')}.`,
     }))
     setAppliedContractAssetId(contractIntakeProposal.assetId)
   }
@@ -1627,8 +1635,14 @@ export function SkdaWorkspace(props: Props) {
     setError('')
     try {
       const existingCodes = new Set(interviews.map((item) => item.code.toUpperCase()))
-      for (let index = 0; index < contractIntakeProposal.meetings.length; index += 1) {
-        const meeting = contractIntakeProposal.meetings[index]
+      const synchronousMeetings = contractIntakeProposal.meetings.filter((meeting) => /teams|meet|online|remot/i.test(normalizeSearchText(meeting.location ?? '')))
+      const interviewMeetings = synchronousMeetings.length > 0
+        ? synchronousMeetings
+        : contractIntakeProposal.meetings.length >= 4
+          ? contractIntakeProposal.meetings.slice(2,-1)
+          : contractIntakeProposal.meetings
+      for (let index = 0; index < interviewMeetings.length; index += 1) {
+        const meeting = interviewMeetings[index]
         const code = 'ENT-' + String(index + 1).padStart(3,'0')
         if (existingCodes.has(code)) continue
         const start = new Date(`${meeting.date}T${meeting.start}:00`)
@@ -1642,9 +1656,14 @@ export function SkdaWorkspace(props: Props) {
             : location
               ? 'presential'
               : 'other'
+        const governanceBoundary = Math.max(1,Math.ceil(interviewMeetings.length * .375))
         const title = index === 0
-          ? 'Abertura da Jornada e início de Governança'
-          : 'Continuidade do Diagnóstico Assistido'
+          ? 'Abertura das entrevistas e início de Governança'
+          : index < governanceBoundary
+            ? 'Continuidade das entrevistas de Governança'
+            : index === governanceBoundary
+              ? 'Transição de Governança para Gestão'
+              : 'Continuidade das entrevistas de Gestão'
         const { error: interviewError } = await supabase.rpc(
           'create_skda_interview_with_event' as never,
           {
@@ -1694,6 +1713,10 @@ export function SkdaWorkspace(props: Props) {
     if (!selected || !canManage || !contractIntakeProposal) return
     if (!openingForm.startedOn || !openingForm.plannedEndOn || !openingForm.leadUserId) {
       setError('Defina início, conclusão prevista e Líder SPARKOOP antes de ratificar a linha de base contratual.')
+      return
+    }
+    if (!organizationUsers.some((user) => user.user_id === openingForm.leadUserId)) {
+      setError('O Líder SPARKOOP precisa ser um usuário ativo associado à Organização.')
       return
     }
     if (openingForm.plannedEndOn < openingForm.startedOn) {
@@ -2766,30 +2789,55 @@ export function SkdaWorkspace(props: Props) {
   }, [evidenceAssets, evidenceVersionTexts, props.organizationName])
   useEffect(() => {
     if (!selected || !contractIntakeProposal) return
-    setOpeningForm((current) => {
-      const nextLead = current.leadUserId || selected.lead_user_id || selected.created_by || props.userId || ''
-      const nextStartedOn = current.startedOn || contractIntakeProposal.startedOn
-      const nextPlannedEndOn = current.plannedEndOn || contractIntakeProposal.plannedEndOn
-      if (
-        nextLead === current.leadUserId
-        && nextStartedOn === current.startedOn
-        && nextPlannedEndOn === current.plannedEndOn
-      ) return current
-      return {
-        ...current,
-        leadUserId:nextLead,
-        startedOn:nextStartedOn,
-        plannedEndOn:nextPlannedEndOn,
-      }
+    const baselineValidated = selected.metadata?.contractual_baseline_status === 'validated'
+    const displayNameKey = normalizeSearchText(props.userDisplayName || '')
+    const displayNameCandidates = organizationUsers.filter((user) => {
+      if (!displayNameKey) return false
+      const candidate = normalizeSearchText(user.user_display_name || '')
+      return candidate === displayNameKey || candidate.startsWith(displayNameKey + ' ')
     })
+    const associatedLead = organizationUsers.find((user) => user.user_id === selected.lead_user_id)
+      ?? organizationUsers.find((user) => user.user_id === props.userId)
+      ?? organizationUsers.find((user) => normalizeSearchText(user.user_email) === normalizeSearchText(props.userEmail))
+      ?? (displayNameCandidates.length === 1 ? displayNameCandidates[0] : null)
+    const year = contractIntakeProposal.startedOn ? contractIntakeProposal.startedOn.slice(0,4) : String(selected.reference_year ?? '')
+    const scopeSuggestion = [
+      `Realizar a Jornada de Diagnóstico Assistido da ${props.organizationName} no ciclo ${year || 'vigente'}, com base no PDGC/Avaliacoop e na fonte contratual ${contractIntakeProposal.sourceTitle}.`,
+      'Integrar Autoavaliação, histórico dos ciclos, evidências organizacionais e entrevistas de Governança e Gestão, consolidando achados rastreáveis, prioridades 80×20, Plano de Ação e devolutiva.',
+      contractIntakeProposal.scopeLabel ? `Escopo contratual identificado: ${contractIntakeProposal.scopeLabel}.` : '',
+    ].filter(Boolean).join(' ')
+    const methodologySuggestion = [
+      'Conduzir o Diagnóstico Assistido como processo de desenvolvimento organizacional, e não como auditoria.',
+      'Utilizar a Autoavaliação vigente como baseline declarado e os ciclos anteriores como linha histórica.',
+      'Executar o aprofundamento na sequência Governança → Gestão, questão a questão, confrontando declarações com evidências e preservando hipóteses, validações e refutações.',
+      'Avaliar existência, implantação, recorrência, abrangência, controle, resultados e aprendizado das práticas, registrando confiança e lacunas.',
+      'Tratar impacto de pontuação apenas como potencial estimado e condicionado às evidências; nunca como garantia.',
+      `Agenda contratual identificada: ${contractIntakeProposal.contractedHours}h entre ${new Date(contractIntakeProposal.startedOn+'T00:00:00').toLocaleDateString('pt-BR')} e ${new Date(contractIntakeProposal.plannedEndOn+'T00:00:00').toLocaleDateString('pt-BR')}.`,
+    ].join(' ')
+
+    setOpeningForm((current) => ({
+      ...current,
+      referenceYear:current.referenceYear || year,
+      leadUserId:associatedLead?.user_id ?? '',
+      startedOn:baselineValidated ? (current.startedOn || contractIntakeProposal.startedOn) : contractIntakeProposal.startedOn,
+      plannedEndOn:baselineValidated ? (current.plannedEndOn || contractIntakeProposal.plannedEndOn) : contractIntakeProposal.plannedEndOn,
+      scopeStatement:current.scopeStatement.trim() || scopeSuggestion,
+      methodologyNotes:current.methodologyNotes.trim() || methodologySuggestion,
+    }))
     setAppliedContractAssetId((current) => current ?? contractIntakeProposal.assetId)
   }, [
     selected?.id,
     selected?.lead_user_id,
-    selected?.created_by,
+    selected?.metadata?.contractual_baseline_status,
     contractIntakeProposal?.assetId,
     contractIntakeProposal?.startedOn,
     contractIntakeProposal?.plannedEndOn,
+    contractIntakeProposal?.contractedHours,
+    organizationUsers,
+    props.userId,
+    props.userEmail,
+    props.userDisplayName,
+    props.organizationName,
   ])
   const catalogLocked = metrics.responses > 0
   const currentMegaphaseCode = selected?.current_megaphase_code ?? 'MF0'
@@ -3304,7 +3352,7 @@ export function SkdaWorkspace(props: Props) {
               <label className="skda-inline-field"><span>Tipo de diagnóstico</span><select value={openingForm.diagnosisType} disabled={!canManage || saving || catalogLocked} onChange={(e)=>setOpeningForm(v=>({...v,diagnosisType:e.target.value}))}>{Object.entries(TYPES).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
               <label className="skda-inline-field"><span>Início da jornada</span><input type="date" value={openingForm.startedOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,startedOn:e.target.value}))}/></label>
               <label className="skda-inline-field"><span>Conclusão prevista</span><input type="date" value={openingForm.plannedEndOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,plannedEndOn:e.target.value}))}/></label>
-              <label className="skda-inline-field skda-opening-wide"><span>Líder SPARKOOP da jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Não definido</option>{props.userId && !organizationUsers.some((user)=>user.user_id === props.userId) && <option value={props.userId}>{props.userDisplayName || props.userEmail} · usuário que iniciou a Jornada</option>}{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.user_id === selected.created_by ? ' · usuário que iniciou a Jornada' : user.job_title ? ' · '+user.job_title : ''}</option>)}</select><small>Preenchido inicialmente com o usuário que iniciou a Jornada. Pode ser substituído antes da ratificação.</small></label>
+              <label className="skda-inline-field skda-opening-wide"><span>Líder SPARKOOP da jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Selecione um usuário associado...</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.job_title ? ' · '+user.job_title : ''}</option>)}</select><small>Somente usuários ativos associados à Organização podem liderar a Jornada. O SPARKs sugere automaticamente o usuário autenticado ou um único cadastro compatível.</small></label>
               <label className="skda-inline-field skda-opening-wide"><span>Escopo da jornada</span><textarea rows={4} value={openingForm.scopeStatement} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,scopeStatement:e.target.value}))} placeholder="Unidades, temas, processos, públicos e limites que serão considerados no diagnóstico."/></label>
               <label className="skda-inline-field skda-opening-wide"><span>Orientações metodológicas</span><textarea rows={4} value={openingForm.methodologyNotes} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,methodologyNotes:e.target.value}))} placeholder="Premissas, critérios de aplicação, adaptações e observações metodológicas específicas desta jornada."/></label>
             </div>

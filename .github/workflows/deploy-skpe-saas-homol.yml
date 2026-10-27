@@ -79,6 +79,7 @@ jobs:
           cp supabase/migrations/20261026043000_enable_skda_artifact_text_versions.sql "${release_root}/"
           cp supabase/migrations/20261026103000_operationalize_skda_organizational_intelligence.sql "${release_root}/"
           cp supabase/migrations/20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql "${release_root}/"
+          cp supabase/migrations/20261027234500_govern_skda_contractual_journey_prefill.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -213,7 +214,8 @@ jobs:
             20261026004500_govern_skda_assessment_instrument_and_leadership.sql \
             20261026043000_enable_skda_artifact_text_versions.sql \
             20261026103000_operationalize_skda_organizational_intelligence.sql \
-            20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql
+            20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql \
+            20261027234500_govern_skda_contractual_journey_prefill.sql
           do
             echo "Applying ${migration_file}"
             ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
@@ -277,6 +279,9 @@ jobs:
           select 'INTELLIGENCE' as kind,analysis_status,count(*) from public.skda_evidence_question_intelligence where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724' group by analysis_status order by analysis_status;
           select 'INTELLIGENCE_FINDINGS' as kind,count(*) from public.skda_findings where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724' and metadata->>'origin'='organizational_intelligence';
           select 'RECENT_CORE_ASSET' as kind,title,validation_status,reliability_level,source_external_key from public.sparks_evidence_assets where organization_id='bd58a170-b5ef-4150-9b69-026afa138661' and source_external_key like 'sharepoint:%' and archived_at is null order by title;
+          select 'RICARDO_PROFILE' as kind,p.id,p.email,p.display_name,p.active from public.profiles p where lower(coalesce(p.email,'')) like '%ricardo%rodrigues%' or lower(coalesce(p.display_name,'')) like 'ricardo rodrigues%';
+          select 'CNTCOOP_MEMBERSHIP' as kind,m.user_id,p.email,p.display_name,m.status,m.is_organization_admin,m.valid_from,m.valid_until,m.job_title from public.organization_memberships m join public.profiles p on p.id=m.user_id where m.organization_id='bd58a170-b5ef-4150-9b69-026afa138661' order by p.display_name,p.email;
+          select 'CNTCOOP_EAP' as kind,a.code,a.name,a.baseline_start_date,a.baseline_due_date,a.planned_start_date,a.planned_due_date from public.sparks_initiative_actions a where a.organization_id='bd58a170-b5ef-4150-9b69-026afa138661' and a.parent_action_id is null and a.source_module_code='SK-DA' order by a.code;
           commit;
           SQL
 
