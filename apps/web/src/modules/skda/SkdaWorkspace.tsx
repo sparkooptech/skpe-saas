@@ -2972,9 +2972,12 @@ export function SkdaWorkspace(props: Props) {
           { key:'governance', title:'Governança', series:governanceRadar, reference:selfAssessmentReference.GOVERNANCA },
           { key:'management', title:'Gestão', series:managementRadar, reference:selfAssessmentReference.GESTAO },
         ].map(({ key,title,series,reference }) => <article key={key} className="skda-executive-card skda-radar-card">
-          <div className="skda-executive-card-head">
+          <div className="skda-executive-card-head skda-radar-card-head">
             <div><span>Maturidade</span><h3>{title} · AA × DA</h3></div>
-            <strong>{reference.current && reference.current.reference_year === selected?.reference_year ? `${Number(reference.current.metric_value).toFixed(2)}%` : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada parcialmente' : 'AA a integrar'}</strong>
+            <div className="skda-radar-index-pair" aria-label="Índices atuais de Autoavaliação e Diagnóstico Assistido">
+              <strong className="aa">{reference.current && reference.current.reference_year === selected?.reference_year ? `${Number(reference.current.metric_value).toFixed(2)}%` : selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'AA importada parcialmente' : 'AA a integrar'}</strong>
+              <strong className="da" aria-hidden="true"></strong>
+            </div>
           </div>
           {series.baseline.length === 0 ? (
             <p className="skda-radar-empty">{selfAssessmentSnapshots.some((snapshot) => snapshot.metadata?.block === (key === 'governance' ? 'GOVERNANCA' : 'GESTAO')) ? 'Radar por critério: aguardando a integração das pontuações oficiais do relatório.' : 'Autoavaliação ainda não integrada.'}</p>

@@ -1045,6 +1045,32 @@
   font-size: 1.6rem;
 }
 
+.skda-radar-card-head {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: start;
+}
+
+.skda-radar-index-pair {
+  display: grid;
+  grid-template-columns: 84px 84px;
+  gap: .35rem;
+  align-items: start;
+  justify-items: center;
+  margin-right: .15rem;
+}
+
+.skda-radar-index-pair > strong {
+  min-height: 1.9rem;
+  font-size: 1.6rem;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.skda-radar-index-pair > strong.aa { color: #2563eb; }
+.skda-radar-index-pair > strong.da { color: var(--skda-primary); }
+
 .skda-progress-track {
   height: 10px;
   margin: 1.2rem 0 .7rem;
