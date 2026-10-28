@@ -387,10 +387,6 @@ const EVIDENCE_TYPES: Record<string,string> = {
   image:'Imagem', audio:'Áudio', video:'Vídeo', other:'Outro',
 }
 
-const EVIDENCE_STATUS: Record<string,string> = {
-  pending:'Pendente', under_review:'Em revisão', validated:'Validada', rejected:'Rejeitada', outdated:'Desatualizada', superseded:'Substituída',
-}
-
 const EVIDENCE_SOURCE_TYPES: Record<string,string> = {
   internal:'Interna', external:'Externa', public:'Pública', market:'Mercado', benchmark:'Benchmark',
   regulatory:'Regulatória', partner:'Parceiro', other:'Outra',
@@ -2128,7 +2124,7 @@ export function SkdaWorkspace(props: Props) {
         analyst_interpretation:targetInterview
           ? `Evidência identificada ou confirmada durante a entrevista ${targetInterview.code} · ${targetInterview.title}.`
           : 'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
-        validation_status:'pending',
+        validation_status:(assetData as unknown as EvidenceAsset).current_version_id ? 'under_review' : 'pending',
         metadata:{
           source:targetInterview ? 'interview' : 'diagnosis',
           interview_id:targetInterview?.id ?? null,
@@ -2865,16 +2861,35 @@ export function SkdaWorkspace(props: Props) {
   const workloadReference = workloadLevelCode
     ? PDGC_WORKLOAD_REFERENCES[workloadLevelCode]
     : null
-  const contractedHours = [
+  const contractedHours = contractIntakeProposal?.contractedHours ?? [
     selected?.metadata?.contracted_hours,
     selected?.metadata?.workload_hours,
     selected?.metadata?.total_contracted_hours,
   ]
     .map((value) => Number(value))
     .find((value) => Number.isFinite(value) && value > 0) ?? null
-  const workloadGap = workloadReference && contractedHours
-    ? contractedHours - workloadReference.totalHours
+  const contractOrganizationHours = contractIntakeProposal
+    ? contractIntakeProposal.meetings
+      .filter((meeting) => {
+        const location = normalizeSearchText(meeting.location ?? '')
+        return !location.includes('off-line')
+          && !location.includes('offline')
+          && !location.includes('off line')
+          && !location.includes('atividade interna')
+      })
+      .reduce((total, meeting) => total + meeting.durationHours, 0)
     : null
+  const contractTechnicalHours = contractedHours != null && contractOrganizationHours != null
+    ? Math.max(0, contractedHours - contractOrganizationHours)
+    : null
+  const workloadPlanningRatio = workloadReference && contractedHours
+    ? contractedHours / workloadReference.totalHours
+    : null
+  const workloadPlanningModel = workloadPlanningRatio != null && workloadPlanningRatio < .85
+    ? 'Modelo intensivo orientado por evidências'
+    : workloadPlanningRatio != null && workloadPlanningRatio > 1.15
+      ? 'Modelo ampliado de aprofundamento'
+      : 'Modelo integrado de diagnóstico assistido'
   const assistedSelfAssessmentActive = selected?.metadata?.self_assessment_mode === 'assisted'
 
   const startAssistedSelfAssessment = async () => {
@@ -3379,44 +3394,36 @@ export function SkdaWorkspace(props: Props) {
             <div className="skda-workload-proposal">
               <div className="skda-phase-workspace-head">
                 <div>
-                  <h4>Dimensionamento da Jornada DA</h4>
-                  <small>O nível do instrumento define o rito metodológico de referência. A OI/OS define a carga efetivamente contratada. O SPARKs deve adaptar o plano sem eliminar silenciosamente etapas essenciais.</small>
+                  <h4>Modelo de execução da Jornada DA</h4>
+                  <small>O SPARKs planeja a Jornada a partir da OI/OS vigente e da complexidade real do diagnóstico. Referenciais metodológicos permanecem como inteligência interna de planejamento e não alteram a carga contratada apresentada à Organização.</small>
                 </div>
-                <span>{workloadReference ? workloadReference.name : 'Nível a identificar'}{contractedHours ? ' · '+contractedHours+'h contratadas' : ''}</span>
+                <span>{contractedHours ? contractedHours+'h contratadas' : 'Carga contratual a confirmar'}</span>
               </div>
 
-              {workloadReference ? <>
+              {contractedHours ? <>
                 <div className="skda-workload-grid">
                   <article className="is-organization">
-                    <div><small>Referência oficial do nível</small><strong>{workloadReference.name}</strong><span>Carga total prevista pela metodologia de referência.</span></div>
-                    <b>{workloadReference.totalHours}h</b>
+                    <div><small>Carga total contratada</small><strong>{workloadPlanningModel}</strong><span>Todo o rito do DA é organizado dentro da carga e do período contratados, com prioridade para evidências, entrevistas, validação, devolutiva e Plano de Ação.</span></div>
+                    <b>{contractedHours}h</b>
                   </article>
                   <article className="is-organization">
-                    <div><small>Com a Organização</small><strong>Entrevistas, análise assistida e devolutiva</strong><span>Horas que exigem participação da cooperativa e devem compor sua agenda/cronograma.</span></div>
-                    <b>{workloadReference.organizationHours}h</b>
+                    <div><small>Com a Organização</small><strong>Entrevistas e validações assistidas</strong><span>{contractIntakeProposal ? 'Blocos síncronos identificados diretamente na agenda contratual.' : 'Horas de interação serão distribuídas conforme a agenda ratificada da Jornada.'}</span></div>
+                    <b>{contractOrganizationHours != null ? contractOrganizationHours+'h' : 'A definir'}</b>
                   </article>
                   <article className="is-internal">
-                    <div><small>Trabalho técnico e institucional</small><strong>Preparação, análise e consolidação</strong><span>Estudo prévio {workloadReference.studyHours}h · alinhamentos técnicos {workloadReference.technicalAlignmentHours}h · preparação da devolutiva {workloadReference.returnPreparationHours}h · plano de melhoria {workloadReference.actionPlanHours}h.</span></div>
-                    <b>{workloadReference.technicalInstitutionalHours}h</b>
+                    <div><small>Trabalho técnico / off-line</small><strong>Preparação, gestão de evidências e consolidação</strong><span>Leitura e correlação documental, preparação do roteiro, consolidação das entrevistas, devolutiva e estruturação do Plano de Ação.</span></div>
+                    <b>{contractTechnicalHours != null ? contractTechnicalHours+'h' : 'A definir'}</b>
                   </article>
                 </div>
-                {contractedHours && workloadGap !== null && <div className="skda-evidence-loop-note">
-                  <strong>{workloadGap < 0 ? 'Adaptação obrigatória' : workloadGap > 0 ? 'Capacidade adicional disponível' : 'Carga aderente ao referencial'}</strong>
-                  <span>{workloadGap < 0
-                    ? `A contratação possui ${Math.abs(workloadGap)}h a menos que o referencial de ${workloadReference.totalHours}h. O plano deve explicitar quais ganhos de eficiência, automações e reagrupamentos permitirão executar o mesmo rito com menor esforço, preservando entrevistas, evidências, avaliação, devolutiva e Plano de Ação.`
-                    : workloadGap > 0
-                      ? `A contratação possui ${workloadGap}h além do referencial. O excedente pode ampliar análise, validações, evidências ou follow-up conforme necessidade.`
-                      : 'A carga contratada coincide com o dimensionamento metodológico de referência.'}</span>
-                </div>}
-              </> : <div className="skda-evidence-loop-note"><strong>Nível de maturidade ainda não identificado</strong><span>Defina o nível do instrumento para que o SPARKs recupere automaticamente o dimensionamento metodológico de referência antes de propor a agenda.</span></div>}
-
-              <div className="skda-workload-grid skda-workload-reference-grid">
-                {Object.values(PDGC_WORKLOAD_REFERENCES).map((reference) => <article key={reference.code} className={workloadLevelCode === reference.code ? 'is-current-reference' : ''}>
-                  <div><small>{reference.code} · referência PDGC</small><strong>{reference.name}</strong><span>{reference.technicalInstitutionalHours}h técnicas/institucionais · {reference.organizationHours}h com a Organização</span></div>
-                  <b>{reference.totalHours}h</b>
-                </article>)}
-              </div>
-              <div className="skda-evidence-loop-note"><strong>Regra de planejamento</strong><span>A agenda apresentada à Organização contém apenas os blocos que exigem sua participação. Estudo, análise documental, alinhamentos técnicos, preparação de devolutiva, lançamentos e construção do Plano de Ação permanecem no plano interno/institucional. A OI/OS é o teto contratual e qualquer reprogramação deve preservar justificativa e histórico.</span></div>
+                <div className="skda-evidence-loop-note">
+                  <strong>Melhor modelo para esta contratação</strong>
+                  <span>{workloadPlanningModel === 'Modelo intensivo orientado por evidências'
+                    ? 'Antecipar ao máximo a análise documental e a correlação com as questões do PDGC, chegar às entrevistas com hipóteses e perguntas já priorizadas, consolidar achados durante a própria execução e reservar o trabalho off-line para validação cruzada, devolutiva e Plano de Ação. O objetivo é aumentar profundidade por hora contratada, sem expor ou transferir para a Organização diferenças entre referências internas de planejamento.'
+                    : workloadPlanningModel === 'Modelo ampliado de aprofundamento'
+                      ? 'Usar a capacidade contratada para aprofundar evidências, entrevistas temáticas, validações adicionais, devolutiva e acompanhamento inicial do Plano de Ação, mantendo a mesma cadeia metodológica e a rastreabilidade das decisões.'
+                      : 'Distribuir a carga contratada entre preparação documental, entrevistas de Governança e Gestão, validação das evidências, consolidação do diagnóstico, devolutiva e Plano de Ação, ajustando a intensidade de cada bloco conforme os achados da própria Jornada.'}</span>
+                </div>
+              </> : <div className="skda-evidence-loop-note"><strong>Carga contratual ainda não identificada</strong><span>O SPARKs deve recuperar a OI/OS ou outra fonte contratual antes de propor o dimensionamento operacional da Jornada. Nenhuma referência metodológica deve substituir silenciosamente a contratação.</span></div>}
             </div>
             <div className="skda-intake-evidence">
               <div className="skda-phase-workspace-head">
@@ -3424,22 +3431,22 @@ export function SkdaWorkspace(props: Props) {
                   <h4>Evidências de entrada e Autoavaliações</h4>
                   <small>A Fase 0 inventaria o que foi recebido antes de qualquer conclusão do diagnóstico. Autoavaliações são preservadas como declaração histórica da organização, não como validação automática.</small>
                 </div>
-                <span>{selfAssessmentSnapshots.length} snapshot(s)</span>
+                <span>{selfAssessmentSnapshots.length} registro(s) oficial(is) do ciclo</span>
               </div>
-              <div className="skda-evidence-loop-note"><strong>Regra de evidência</strong><span>O que a organização declarou, o que as evidências efetivamente sustentam e o que o DA valida permanecem separados e rastreáveis.</span></div>
-              {selfAssessmentSnapshots.length === 0 ? <p className="skda-phase-empty">Nenhuma Autoavaliação foi importada para este ciclo. A preparação pode continuar com inventário documental, entrevistas iniciais e outras fontes disponíveis.</p> : <div className="skda-intake-snapshots">
+              <div className="skda-evidence-loop-note"><strong>Regra de evidência</strong><span>As Autoavaliações oficiais do ciclo são preservadas como fonte do Sistema OCB e como declaração formal da Organização. O DA mantém separadas a declaração, as evidências que a sustentam e a validação diagnóstica.</span></div>
+              {selfAssessmentSnapshots.length === 0 ? <p className="skda-phase-empty">Nenhuma Autoavaliação oficial foi importada para este ciclo. A preparação pode continuar com inventário documental, entrevistas iniciais e outras fontes disponíveis.</p> : <div className="skda-intake-snapshots">
                 {selfAssessmentSnapshots.map((snapshot) => {
                   const block = typeof snapshot.metadata?.block === 'string' ? snapshot.metadata.block : 'AUTOAVALIAÇÃO'
                   const normalizationStatus = typeof snapshot.metadata?.normalization_status === 'string' ? snapshot.metadata.normalization_status : 'preserved'
                   return <article key={snapshot.id}>
                     <div>
                       <small>{block === 'GOVERNANCA' ? 'Governança Cooperativa' : block === 'GESTAO' ? 'Gestão' : 'Autoavaliação'}</small>
-                      <strong>{snapshot.source_label || 'Autoavaliação importada'}</strong>
-                      <span>{snapshot.source_date ? new Date(snapshot.source_date+'T00:00:00').toLocaleDateString('pt-BR') : 'Data não informada'} · Snapshot imutável</span>
+                      <strong>{snapshot.source_label || 'Autoavaliação oficial do ciclo'}</strong>
+                      <span>{snapshot.source_date ? 'Documento oficial do Sistema OCB · emissão '+new Date(snapshot.source_date+'T00:00:00').toLocaleDateString('pt-BR') : 'Documento oficial do Sistema OCB · ciclo '+(selected.reference_year ?? 'vigente')}</span>
                     </div>
                     <div className="skda-intake-status">
-                      <b>Declaração preservada</b>
-                      <span>{normalizationStatus === 'staging' ? 'Estruturação em andamento' : 'Estruturada'}</span>
+                      <b>Fonte oficial preservada</b>
+                      <span>{normalizationStatus === 'staging' ? 'Estruturação em andamento' : 'Integrada ao diagnóstico'}</span>
                     </div>
                   </article>
                 })}
@@ -3449,7 +3456,7 @@ export function SkdaWorkspace(props: Props) {
           </div>}
           {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head">
-              <div><h4>Evidências disponíveis no Core</h4><small>Registre novas evidências no Core ou correlacione ativos já existentes com esta Jornada DA.</small></div>
+              <div><h4>Gestão das Evidências</h4><small>O Core organiza a fonte, sua integridade, confiabilidade, aderência às questões do catálogo e o que ainda precisa ser confirmado para transformar documento em evidência de prática e resultado.</small></div>
               <div className="skda-phase-workspace-actions">
                 <span>{evidenceAssets.length} ativo(s)</span>
                 {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceFile(null); setShowEvidenceCreate(true) }}>Adicionar e analisar evidência</button>}
@@ -3481,11 +3488,35 @@ export function SkdaWorkspace(props: Props) {
               {evidenceAssets.map((asset) => {
                 const correlation = evidenceCorrelations.find((item) => item.evidence_asset_id === asset.id)
                 const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.evidence_asset_id === asset.id)
-                const proposedCount = intelligenceRows.filter((item) => ['proposed','validated'].includes(item.analysis_status)).length
+                const proposedCount = intelligenceRows.filter((item) => item.analysis_status === 'proposed').length
+                const validatedCount = intelligenceRows.filter((item) => item.analysis_status === 'validated').length
                 const pendingCount = intelligenceRows.filter((item) => ['pending','queued','processing'].includes(item.analysis_status)).length
+                const coversCount = intelligenceRows.filter((item) => item.evidence_coverage_status === 'covers').length
+                const partialCount = intelligenceRows.filter((item) => item.evidence_coverage_status === 'partially_covers').length
+                const complementCount = intelligenceRows.filter((item) => item.evidence_coverage_status === 'needs_complement').length
+                const sourceState = asset.current_version_id
+                  ? asset.validation_status === 'validated'
+                    ? 'Fonte documental validada'
+                    : asset.validation_status === 'under_review'
+                      ? 'Fonte documental analisada'
+                      : 'Fonte documental recebida e versionada'
+                  : 'Registro sem versão documental'
+                const reliabilityLabel = asset.reliability_level === 'not_assessed' && asset.current_version_id
+                  ? 'Em avaliação automática'
+                  : RELIABILITY[asset.reliability_level] ?? asset.reliability_level
                 return <article key={asset.id}>
-                  <div><small>{EVIDENCE_TYPES[asset.evidence_type] ?? asset.evidence_type}</small><strong>{asset.title}</strong><span>{EVIDENCE_STATUS[asset.validation_status] ?? asset.validation_status} · Confiabilidade: {RELIABILITY[asset.reliability_level] ?? asset.reliability_level}</span>{intelligenceRows.length > 0 && <span>Análise por questão: {intelligenceRows.length} vínculo(s) · {pendingCount} em análise · {proposedCount} proposta(s)</span>}</div>
-                  <div>{correlation ? <b>Vinculada ao diagnóstico</b> : canLinkEvidence ? <button type="button" className="skda-primary" disabled={saving} onClick={() => void linkEvidence(asset)}>Vincular</button> : <span>Disponível</span>}</div>
+                  <div>
+                    <small>{EVIDENCE_TYPES[asset.evidence_type] ?? asset.evidence_type}</small>
+                    <strong>{asset.title}</strong>
+                    <span><b>{sourceState}</b> · Confiabilidade da fonte: {reliabilityLabel}</span>
+                    {intelligenceRows.length > 0
+                      ? <>
+                        <span>Aderência ao catálogo: {intelligenceRows.length} questão(ões) associada(s) · {coversCount} contempla(m) · {partialCount} cobertura parcial · {complementCount} necessita(m) complemento</span>
+                        <span>Inteligência: {proposedCount} hipótese(s) proposta(s) · {validatedCount} validada(s) · {pendingCount} ainda em processamento. A confirmação de implantação, recorrência e resultados ocorre nas entrevistas e demais evidências de execução.</span>
+                      </>
+                      : <span>Ainda sem correlação analítica com as questões do catálogo. O ativo permanece disponível no Core para classificação e uso transversal.</span>}
+                  </div>
+                  <div>{correlation ? <b>Integrada ao DA</b> : canLinkEvidence ? <button type="button" className="skda-primary" disabled={saving} onClick={() => void linkEvidence(asset)}>Vincular e analisar</button> : <span>Disponível no Core</span>}</div>
                 </article>
               })}
             </div>}
