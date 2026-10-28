@@ -29,6 +29,57 @@ on public.skda_diagnoses
 for each row
 execute function public.capture_skda_contractual_baseline_schedule();
 
+-- Keep the transverse baseline guard, but allow one governed initialization for SK-DA
+-- when the action was created without LB0 and the contractual schedule is now known.
+create or replace function public.sparks_protect_initiative_action_identity()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $function$
+declare
+  skda_contractual_baseline_initialization boolean;
+begin
+  if new.organization_id is distinct from old.organization_id then
+    raise exception 'A organizacao da acao e imutavel.'
+      using errcode = '22023';
+  end if;
+
+  if new.initiative_id is distinct from old.initiative_id then
+    raise exception 'A iniciativa pai da acao e imutavel.'
+      using errcode = '22023';
+  end if;
+
+  if new.source_module_code is distinct from old.source_module_code then
+    raise exception 'O modulo de origem da acao e imutavel.'
+      using errcode = '22023';
+  end if;
+
+  skda_contractual_baseline_initialization :=
+    old.source_module_code='SK-DA'
+    and new.source_module_code='SK-DA'
+    and new.metadata->>'lb0_source'='contractual_schedule'
+    and (
+      (old.baseline_start_date is null and new.baseline_start_date is not null)
+      or new.baseline_start_date is not distinct from old.baseline_start_date
+    )
+    and (
+      (old.baseline_due_date is null and new.baseline_due_date is not null)
+      or new.baseline_due_date is not distinct from old.baseline_due_date
+    );
+
+  if (
+    new.baseline_start_date is distinct from old.baseline_start_date
+    or new.baseline_due_date is distinct from old.baseline_due_date
+  ) and not skda_contractual_baseline_initialization then
+    raise exception 'A baseline original da acao e imutavel.'
+      using errcode = '22023';
+  end if;
+
+  return new;
+end;
+$function$;
+
 create or replace function public.apply_skda_contractual_schedule(target_diagnosis_id uuid)
 returns void
 language plpgsql
