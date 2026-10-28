@@ -402,6 +402,12 @@
 
 .application-shell-navigation-group-toggle {
   width: 100%;
+  list-style: none;
+  cursor: pointer;
+}
+
+.application-shell-navigation-group-toggle::-webkit-details-marker {
+  display: none;
 }
 
 .application-shell-navigation-group-chevron {
@@ -409,6 +415,16 @@
   font-size: .9rem;
   line-height: 1;
   opacity: .72;
+  transition: transform .16s ease;
+}
+
+.application-shell-navigation-group:not([open]) .application-shell-navigation-group-chevron {
+  transform: rotate(-90deg);
+}
+
+.application-shell-navigation-group-toggle[aria-disabled="true"] {
+  cursor: default;
+  opacity: .58;
 }
 
 .application-shell-navigation-submenu {

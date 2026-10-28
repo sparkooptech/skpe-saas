@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import './ApplicationShell.css'
 
@@ -50,6 +50,21 @@ export function ApplicationShell({
   onToggleCollapsed,
   onCloseMobile,
 }: ApplicationShellProps) {
+  const activeGroupKey = navigationItems
+    .filter((item) => item.children?.length && item.active)
+    .map((item) => item.id)
+    .join('|')
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(navigationItems.filter((item) => item.children?.length && item.active).map((item) => [item.id, true])),
+  )
+
+  useEffect(() => {
+    if (!activeGroupKey) return
+    setExpandedGroups((current) => current[activeGroupKey] === undefined
+      ? { ...current, [activeGroupKey]:true }
+      : current)
+  }, [activeGroupKey])
+
   return (
     <div
       className={[
@@ -83,28 +98,33 @@ export function ApplicationShell({
 
         <nav className="application-shell-navigation">
           {navigationItems.map((item) => item.children?.length ? (
-            <div
+            <details
               key={item.id}
               className="application-shell-navigation-group"
+              open={collapsed || Boolean(expandedGroups[item.id])}
             >
-              <button
-                type="button"
+              <summary
                 className={[
                   'application-shell-navigation-item',
                   'application-shell-navigation-group-toggle',
                   item.active ? 'active' : '',
                 ].filter(Boolean).join(' ')}
                 title={collapsed ? item.label : undefined}
-                onClick={() => {
+                onClick={(event) => {
+                  if (item.disabled) {
+                    event.preventDefault()
+                    return
+                  }
+                  setExpandedGroups((current) => ({ ...current, [item.id]: !current[item.id] }))
                   item.onActivate?.()
                   onCloseMobile?.()
                 }}
-                disabled={item.disabled}
+                aria-disabled={item.disabled || undefined}
               >
                 {item.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{item.icon}</span>}
                 <span className="application-shell-navigation-label">{item.label}</span>
                 {!collapsed && <span className="application-shell-navigation-group-chevron" aria-hidden="true">⌄</span>}
-              </button>
+              </summary>
               <div className="application-shell-navigation-submenu">
                 {item.children.map((child) => (
                   <button
@@ -127,7 +147,7 @@ export function ApplicationShell({
                   </button>
                 ))}
               </div>
-            </div>
+            </details>
           ) : (
             <button
               key={item.id}

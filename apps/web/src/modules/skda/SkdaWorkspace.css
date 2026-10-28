@@ -1204,33 +1204,16 @@
 }
 
 .skda-radar-legend {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: .9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
   font-size: .72rem;
   color: var(--skda-muted);
 }
 
-.skda-radar-legend-item {
-  display: grid;
-  justify-items: center;
-  gap: .3rem;
-  text-align: center;
-}
-
-.skda-radar-legend-item > b {
-  font-size: 1.05rem;
-  line-height: 1;
-  font-weight: 850;
-}
-
-.skda-radar-legend-item.aa > b { color: #2563eb; }
-.skda-radar-legend-item.da > b { color: var(--skda-primary); }
-
-.skda-radar-legend-item > span {
+.skda-radar-legend span {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: .3rem;
 }
 
@@ -3096,7 +3079,7 @@
 
 .skda-aa-reference {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2,minmax(0,1fr));
   gap: .55rem;
   margin-top: .75rem;
   padding-top: .75rem;
