@@ -115,7 +115,9 @@ with target_assets as (
 )
 update public.skda_evidence_correlations c
 set
-  validation_status=case when c.validation_status='pending' then 'under_review' else c.validation_status end,
+  adequacy_score=coalesce(c.adequacy_score,65),
+  sufficiency_score=coalesce(c.sufficiency_score,50),
+  reliability_score=coalesce(c.reliability_score,85),
   analyst_interpretation=case
     when c.target_type='question'
       then 'Fonte documental íntegra, recente e pré-localizada na Autoavaliação. Aderência preliminar reconhecida; confirmar suficiência, implantação, recorrência e resultados no DA.'

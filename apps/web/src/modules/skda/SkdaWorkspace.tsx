@@ -2124,7 +2124,7 @@ export function SkdaWorkspace(props: Props) {
         analyst_interpretation:targetInterview
           ? `Evidência identificada ou confirmada durante a entrevista ${targetInterview.code} · ${targetInterview.title}.`
           : 'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
-        validation_status:(assetData as unknown as EvidenceAsset).current_version_id ? 'under_review' : 'pending',
+        validation_status:'pending',
         metadata:{
           source:targetInterview ? 'interview' : 'diagnosis',
           interview_id:targetInterview?.id ?? null,
