@@ -1902,6 +1902,17 @@
 .skda-product-signature > div {
   display: grid;
   gap: .1rem;
+  text-align: center;
+  justify-items: center;
+}
+
+.application-shell-sidebar-footer .skda-product-signature,
+.application-shell-sidebar-footer > button {
+  margin-inline: auto;
+}
+
+.application-shell-sidebar-footer > button {
+  text-align: center;
 }
 
 .skda-product-signature strong {

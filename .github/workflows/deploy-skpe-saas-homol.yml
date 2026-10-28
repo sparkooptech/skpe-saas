@@ -81,6 +81,7 @@ jobs:
           cp supabase/migrations/20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql "${release_root}/"
           cp supabase/migrations/20261027234500_govern_skda_contractual_journey_prefill.sql "${release_root}/"
           cp supabase/migrations/20261028010625_enrich_skda_evidence_governance.sql "${release_root}/"
+          cp supabase/migrations/20261028014500_create_module_scoped_user_picker.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -217,7 +218,8 @@ jobs:
             20261026103000_operationalize_skda_organizational_intelligence.sql \
             20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql \
             20261027234500_govern_skda_contractual_journey_prefill.sql \
-            20261028010625_enrich_skda_evidence_governance.sql
+            20261028010625_enrich_skda_evidence_governance.sql \
+            20261028014500_create_module_scoped_user_picker.sql
           do
             echo "Applying ${migration_file}"
             ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \

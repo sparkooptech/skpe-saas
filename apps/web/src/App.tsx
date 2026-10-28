@@ -478,6 +478,9 @@ function App() {
   const [organizationAdminOpen, setOrganizationAdminOpen] =
     useState(false)
 
+  const [organizationAdminInitialSection, setOrganizationAdminInitialSection] =
+    useState<'organization' | 'administration'>('organization')
+
   const [organizationViewMode, setOrganizationViewMode] =
     useState<'cards' | 'hierarchy'>('cards')
 
@@ -1279,7 +1282,9 @@ function App() {
     clearMessage()
     navigate(platformRoutes.home())
   }
-  const handleOpenOrganizationAdmin = () => {
+  const handleOpenOrganizationAdmin = (
+    initialSection: 'organization' | 'administration' = 'organization',
+  ) => {
     if (!selectedOrganization) {
       return
     }
@@ -1299,6 +1304,7 @@ function App() {
     }
 
     setPlatformAdminOpen(false)
+    setOrganizationAdminInitialSection(initialSection)
     setOrganizationAdminOpen(true)
     setOpenedModule(null)
     clearMessage()
@@ -1892,7 +1898,7 @@ function App() {
       <>
 <SkpeWorkspace
         mode="organization-admin"
-        initialSection="organization"
+        initialSection={organizationAdminInitialSection}
         organizationId={
           selectedOrganization.organization_id
         }
@@ -1972,7 +1978,8 @@ function App() {
             localStorage.setItem(PLATFORM_THEME_KEY, nextTheme)
           }}
           onOpenUserProfile={() => setUserProfileOpen(true)}
-          onOpenOrganizationAdmin={handleOpenOrganizationAdmin}
+          onOpenOrganizationAdmin={() => handleOpenOrganizationAdmin('organization')}
+          onOpenOrganizationUsers={() => handleOpenOrganizationAdmin('administration')}
           onOpenPlatformAdmin={handleOpenPlatformAdmin}
           onLogout={handleLogout}
           onReturnToModules={handleReturnToModules}
@@ -2572,7 +2579,7 @@ function App() {
               className="platform-admin-topbar-icon-button"
               onClick={
                 selectedOrganization
-                  ? handleOpenOrganizationAdmin
+                  ? () => handleOpenOrganizationAdmin('organization')
                   : handleOpenPlatformAdmin
               }
               disabled={loading}
