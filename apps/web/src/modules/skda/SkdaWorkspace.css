@@ -3814,54 +3814,93 @@
   line-height: 1.35;
 }
 
+.skda-findings-summary-body {
+  display: grid;
+  grid-template-columns: minmax(205px, .72fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
 .skda-intelligence-summary-grid {
   display: grid;
-  grid-template-columns: repeat(5,minmax(0,1fr));
+  grid-template-columns: 1fr;
   gap: .55rem;
-  margin-bottom: .75rem;
+  margin: 0;
 }
 
 .skda-intelligence-summary-grid > div {
   display: grid;
-  gap: .15rem;
+  place-items: center;
+  align-content: center;
+  gap: .22rem;
+  min-height: 62px;
   padding: .58rem .65rem;
   border: 1px solid var(--skda-border);
   border-radius: 9px;
   background: #fbfcfc;
+  text-align: center;
 }
 
 .skda-intelligence-summary-grid span {
-  color: var(--skda-muted);
-  font-size: .67rem;
+  color: var(--skda-text);
+  font-size: .69rem;
+  font-weight: 800;
+  text-align: center;
 }
 
 .skda-intelligence-summary-grid b {
   color: var(--skda-primary);
-  font-size: 1rem;
+  font-size: 1.08rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.skda-formal-findings-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--skda-border);
 }
 
 .skda-findings-subhead {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  margin: .15rem 0 .55rem;
-  padding-top: .65rem;
-  border-top: 1px solid var(--skda-border);
+  gap: .75rem;
+  margin: 0 0 .75rem;
+  padding: .15rem 0 .65rem;
+  border-bottom: 1px solid var(--skda-border);
 }
 
 .skda-findings-subhead span {
+  grid-column: 2;
   color: var(--skda-text);
   font-size: .72rem;
   font-weight: 850;
+  text-align: center;
 }
 
 .skda-findings-subhead strong {
+  grid-column: 3;
+  justify-self: end;
   color: var(--skda-primary);
 }
 
 @media (max-width: 900px) {
+  .skda-findings-summary-body {
+    grid-template-columns: 1fr;
+  }
+
   .skda-intelligence-summary-grid {
     grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .skda-formal-findings-panel {
+    padding-left: 0;
+    padding-top: .9rem;
+    border-left: 0;
+    border-top: 1px solid var(--skda-border);
   }
 }
 

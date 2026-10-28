@@ -3024,20 +3024,24 @@ export function SkdaWorkspace(props: Props) {
           <div><span>Inteligência organizacional</span><h3>Hipóteses → achados formalizados</h3></div>
           <strong>{metrics.findings}</strong>
         </div>
-        <div className="skda-intelligence-summary-grid">
-          <div><span>Hipóteses em análise</span><b>{organizationalIntelligenceSummary.underAnalysis}</b></div>
-          <div><span>Validadas</span><b>{organizationalIntelligenceSummary.validated}</b></div>
-          <div><span>Refutadas</span><b>{organizationalIntelligenceSummary.rejected}</b></div>
-          <div><span>Convertidas em achados</span><b>{organizationalIntelligenceSummary.converted}</b></div>
-          <div><span>Perguntas para entrevistas</span><b>{organizationalIntelligenceSummary.interviewPrompts}</b></div>
-        </div>
-        <div className="skda-findings-subhead"><span>Achados formais do DA</span><strong>{metrics.findings}</strong></div>
-        <div className="skda-finding-bars">
-          {Object.entries(FINDING_TYPES).map(([type,label]) => {
-            const value = findingsByType[type] ?? 0
-            const width = metrics.findings > 0 ? Math.round((value / metrics.findings) * 100) : 0
-            return <div key={type}><span>{label}</span><div><i style={{ width: `${width}%` }} /></div><b>{value}</b></div>
-          })}
+        <div className="skda-findings-summary-body">
+          <div className="skda-intelligence-summary-grid">
+            <div><span>Hipóteses em análise</span><b>{organizationalIntelligenceSummary.underAnalysis}</b></div>
+            <div><span>Validadas</span><b>{organizationalIntelligenceSummary.validated}</b></div>
+            <div><span>Refutadas</span><b>{organizationalIntelligenceSummary.rejected}</b></div>
+            <div><span>Convertidas em achados</span><b>{organizationalIntelligenceSummary.converted}</b></div>
+            <div><span>Perguntas para entrevistas</span><b>{organizationalIntelligenceSummary.interviewPrompts}</b></div>
+          </div>
+          <div className="skda-formal-findings-panel">
+            <div className="skda-findings-subhead"><span>Achados formais do DA</span><strong>{metrics.findings}</strong></div>
+            <div className="skda-finding-bars">
+              {Object.entries(FINDING_TYPES).map(([type,label]) => {
+                const value = findingsByType[type] ?? 0
+                const width = metrics.findings > 0 ? Math.round((value / metrics.findings) * 100) : 0
+                return <div key={type}><span>{label}</span><div><i style={{ width: `${width}%` }} /></div><b>{value}</b></div>
+              })}
+            </div>
+          </div>
         </div>
       </article>
       {selfAssessmentSnapshots.length === 0 && <div className="skda-aa-entry-callout">
