@@ -79,7 +79,7 @@ type EvidenceAsset = { id: string; title: string; evidence_type: string; validat
 type EvidenceVersionText = { id: string; evidence_asset_id: string; extracted_text: string | null }
 type ContractMeetingProposal = { date: string; start: string; durationHours: number; location: string | null }
 type ContractIntakeProposal = { assetId: string; sourceTitle: string; sourceText: string; startedOn: string; plannedEndOn: string; contractedHours: number; meetings: ContractMeetingProposal[]; scopeLabel: string | null }
-type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string }
+type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string; metadata: Record<string,unknown> }
 type EvidenceQuestionIntelligence = { id:string; evidence_asset_id:string; question_id:string; document_intake_status:string; evidence_coverage_status:string; practice_state:string; relevance_score:number|null; adequacy_score:number|null; sufficiency_score:number|null; reliability_score:number|null; actuality_score:number|null; coverage_score:number|null; confidence_score:number|null; gap_description:string|null; complement_needed:string|null; improvement_suggestion:string|null; interview_question_suggestion:string|null; self_assessment_guidance:string|null; diagnostic_hypothesis:string|null; analysis_status:string; source_excerpt:string|null; source_locator:string|null; metadata:Record<string,unknown> }
 type SelfAssessmentSnapshot = { id: string; source_label: string | null; source_date: string | null; content_hash: string | null; metadata: Record<string, unknown> }
 type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metric_kind:'overall_index'|'criterion'|'history'|'benchmark'; metric_code:string; metric_name:string; reference_year:number|null; comparator_code:string; comparator_label:string|null; metric_value:number; unit:string; source_label:string|null; source_reference:string|null; metadata?:Record<string,unknown>|null }
@@ -501,6 +501,7 @@ export function SkdaWorkspace(props: Props) {
     interviewId:'',
     externalUrl:'',
     externalKey:'',
+    checklistGroupCode:'',
     changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
   })
   const [evidenceAssets, setEvidenceAssets] = useState<EvidenceAsset[]>([])
@@ -1132,7 +1133,7 @@ export function SkdaWorkspace(props: Props) {
           .order('updated_at', { ascending:false }),
         supabase
           .from('skda_evidence_correlations' as never)
-          .select('id,evidence_asset_id,usage_type,validation_status' as never)
+          .select('id,evidence_asset_id,usage_type,validation_status,metadata' as never)
           .eq('diagnosis_id', selectedId),
         supabase
           .from('skda_evidence_question_intelligence' as never)
@@ -1944,8 +1945,13 @@ export function SkdaWorkspace(props: Props) {
         usage_type:'support',
         relevance_level:'important',
         validation_status:'pending',
+        metadata:{
+          checklist_group_code:'complementar',
+          checklist_group_title:'Outras evidências',
+          source:'core_existing_asset',
+        },
       } as never)
-      .select('id,evidence_asset_id,usage_type,validation_status' as never)
+      .select('id,evidence_asset_id,usage_type,validation_status,metadata' as never)
       .single()
 
     if (saveError) { setSaving(false); setError(saveError.message); return }
@@ -2136,9 +2142,11 @@ export function SkdaWorkspace(props: Props) {
           interview_code:targetInterview?.code ?? null,
           file_uploaded:Boolean(evidenceFile),
           intelligence_pipeline:'SK-DOC>SK-KM>SK-DA',
+          checklist_group_code:evidenceForm.checklistGroupCode || 'complementar',
+          checklist_group_title:DA_EVIDENCE_CHECKLIST.find((item)=>item.code===(evidenceForm.checklistGroupCode || 'complementar'))?.title || 'Outras evidências',
         },
       } as never, { onConflict:'diagnosis_id,evidence_asset_id,target_type,target_id' })
-      .select('id,evidence_asset_id,usage_type,validation_status' as never)
+      .select('id,evidence_asset_id,usage_type,validation_status,metadata' as never)
       .single()
 
     if (correlationError || !correlationData) {
@@ -2214,6 +2222,7 @@ export function SkdaWorkspace(props: Props) {
       interviewId:'',
       externalUrl:'',
       externalKey:'',
+      checklistGroupCode:'',
       changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
     })
     setShowEvidenceCreate(false)
@@ -2930,6 +2939,7 @@ export function SkdaWorkspace(props: Props) {
       sourceType:'external',
       title:'',
       description:'Autoavaliação da Organização para absorção como baseline da Jornada.',
+      checklistGroupCode:'autoavaliacao',
       changeReason:'Autoavaliação importada como declaração da Organização e baseline da Jornada DA.',
     }))
     setShowEvidenceCreate(true)
@@ -3471,60 +3481,56 @@ export function SkdaWorkspace(props: Props) {
               <h4>Checklist documental da Jornada</h4>
               <p>Importe documentos históricos, materiais solicitados e outras evidências. A classificação é orientativa e não impede novos registros.</p>
               <div className="skda-evidence-checklist-grid">
-                {DA_EVIDENCE_CHECKLIST.map((item) => (
-                  <article key={item.code}>
-                    <strong>{item.title}</strong>
-                    <small>{item.hint}</small>
+                {DA_EVIDENCE_CHECKLIST.map((item) => {
+                  const groupedAssets = evidenceAssets.filter((asset) => {
+                    const correlation = evidenceCorrelations.find((row) => row.evidence_asset_id === asset.id)
+                    const storedGroup = typeof correlation?.metadata?.checklist_group_code === 'string'
+                      ? correlation.metadata.checklist_group_code
+                      : ''
+                    return item.code === 'complementar'
+                      ? !storedGroup || storedGroup === 'complementar'
+                      : storedGroup === item.code
+                  })
+                  return <article key={item.code} className="skda-evidence-checklist-group">
+                    <div className="skda-evidence-checklist-group-head">
+                      <div>
+                        <strong>{item.title}</strong>
+                        <small>{item.hint}</small>
+                      </div>
+                      <span>{groupedAssets.length}</span>
+                    </div>
+                    {groupedAssets.length > 0 && <div className="skda-evidence-checklist-assets">
+                      {groupedAssets.map((asset) => {
+                        const correlation = evidenceCorrelations.find((row) => row.evidence_asset_id === asset.id)
+                        const intelligenceRows = evidenceQuestionIntelligence.filter((row) => row.evidence_asset_id === asset.id)
+                        const pendingCount = intelligenceRows.filter((row) => ['pending','queued','processing'].includes(row.analysis_status)).length
+                        return <div key={asset.id} className="skda-evidence-checklist-asset">
+                          <div>
+                            <small>{EVIDENCE_TYPES[asset.evidence_type] ?? asset.evidence_type}</small>
+                            <b>{asset.title}</b>
+                            <span>{correlation ? 'Integrada ao DA' : 'Disponível no Core'} · Confiabilidade: {RELIABILITY[asset.reliability_level] ?? asset.reliability_level}{intelligenceRows.length > 0 ? ` · ${intelligenceRows.length} questão(ões) correlacionada(s)` : ''}{pendingCount > 0 ? ` · ${pendingCount} em análise` : ''}</span>
+                          </div>
+                          {!correlation && canLinkEvidence && <button type="button" disabled={saving} onClick={() => void linkEvidence(asset)}>Vincular e analisar</button>}
+                        </div>
+                      })}
+                    </div>}
+                    {groupedAssets.length === 0 && <small className="skda-evidence-checklist-empty">Nenhum documento associado a este grupo.</small>}
                     {canRegisterEvidence && <button type="button" onClick={() => {
                       setEvidenceFile(null)
                       setEvidenceForm((current) => ({
                         ...current,
                         title:'',
                         description:item.title + ' — ' + item.hint,
+                        checklistGroupCode:item.code,
                         changeReason:'Importação documental orientada pelo checklist da Jornada SK-DA.',
                       }))
                       setShowEvidenceCreate(true)
                     }}>Importar evidência</button>}
                   </article>
-                ))}
+                })}
               </div>
             </div>
-            {evidenceAssets.length === 0 ? <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p> : <div className="skda-evidence-list">
-              {evidenceAssets.map((asset) => {
-                const correlation = evidenceCorrelations.find((item) => item.evidence_asset_id === asset.id)
-                const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.evidence_asset_id === asset.id)
-                const proposedCount = intelligenceRows.filter((item) => item.analysis_status === 'proposed').length
-                const validatedCount = intelligenceRows.filter((item) => item.analysis_status === 'validated').length
-                const pendingCount = intelligenceRows.filter((item) => ['pending','queued','processing'].includes(item.analysis_status)).length
-                const coversCount = intelligenceRows.filter((item) => item.evidence_coverage_status === 'covers').length
-                const partialCount = intelligenceRows.filter((item) => item.evidence_coverage_status === 'partially_covers').length
-                const complementCount = intelligenceRows.filter((item) => item.evidence_coverage_status === 'needs_complement').length
-                const sourceState = asset.current_version_id
-                  ? asset.validation_status === 'validated'
-                    ? 'Fonte documental validada'
-                    : asset.validation_status === 'under_review'
-                      ? 'Fonte documental analisada'
-                      : 'Fonte documental recebida e versionada'
-                  : 'Registro sem versão documental'
-                const reliabilityLabel = asset.reliability_level === 'not_assessed' && asset.current_version_id
-                  ? 'Em avaliação automática'
-                  : RELIABILITY[asset.reliability_level] ?? asset.reliability_level
-                return <article key={asset.id}>
-                  <div>
-                    <small>{EVIDENCE_TYPES[asset.evidence_type] ?? asset.evidence_type}</small>
-                    <strong>{asset.title}</strong>
-                    <span><b>{sourceState}</b> · Confiabilidade da fonte: {reliabilityLabel}</span>
-                    {intelligenceRows.length > 0
-                      ? <>
-                        <span>Aderência ao catálogo: {intelligenceRows.length} questão(ões) associada(s) · {coversCount} contempla(m) · {partialCount} cobertura parcial · {complementCount} necessita(m) complemento</span>
-                        <span>Inteligência: {proposedCount} hipótese(s) proposta(s) · {validatedCount} validada(s) · {pendingCount} ainda em processamento. A confirmação de implantação, recorrência e resultados ocorre nas entrevistas e demais evidências de execução.</span>
-                      </>
-                      : <span>Ainda sem correlação analítica com as questões do catálogo. O ativo permanece disponível no Core para classificação e uso transversal.</span>}
-                  </div>
-                  <div>{correlation ? <b>Integrada ao DA</b> : canLinkEvidence ? <button type="button" className="skda-primary" disabled={saving} onClick={() => void linkEvidence(asset)}>Vincular e analisar</button> : <span>Disponível no Core</span>}</div>
-                </article>
-              })}
-            </div>}
+            {evidenceAssets.length === 0 && <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p>}
           </div>}
           {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head">

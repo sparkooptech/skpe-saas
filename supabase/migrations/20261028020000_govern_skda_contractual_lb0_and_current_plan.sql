@@ -58,7 +58,7 @@ begin
   skda_contractual_baseline_initialization :=
     old.source_module_code='SK-DA'
     and new.source_module_code='SK-DA'
-    and new.metadata->>'lb0_source'='contractual_schedule'
+    and new.metadata->>'lb0_source' in ('contractual_schedule','parent_contractual_schedule')
     and (
       (old.baseline_start_date is null and new.baseline_start_date is not null)
       or new.baseline_start_date is not distinct from old.baseline_start_date
@@ -307,5 +307,40 @@ comment on function public.capture_skda_contractual_baseline_schedule() is
 
 comment on function public.apply_skda_contractual_schedule(uuid) is
 'Aplica LB0 contratual sem sobrescrevê-la e mantém o plano vigente da EAP sincronizado com a agenda ratificada.';
+
+-- Reconcile existing SK-DA evidence correlations into checklist groups without duplicating Core assets.
+-- Only deterministic evidence-type mappings are promoted; everything else falls back to complementary.
+update public.skda_evidence_correlations correlation
+set
+  metadata = coalesce(correlation.metadata,'{}'::jsonb) || jsonb_build_object(
+    'checklist_group_code',case evidence.evidence_type
+      when 'self_assessment' then 'autoavaliacao'
+      when 'assisted_diagnosis' then 'complementar'
+      when 'action_plan' then 'planos-acao'
+      when 'interview' then 'entrevistas'
+      when 'audio' then 'entrevistas'
+      when 'video' then 'entrevistas'
+      else 'complementar'
+    end,
+    'checklist_group_title',case evidence.evidence_type
+      when 'self_assessment' then 'Autoavaliação vigente'
+      when 'action_plan' then 'Planos de ação e acompanhamento'
+      when 'interview' then 'Entrevistas e verificações'
+      when 'audio' then 'Entrevistas e verificações'
+      when 'video' then 'Entrevistas e verificações'
+      else 'Outras evidências'
+    end,
+    'checklist_group_source','evidence_type_reconciliation'
+  ),
+  updated_at=timezone('utc',now())
+from public.sparks_evidence_assets evidence
+where evidence.id=correlation.evidence_asset_id
+  and evidence.organization_id=correlation.organization_id
+  and (
+    not (coalesce(correlation.metadata,'{}'::jsonb) ? 'checklist_group_code')
+    or nullif(trim(coalesce(correlation.metadata->>'checklist_group_code','')),'') is null
+  );
+
+notify pgrst, 'reload schema';
 
 commit;

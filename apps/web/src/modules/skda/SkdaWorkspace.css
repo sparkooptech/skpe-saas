@@ -3909,6 +3909,15 @@
 .skda-evidence-checklist-grid strong{text-transform:none;font-weight:700}
 .skda-evidence-checklist-grid small{flex:1}
 .skda-evidence-checklist-grid button{cursor:pointer}
+.skda-evidence-checklist-group-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;width:100%}
+.skda-evidence-checklist-group-head>div{display:grid;gap:.25rem;min-width:0}
+.skda-evidence-checklist-group-head>span{display:grid;place-items:center;min-width:1.8rem;height:1.8rem;border-radius:999px;border:1px solid var(--border-color,#dce4e9);font-weight:800}
+.skda-evidence-checklist-assets{display:grid;gap:.5rem;width:100%}
+.skda-evidence-checklist-asset{display:flex;align-items:center;justify-content:space-between;gap:.75rem;width:100%;padding:.6rem .65rem;border:1px solid var(--border-color,#dce4e9);border-radius:10px}
+.skda-evidence-checklist-asset>div{display:grid;gap:.18rem;min-width:0}
+.skda-evidence-checklist-asset b,.skda-evidence-checklist-asset span{overflow-wrap:anywhere}
+.skda-evidence-checklist-asset small{font-weight:700}
+.skda-evidence-checklist-empty{opacity:.7}
 
 /* MegaFase actions: interactive when available; explanatory tooltip on disabled items. */
 .skda-input-chips span:has(> button) { padding: 0; }
