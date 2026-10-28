@@ -376,7 +376,7 @@ begin
     ),
     auth.uid()
   )
-  on conflict (evidence_asset_id,module_code,target_type,target_id)
+  on conflict on constraint sparks_evidence_links_unique
   do update set
     usage_status='active',
     usage_purpose=excluded.usage_purpose,
