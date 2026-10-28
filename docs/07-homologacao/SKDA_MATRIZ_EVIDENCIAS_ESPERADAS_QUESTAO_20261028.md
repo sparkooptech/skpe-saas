@@ -1,5 +1,7 @@
 # SK-DA — Matriz de Evidências Esperadas por Questão
 
+Contrato canônico relacionado: `docs/03-methodology/CONTRATO_SKDA_ABERTURA_EVIDENCIAS_ENTREVISTAS.md`
+
 Data: 28/10/2026  
 Modelo-base: PDGC/Avaliacoop 2025 | aplicação 2026
 

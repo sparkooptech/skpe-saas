@@ -1,0 +1,151 @@
+---
+id: SKDA-MET-001
+title: Contrato Canônico de Abertura, Evidências, Checklist e Entrevistas do SK-DA
+version: 1.0.0
+status: canonical
+canonical: true
+domain: sk-da
+owner: SPARKOOP
+created_at: 2026-10-28
+updated_at: 2026-10-28
+dependencies:
+  - docs/07-homologacao/SKDA_MATRIZ_EVIDENCIAS_ESPERADAS_QUESTAO_20261028.md
+---
+
+# Contrato Canônico de Abertura, Evidências, Checklist e Entrevistas do SK-DA
+
+## 1. Decisão metodológica
+
+A Matriz de Evidências Esperadas por Questão é a fonte governada da qual devem derivar:
+
+1. Checklist de Evidências do Kit de Abertura;
+2. roteiro/caderno de entrevistas;
+3. Matriz questão x evidência apresentada;
+4. mapa de lacunas e hipóteses;
+5. plano posterior de ação e evolução.
+
+Checklist e entrevista não devem ser reconstruídos como artefatos independentes.
+
+## 2. Duas matrizes, dois papéis
+
+**Matriz de Evidências Esperadas**: prescritiva/orientadora. Registra o que sustenta cada alternativa A-D e, quando menor que D, o que pode sustentar a evolução até D.
+
+**Matriz questão x evidência**: diagnóstica. Registra o que a organização efetivamente apresentou, cobertura, suficiência, confiabilidade, lacunas e complementos.
+
+## 3. Dimensões de investigação
+
+Toda questão pode exigir evidências nas dimensões:
+
+- existência;
+- institucionalização;
+- execução;
+- recorrência e abrangência;
+- controle e resultados;
+- aprendizado e melhoria.
+
+Documento aprovado não comprova execução. Declaração não comprova resultado. Modelo não comprova adoção institucional.
+
+## 4. Delta da resposta
+
+Para cada questão, calcular conceitualmente:
+
+- **delta de sustentação**: lacuna entre a resposta autodeclarada e a evidência necessária para sustentá-la;
+- **delta de evolução**: lacuna entre a situação evidenciada e o atendimento pleno D, quando aplicável.
+
+A resposta D autodeclarada não encerra a investigação: vigência, execução, abrangência, resultado e melhoria ainda precisam ser comprovados.
+
+## 5. Regra do Checklist de Abertura
+
+Cada linha do checklist deve representar uma expectativa de evidência e trazer, quando aplicável:
+
+- questão e alternativa autodeclarada;
+- dimensão;
+- evidência esperada;
+- evidência já localizada;
+- status DISPONIVEL/AUSENTE/NAO_APLICAVEL;
+- validação VALIDADO/A_VALIDAR/DESATUALIZADO;
+- responsável;
+- período/versão;
+- ramo/atividade/contexto;
+- autoridade da recomendação;
+- finalidade SUSTENTAR_RESPOSTA/EVOLUIR_ATE_D/AMBAS;
+- questões adicionais apoiadas;
+- limite de suficiência.
+
+Priorizar evidências reutilizáveis em várias questões para reduzir carga sobre a organização.
+
+## 6. Regra das Entrevistas
+
+As seis dimensões funcionam como grade de controle, não como questionário repetitivo.
+
+Para cada questão, o roteiro deve apresentar:
+
+1. enunciado oficial integral e alternativas A-D;
+2. resposta autodeclarada e resposta histórica;
+3. evidências já localizadas;
+4. evidências para sustentar a resposta atual;
+5. se menor que D, evidências/capacidades para avançar até D;
+6. lacunas abertas por dimensão;
+7. pergunta central;
+8. perguntas de aprofundamento apenas para lacunas abertas;
+9. evidências específicas a solicitar;
+10. conexões sistêmicas;
+11. saída esperada.
+
+Perguntar por casos recentes e verificáveis: quem, quando, registro, frequência, abrangência, indicador, decisão e efeito.
+
+Não induzir alteração de resposta. Investigar capacidade e evidência.
+
+## 7. Saídas por questão
+
+Registrar uma ou mais:
+
+- evidência identificada;
+- evidência a disponibilizar;
+- prática sem formalização;
+- documento sem evidência de execução;
+- execução sem indicador/resultado;
+- evidência parcial/insuficiente;
+- contradição entre declaração e evidência;
+- lacuna para plano de ação;
+- relato a validar;
+- não aplicável com justificativa;
+- não avaliada por falta de informação/tempo.
+
+A entrevista não atribui nota definitiva. A consolidação de suficiência ocorre após reunião e triangulação das fontes.
+
+## 8. Questões de resultados
+
+Quando o instrumento exigir resultados, buscar conforme aplicável:
+
+- série histórica exigida;
+- fórmula/memória de cálculo;
+- fonte;
+- responsável;
+- baseline;
+- meta/faixa/nível aceitável;
+- tendência;
+- análise de desvios/causas;
+- decisão;
+- efeito posterior.
+
+Relatório isolado não substitui série, memória e análise quando a questão exigir evolução temporal.
+
+## 9. Contexto, ramo e atividade
+
+As expectativas podem ser especializadas por ramo, atividade, processo e contexto organizacional.
+
+Cada item deve indicar autoridade: official, canonical, sparkoop, benchmark ou inference.
+
+Recomendação SPARKOOP, benchmark ou inferência nunca deve ser apresentada como requisito oficial.
+
+## 10. Regra para Agentes e Skills
+
+Agentes, Skills e automações do SK-DA devem:
+
+- usar este contrato antes de gerar checklist ou entrevista;
+- derivar perguntas das lacunas da matriz;
+- reutilizar evidências entre questões com limite de suficiência explícito;
+- marcar CURADORIA_PENDENTE quando não houver base governada;
+- nunca inventar evidência oficial;
+- preservar rastreabilidade questão -> prática -> fala/transcrição -> evidência -> validação -> melhoria/plano de ação.
