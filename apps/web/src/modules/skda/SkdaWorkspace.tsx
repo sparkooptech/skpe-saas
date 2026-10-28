@@ -87,6 +87,7 @@ type CatalogVersion = { id: string; code: string; version_code: string; name: st
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; guidance: string | null; display_order: number }
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; declared_alternative_id: string | null; evidenced_alternative_id: string | null; validated_alternative_id: string | null; evaluated_at: string | null; validated_at: string | null; metadata: Record<string,unknown> }
 type QuestionAlternative = { id:string; question_id:string; code:string; alternative_text:string; progression_order:number; score_value:number|null }
+type QuestionEvidenceExpectation = { expectation_id:string; question_id:string; evidence_key:string; title:string; description:string|null; answer_level:'A'|'B'|'C'|'D'; purpose:'support_declared_answer'|'evolution_to_d'|'both'; necessity:'required'|'recommended'|'alternative'; evidence_dimension:string; evidence_kind:string; branch_code:string|null; activity_scope:string|null; source_authority:string; source_reference:string|null; confidence:string; display_order:number; metadata:Record<string,unknown> }
 type SelfAssessmentAnswer = { id:string; snapshot_id:string; question_id:string; declared_alternative_id:string|null; declared_code:string|null; declared_text:string|null; rationale:string|null; metadata:Record<string,unknown> }
 type AssessmentDraft = { classification: string; answerText: string; rationale: string; confidenceLevel: string; alternativeId: string }
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
@@ -413,6 +414,13 @@ const RESPONSE_STATUS: Record<string,string> = {
   draft:'Rascunho', review:'Em revisão', validated:'Validada',
 }
 
+const EXPECTATION_DIMENSION_LABELS: Record<string,string> = {
+  existence:'Existência', institutionalization:'Institucionalização', execution:'Execução', recurrence:'Recorrência',
+  coverage:'Abrangência', control_results:'Controle e resultados', learning_improvement:'Aprendizado e melhoria',
+}
+const EXPECTATION_NECESSITY_LABELS: Record<string,string> = { required:'Obrigatória', recommended:'Recomendada', alternative:'Alternativa possível' }
+const ANSWER_LEVEL_RANK: Record<string,number> = { A:1, B:2, C:3, D:4 }
+
 const FINDING_TYPES: Record<string,string> = {
   strength:'Força', gap:'Lacuna', opportunity:'Oportunidade', risk:'Risco', observation:'Observação',
 }
@@ -525,6 +533,7 @@ export function SkdaWorkspace(props: Props) {
   const [selfAssessmentSnapshots, setSelfAssessmentSnapshots] = useState<SelfAssessmentSnapshot[]>([])
   const [selfAssessmentMetrics, setSelfAssessmentMetrics] = useState<SelfAssessmentMetric[]>([])
   const [questionAlternatives, setQuestionAlternatives] = useState<QuestionAlternative[]>([])
+  const [questionEvidenceExpectations, setQuestionEvidenceExpectations] = useState<QuestionEvidenceExpectation[]>([])
   const [selfAssessmentAnswers, setSelfAssessmentAnswers] = useState<SelfAssessmentAnswer[]>([])
   const [catalogs, setCatalogs] = useState<CatalogVersion[]>([])
   const [organizationUsers, setOrganizationUsers] = useState<OrganizationUser[]>([])
@@ -1197,6 +1206,22 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [questions, selfAssessmentSnapshots])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selectedId) { setQuestionEvidenceExpectations([]); return }
+      const { data, error: expectationsError } = await supabase.rpc('list_skda_question_evidence_expectations' as never, {
+        target_organization_id:props.organizationId,
+        target_diagnosis_id:selectedId,
+      } as never)
+      if (expectationsError) {
+        setQuestionEvidenceExpectations([])
+        return
+      }
+      setQuestionEvidenceExpectations((data ?? []) as unknown as QuestionEvidenceExpectation[])
+    }
+    void run()
+  }, [selectedId, props.organizationId])
 
   useEffect(() => {
     const run = async () => {
@@ -3627,10 +3652,31 @@ export function SkdaWorkspace(props: Props) {
                 const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', alternativeId:'' }
                 const alternatives = questionAlternatives.filter((item) => item.question_id === question.id)
                 const aaAnswer = selfAssessmentAnswers.find((item) => item.question_id === question.id)
+                const selectedAlternative = alternatives.find((item) => item.id === draft.alternativeId)
+                const currentAnswerLevel = (selectedAlternative?.code ?? aaAnswer?.declared_code ?? '').toUpperCase()
+                const expectationRows = questionEvidenceExpectations.filter((item) => item.question_id === question.id)
+                const declaredExpectations = expectationRows.filter((item) => currentAnswerLevel && item.answer_level === currentAnswerLevel && ['support_declared_answer','both'].includes(item.purpose))
+                const currentAnswerRank = ANSWER_LEVEL_RANK[currentAnswerLevel] ?? 0
+                const evolutionExpectations = currentAnswerRank < 4
+                  ? expectationRows.filter((item) => (ANSWER_LEVEL_RANK[item.answer_level] ?? 0) > currentAnswerRank && ['evolution_to_d','both'].includes(item.purpose))
+                  : []
                 return <article id={'skda-question-'+question.id} key={question.id} className="skda-assessment-card">
                   <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
                   {aaAnswer && <div className="skda-aa-guidance"><strong>Autoavaliação importada · {aaAnswer.declared_code ?? 'sem alternativa'}</strong><span>{aaAnswer.declared_text ?? 'Resposta declarada importada sem texto descritivo.'}</span></div>}
                   {assistedSelfAssessmentActive && question.guidance && <div className="skda-aa-guidance"><strong>Orientação metodológica da questão</strong><span>{question.guidance}</span></div>}
+                  <div className="skda-expected-evidence-panel">
+                    <div className="skda-expected-evidence-head"><strong>Matriz de evidências esperadas</strong><span>{expectationRows.length > 0 ? 'Curadoria aplicável ao ramo/atividade' : 'Curadoria ainda não cadastrada para esta questão'}</span></div>
+                    {expectationRows.length > 0 && <>
+                      <section>
+                        <div className="skda-expected-evidence-section-head"><b>{currentAnswerLevel ? `Para sustentar a resposta ${currentAnswerLevel}` : 'Para sustentar a resposta declarada'}</b><span>{declaredExpectations.length}</span></div>
+                        {declaredExpectations.length === 0 ? <small>Nenhuma evidência governada foi vinculada a este nível de resposta.</small> : <div className="skda-expected-evidence-list">{declaredExpectations.map((item)=><article key={item.expectation_id}><div><strong>{item.title}</strong>{item.description && <span>{item.description}</span>}<small>{EXPECTATION_DIMENSION_LABELS[item.evidence_dimension] ?? item.evidence_dimension} · {EXPECTATION_NECESSITY_LABELS[item.necessity] ?? item.necessity}{item.branch_code ? ` · Ramo ${item.branch_code}` : ''}{item.activity_scope ? ` · Atividade ${item.activity_scope}` : ''}</small></div><b>{item.answer_level}</b></article>)}</div>}
+                      </section>
+                      {currentAnswerLevel !== 'D' && <section className="is-evolution">
+                        <div className="skda-expected-evidence-section-head"><b>Para avançar até D</b><span>{evolutionExpectations.length}</span></div>
+                        {evolutionExpectations.length === 0 ? <small>Ainda não há evidências adicionais curadas para o caminho até D.</small> : <div className="skda-expected-evidence-list">{evolutionExpectations.map((item)=><article key={item.expectation_id}><div><strong>{item.title}</strong>{item.description && <span>{item.description}</span>}<small>{EXPECTATION_DIMENSION_LABELS[item.evidence_dimension] ?? item.evidence_dimension} · {EXPECTATION_NECESSITY_LABELS[item.necessity] ?? item.necessity}{item.branch_code ? ` · Ramo ${item.branch_code}` : ''}{item.activity_scope ? ` · Atividade ${item.activity_scope}` : ''}</small></div><b>{item.answer_level}</b></article>)}</div>}
+                      </section>}
+                    </>}
+                  </div>
                   <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{typeof response?.metadata?.last_interview_code === 'string' && <small>Encontro: {response.metadata.last_interview_code}</small>}{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>
                   {intelligenceRows.length > 0 && <div className="skda-question-intelligence">
                     <div className="skda-question-intelligence-head">

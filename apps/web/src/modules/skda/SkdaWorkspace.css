@@ -3705,6 +3705,101 @@
   font-size: .68rem;
 }
 
+
+.skda-expected-evidence-panel {
+  display:grid;
+  gap:.65rem;
+  grid-column:1 / -1;
+  padding:.75rem;
+  border:1px solid color-mix(in srgb, #2563eb 18%, var(--skda-border));
+  border-radius:10px;
+  background:color-mix(in srgb, #2563eb 2.5%, white);
+}
+
+.skda-expected-evidence-head,
+.skda-expected-evidence-section-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.7rem;
+}
+
+.skda-expected-evidence-head strong {
+  color:var(--skda-text);
+  font-size:.76rem;
+}
+
+.skda-expected-evidence-head span,
+.skda-expected-evidence-section-head span,
+.skda-expected-evidence-panel section > small {
+  color:var(--skda-muted);
+  font-size:.66rem;
+}
+
+.skda-expected-evidence-panel section {
+  display:grid;
+  gap:.45rem;
+  padding-top:.55rem;
+  border-top:1px solid var(--skda-border);
+}
+
+.skda-expected-evidence-panel section.is-evolution {
+  border-top-color:color-mix(in srgb, var(--skda-primary) 24%, var(--skda-border));
+}
+
+.skda-expected-evidence-section-head b {
+  font-size:.72rem;
+  color:var(--skda-text);
+}
+
+.skda-expected-evidence-section-head span {
+  display:grid;
+  place-items:center;
+  min-width:1.55rem;
+  height:1.55rem;
+  border:1px solid var(--skda-border);
+  border-radius:999px;
+  font-weight:800;
+}
+
+.skda-expected-evidence-list {
+  display:grid;
+  gap:.4rem;
+}
+
+.skda-expected-evidence-list > article {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:.65rem;
+  align-items:start;
+  padding:.55rem .6rem;
+  border:1px solid var(--skda-border);
+  border-radius:8px;
+  background:white;
+}
+
+.skda-expected-evidence-list > article > div {
+  display:grid;
+  gap:.15rem;
+}
+
+.skda-expected-evidence-list strong {
+  font-size:.71rem;
+  color:var(--skda-text);
+}
+
+.skda-expected-evidence-list span,
+.skda-expected-evidence-list small {
+  color:var(--skda-muted);
+  font-size:.66rem;
+  line-height:1.4;
+}
+
+.skda-expected-evidence-list > article > b {
+  color:#2563eb;
+  font-size:.78rem;
+}
+
 .skda-question-intelligence {
   display: grid;
   gap: .5rem;
