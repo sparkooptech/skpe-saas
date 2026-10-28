@@ -14,7 +14,13 @@ dependencies:
 
 # Contrato Canônico de Abertura, Evidências, Checklist e Entrevistas do SK-DA
 
-## 1. Decisão metodológica
+## 1. Premissa metodológica obrigatória
+
+**A Matriz de Evidências Esperadas por Questão é a fonte-mãe da preparação do Diagnóstico Assistido.**
+
+Nenhum Checklist de Abertura, roteiro/caderno de entrevista, solicitação de evidência ou preparação diagnóstica por questão deve ser produzido de forma independente quando a matriz estiver disponível ou puder ser construída. O trabalho deve partir do delta entre resposta declarada, evidência já disponível, evidência necessária para sustentação e capacidade/evidência necessária para evolução.
+
+Esta premissa é obrigatória para agentes, Skills, automações, artefatos e implementações do SK-DA. Exceções devem ser explicitamente justificadas e não podem virar novo padrão metodológico.
 
 A Matriz de Evidências Esperadas por Questão é a fonte governada da qual devem derivar:
 
