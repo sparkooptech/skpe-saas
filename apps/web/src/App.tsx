@@ -1937,35 +1937,56 @@ function App() {
 
   if (openedModule?.module_code === 'SK-DA' && selectedOrganization) {
     return (
-      <SkdaWorkspace
-        organizationId={selectedOrganization.organization_id}
-        organizationName={selectedOrganization.trade_name ?? selectedOrganization.legal_name}
-        organizationCode={selectedOrganization.organization_code}
-        organizationLogoStoragePath={selectedOrganization.logo_storage_path ?? null}
-        workspaceOrganizations={organizations.map((organization) => ({
-          id: organization.organization_id,
-          code: organization.organization_code,
-          name: organization.trade_name ?? organization.legal_name,
-        }))}
-        workspaceModules={modules.map((module) => ({
-          code: module.module_code,
-          name: module.module_name,
-          description: module.module_description,
-          available: ['SK-PE', 'SK-DA'].includes(module.module_code),
-        }))}
-        activeModuleCode={openedModule.module_code}
-        onSwitchOrganization={handleSwitchWorkspaceOrganization}
-        onSwitchModule={handleSwitchWorkspaceModule}
-        userRoleCode={openedModule.role_code}
-        userRoleName={openedModule.role_name}
-        userId={session?.user.id ?? ''}
-        userDisplayName={userDisplayName || session?.user.email || 'Usuário'}
-        userEmail={session?.user.email ?? ''}
-        userAvatarUrl={userAvatarUrl}
-        isOrganizationAdmin={selectedOrganization.is_organization_admin}
-        isPlatformSuperAdmin={isPlatformSuperAdmin}
-        onReturnToModules={handleReturnToModules}
-      />
+      <>
+        <SkdaWorkspace
+          organizationId={selectedOrganization.organization_id}
+          organizationName={selectedOrganization.trade_name ?? selectedOrganization.legal_name}
+          organizationCode={selectedOrganization.organization_code}
+          organizationLogoStoragePath={selectedOrganization.logo_storage_path ?? null}
+          workspaceOrganizations={organizations.map((organization) => ({
+            id: organization.organization_id,
+            code: organization.organization_code,
+            name: organization.trade_name ?? organization.legal_name,
+          }))}
+          workspaceModules={modules.map((module) => ({
+            code: module.module_code,
+            name: module.module_name,
+            description: module.module_description,
+            available: ['SK-PE', 'SK-DA'].includes(module.module_code),
+          }))}
+          activeModuleCode={openedModule.module_code}
+          onSwitchOrganization={handleSwitchWorkspaceOrganization}
+          onSwitchModule={handleSwitchWorkspaceModule}
+          userRoleCode={openedModule.role_code}
+          userRoleName={openedModule.role_name}
+          userId={session?.user.id ?? ''}
+          userDisplayName={userDisplayName || session?.user.email || 'Usuário'}
+          userEmail={session?.user.email ?? ''}
+          userAvatarUrl={userAvatarUrl}
+          isOrganizationAdmin={selectedOrganization.is_organization_admin}
+          isPlatformSuperAdmin={isPlatformSuperAdmin}
+          platformTheme={platformTheme}
+          onToggleTheme={() => {
+            const nextTheme = platformTheme === 'dark' ? 'light' : 'dark'
+            setPlatformTheme(nextTheme)
+            localStorage.setItem(PLATFORM_THEME_KEY, nextTheme)
+          }}
+          onOpenUserProfile={() => setUserProfileOpen(true)}
+          onOpenOrganizationAdmin={handleOpenOrganizationAdmin}
+          onOpenPlatformAdmin={handleOpenPlatformAdmin}
+          onLogout={handleLogout}
+          onReturnToModules={handleReturnToModules}
+        />
+        <UserProfileDialog
+          open={userProfileOpen}
+          userId={session?.user.id ?? ''}
+          email={session?.user.email ?? ''}
+          onClose={() => setUserProfileOpen(false)}
+          onSaved={() => {
+            setUserProfileRefresh((current) => current + 1)
+          }}
+        />
+      </>
     )
   }
 

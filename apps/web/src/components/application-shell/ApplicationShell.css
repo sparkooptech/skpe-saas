@@ -133,14 +133,17 @@
 
 .application-shell-sidebar-footer {
   display: grid;
+  justify-items: center;
   gap: .65rem;
   padding: .9rem 1rem 1rem;
   border-top: 1px solid rgba(255,255,255,.12);
+  text-align: center;
 }
 
 .application-shell-sidebar-footer button {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .55rem;
   width: 100%;
   padding: .55rem 0;
@@ -397,25 +400,15 @@
   margin: 0;
 }
 
-.application-shell-navigation-group > summary {
-  list-style: none;
-  cursor: pointer;
+.application-shell-navigation-group-toggle {
+  width: 100%;
 }
 
-.application-shell-navigation-group > summary::-webkit-details-marker {
-  display: none;
-}
-
-.application-shell-navigation-group > summary::after {
-  content: '›';
+.application-shell-navigation-group-chevron {
   margin-left: auto;
-  font-size: 1.05rem;
+  font-size: .9rem;
   line-height: 1;
-  transition: transform 160ms ease;
-}
-
-.application-shell-navigation-group[open] > summary::after {
-  transform: rotate(90deg);
+  opacity: .72;
 }
 
 .application-shell-navigation-submenu {
@@ -451,7 +444,7 @@
   width: 46px;
 }
 
-.application-shell-collapsed .application-shell-navigation-group > summary {
+.application-shell-collapsed .application-shell-navigation-group-toggle {
   width: 46px;
   min-width: 46px;
   min-height: 42px;
@@ -460,7 +453,7 @@
   font-size: 0;
 }
 
-.application-shell-collapsed .application-shell-navigation-group > summary::after {
+.application-shell-collapsed .application-shell-navigation-group-chevron {
   display: none;
 }
 

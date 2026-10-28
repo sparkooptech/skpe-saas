@@ -83,21 +83,28 @@ export function ApplicationShell({
 
         <nav className="application-shell-navigation">
           {navigationItems.map((item) => item.children?.length ? (
-            <details
+            <div
               key={item.id}
               className="application-shell-navigation-group"
-              open={item.active || collapsed}
             >
-              <summary
+              <button
+                type="button"
                 className={[
                   'application-shell-navigation-item',
+                  'application-shell-navigation-group-toggle',
                   item.active ? 'active' : '',
                 ].filter(Boolean).join(' ')}
                 title={collapsed ? item.label : undefined}
+                onClick={() => {
+                  item.onActivate?.()
+                  onCloseMobile?.()
+                }}
+                disabled={item.disabled}
               >
                 {item.icon && <span className="application-shell-navigation-icon" aria-hidden="true">{item.icon}</span>}
                 <span className="application-shell-navigation-label">{item.label}</span>
-              </summary>
+                {!collapsed && <span className="application-shell-navigation-group-chevron" aria-hidden="true">⌄</span>}
+              </button>
               <div className="application-shell-navigation-submenu">
                 {item.children.map((child) => (
                   <button
@@ -120,7 +127,7 @@ export function ApplicationShell({
                   </button>
                 ))}
               </div>
-            </details>
+            </div>
           ) : (
             <button
               key={item.id}

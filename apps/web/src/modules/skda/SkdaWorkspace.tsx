@@ -26,6 +26,12 @@ type Props = {
   userAvatarUrl: string | null
   isOrganizationAdmin: boolean
   isPlatformSuperAdmin: boolean
+  platformTheme: 'light' | 'dark'
+  onToggleTheme: () => void
+  onOpenUserProfile?: () => void
+  onOpenOrganizationAdmin?: () => void
+  onOpenPlatformAdmin?: () => void
+  onLogout?: () => void | Promise<void>
   onReturnToModules: () => void
 }
 
@@ -54,8 +60,14 @@ type OrganizationUser = {
   user_id: string
   user_email: string
   user_display_name: string | null
+  user_active: boolean
   membership_status: string
   job_title: string | null
+  module_code: string | null
+  module_name: string | null
+  role_code: string | null
+  role_name: string | null
+  module_role_status: string | null
 }
 type Metrics = { responses: number; interviews: number; evidence: number; findings: number }
 type Phase = { code: string; title: string; description: string; statusKey: string }
@@ -465,6 +477,7 @@ export function SkdaWorkspace(props: Props) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [shellCollapsed, setShellCollapsed] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [error, setError] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [showInterviewCreate, setShowInterviewCreate] = useState(false)
@@ -1018,7 +1031,10 @@ export function SkdaWorkspace(props: Props) {
       }
       const unique = new Map<string, OrganizationUser>()
       for (const row of (data ?? []) as unknown as OrganizationUser[]) {
+        if (!row.user_active) continue
         if (row.membership_status !== 'active') continue
+        if (row.module_code !== 'SK-DA') continue
+        if (row.module_role_status !== 'active') continue
         if (!unique.has(row.user_id)) unique.set(row.user_id, row)
       }
       setOrganizationUsers([...unique.values()].sort((a,b) =>
@@ -3352,7 +3368,7 @@ export function SkdaWorkspace(props: Props) {
               <label className="skda-inline-field"><span>Tipo de diagnóstico</span><select value={openingForm.diagnosisType} disabled={!canManage || saving || catalogLocked} onChange={(e)=>setOpeningForm(v=>({...v,diagnosisType:e.target.value}))}>{Object.entries(TYPES).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
               <label className="skda-inline-field"><span>Início da jornada</span><input type="date" value={openingForm.startedOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,startedOn:e.target.value}))}/></label>
               <label className="skda-inline-field"><span>Conclusão prevista</span><input type="date" value={openingForm.plannedEndOn} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,plannedEndOn:e.target.value}))}/></label>
-              <label className="skda-inline-field skda-opening-wide"><span>Líder SPARKOOP da jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Selecione um usuário associado...</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email}{user.job_title ? ' · '+user.job_title : ''}</option>)}</select><small>Somente usuários ativos associados à Organização podem liderar a Jornada. O SPARKs sugere automaticamente o usuário autenticado ou um único cadastro compatível.</small></label>
+              <label className="skda-inline-field skda-opening-wide"><span>Líder SPARKOOP da jornada</span><select value={openingForm.leadUserId} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,leadUserId:e.target.value}))}><option value="">Selecione um usuário CNTCOOP + SK-DA...</option>{organizationUsers.map((user)=><option key={user.user_id} value={user.user_id}>{user.user_display_name || user.user_email} ({user.user_email})</option>)}</select><small>Lista restrita a usuários ativos associados à CNTCOOP e com papel ativo no módulo SK-DA.</small></label>
               <label className="skda-inline-field skda-opening-wide"><span>Escopo da jornada</span><textarea rows={4} value={openingForm.scopeStatement} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,scopeStatement:e.target.value}))} placeholder="Unidades, temas, processos, públicos e limites que serão considerados no diagnóstico."/></label>
               <label className="skda-inline-field skda-opening-wide"><span>Orientações metodológicas</span><textarea rows={4} value={openingForm.methodologyNotes} disabled={!canManage || saving} onChange={(e)=>setOpeningForm(v=>({...v,methodologyNotes:e.target.value}))} placeholder="Premissas, critérios de aplicação, adaptações e observações metodológicas específicas desta jornada."/></label>
             </div>
@@ -3846,14 +3862,45 @@ export function SkdaWorkspace(props: Props) {
       }
       contextItems={[]}
       userArea={
-        <div className="skda-shell-user">
-          <div className="skda-shell-avatar" aria-hidden="true">
-            {props.userAvatarUrl ? <img src={props.userAvatarUrl} alt="" /> : props.userDisplayName.slice(0,2).toUpperCase()}
-          </div>
-          <div>
-            <strong>{props.userDisplayName}</strong>
-            <span>{props.userRoleName}</span>
-          </div>
+        <div className="skda-user-menu">
+          <button
+            type="button"
+            className="skda-shell-user skda-shell-user-button"
+            onClick={() => setUserMenuOpen((current) => !current)}
+            aria-label="Abrir menu do usuário"
+            aria-haspopup="menu"
+            aria-expanded={userMenuOpen}
+          >
+            <div className="skda-shell-avatar" aria-hidden="true">
+              {props.userAvatarUrl ? <img src={props.userAvatarUrl} alt="" /> : props.userDisplayName.slice(0,2).toUpperCase()}
+            </div>
+            <div>
+              <strong>{props.userDisplayName}</strong>
+              <span>{props.userRoleName}</span>
+            </div>
+            <span className="skda-user-menu-chevron" aria-hidden="true">▾</span>
+          </button>
+          {userMenuOpen && <>
+            <button type="button" className="skda-user-menu-backdrop" aria-label="Fechar menu do usuário" onClick={() => setUserMenuOpen(false)} />
+            <div className="skda-user-menu-popover" role="menu" aria-label="Conta e administração">
+              <div className="skda-user-menu-identity"><strong>{props.userDisplayName}</strong><span>{props.userEmail}</span></div>
+              <div className="skda-user-menu-section-label">CONTA</div>
+              <button type="button" role="menuitem" disabled={!props.onOpenUserProfile} onClick={() => { setUserMenuOpen(false); props.onOpenUserProfile?.() }}>Meu perfil</button>
+              <button type="button" role="menuitem" onClick={() => { setUserMenuOpen(false); props.onToggleTheme() }}>{props.platformTheme === 'dark' ? 'Aparência: usar modo claro' : 'Aparência: usar modo escuro'}</button>
+              {(props.isOrganizationAdmin || props.isPlatformSuperAdmin) && props.onOpenOrganizationAdmin && <>
+                <div className="skda-user-menu-section-label">ORGANIZAÇÃO</div>
+                <button type="button" role="menuitem" onClick={() => { setUserMenuOpen(false); props.onOpenOrganizationAdmin?.() }}>Administração da Organização</button>
+              </>}
+              {props.isPlatformSuperAdmin && props.onOpenPlatformAdmin && <>
+                <div className="skda-user-menu-section-label">PLATAFORMA</div>
+                <button type="button" role="menuitem" onClick={() => { setUserMenuOpen(false); props.onOpenPlatformAdmin?.() }}>Administração da Plataforma</button>
+              </>}
+              <div className="skda-user-menu-section-label">DIAGNÓSTICO ASSISTIDO · SK-DA</div>
+              <button type="button" role="menuitem" onClick={() => { setUserMenuOpen(false); setActivePhaseCode('OVERVIEW') }}>Visão Geral do SK-DA</button>
+              <button type="button" role="menuitem" onClick={() => { setUserMenuOpen(false); setActivePhaseCode('AGENDA') }}>Agenda do SK-DA</button>
+              {props.onLogout && <button type="button" role="menuitem" className="skda-user-menu-logout" onClick={() => { setUserMenuOpen(false); void props.onLogout?.() }}>Sair</button>}
+            </div>
+          </>}
         </div>
       }
       pageTitle={shellPageTitle}
