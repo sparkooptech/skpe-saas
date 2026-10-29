@@ -80,6 +80,24 @@ Cada linha do checklist deve representar uma expectativa de evidência e trazer,
 
 Priorizar evidências reutilizáveis em várias questões para reduzir carga sobre a organização.
 
+### 5.1 Descoberta inteligente de evidências em pastas
+
+Quando a organização disponibilizar uma pasta organizada de documentos, o SK-DA deve permitir varredura recursiva como mecanismo de intake progressivo. A estrutura da pasta, o nome do arquivo e, quando tecnicamente possível, o conteúdo do documento podem ser usados para sugerir classificação, questões relacionadas e novas categorias documentais relevantes.
+
+Regras obrigatórias:
+
+- deduplicar arquivos pelo hash do conteúdo antes de criar novos ativos no Core;
+- preservar o caminho relativo de origem como metadado de rastreabilidade;
+- classificar automaticamente apenas como sugestão, sempre pendente de validação humana;
+- permitir que o usuário revise ou altere a categoria sugerida antes da importação;
+- associar automaticamente apenas questões com aderência suficiente, sem marcar cobertura ou suficiência como validada;
+- reconhecer evidências relevantes mesmo quando não previstas originalmente no checklist;
+- tratar saúde econômico-financeira como domínio potencial do eixo Resultados quando houver balanços, DRE/DSP, balancetes, DFC, orçamento, indicadores, liquidez, solvência, margens, sobras, reservas, FATES ou equivalentes;
+- não inferir resultado organizacional apenas pela existência de documento financeiro; a análise deve verificar período, série, memória de cálculo, tendência, meta/parâmetro, causas, decisão e efeito quando aplicável;
+- arquivos cujo conteúdo não possa ser lido na triagem inicial devem permanecer elegíveis à ingestão e análise posterior, sem falsa classificação de suficiência.
+
+A descoberta automática deve reduzir a carga da cooperativa e ampliar cobertura documental, nunca transformar associação algorítmica em evidência validada.
+
 ## 6. Regra das Entrevistas
 
 As seis dimensões funcionam como grade de controle, não como questionário repetitivo.

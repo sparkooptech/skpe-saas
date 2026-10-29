@@ -1,4 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import ExcelJS from 'exceljs'
+import JSZip from 'jszip'
 import { ApplicationShell } from '../../components/application-shell/ApplicationShell'
 import { OrganizationBrandingLogo } from '../../components/organization-branding/OrganizationBrandingLogo'
 import { TransversalWorkspace } from '../../components/application-shell/TransversalWorkspace'
@@ -79,6 +81,7 @@ type ActionPlanAllocation = { id: string; finding_id: string; initiative_id: str
 type ManagedInterviewEvent = { event_id: string; journey_item_code: string; journey_item_title: string; event_type: string; event_title: string; event_description: string | null; starts_at: string | null; ends_at: string | null; all_day: boolean; timezone_name: string; event_status: string; priority: string; location_text: string | null; meeting_reference: string | null; participant_count: number; accepted_count: number; attended_count: number }
 type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null; current_version_id: string | null }
 type EvidenceVersionText = { id: string; evidence_asset_id: string; extracted_text: string | null }
+type FolderEvidenceCandidate = { id:string; file:File; relativePath:string; selected:boolean; status:'ready'|'importing'|'imported'|'error'; errorMessage:string|null; groupCode:string; groupTitle:string; groupHint:string; evidenceType:string; referenceDate:string; confidence:number; discoveryTags:string[]; suggestedQuestionIds:string[]; suggestedQuestionCodes:string[]; triageSummary:string; extractedPreview:string }
 type ContractMeetingProposal = { date: string; start: string; durationHours: number; location: string | null }
 type ContractIntakeProposal = { assetId: string; sourceTitle: string; sourceText: string; startedOn: string; plannedEndOn: string; contractedHours: number; meetings: ContractMeetingProposal[]; scopeLabel: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string; metadata: Record<string,unknown> }
@@ -143,6 +146,7 @@ const DA_EVIDENCE_CHECKLIST = [
   { code:'autoavaliacao', title:'Autoavaliação vigente', hint:'Respostas, comentários e relatórios oficiais' },
   { code:'governanca', title:'Governança e quadro social', hint:'Estatuto, regimentos, atas, políticas e registros' },
   { code:'gestao', title:'Gestão e resultados', hint:'Estratégia, processos, indicadores e controles' },
+  { code:'financeiro', title:'Saúde econômico-financeira', hint:'Balanços, DRE/DSP, balancetes, DFC, orçamento, solvência, liquidez, margens, sobras e indicadores' },
   { code:'entrevistas', title:'Entrevistas e verificações', hint:'Atas, gravações, transcrições e complementos' },
   { code:'complementar', title:'Outras evidências', hint:'Documentos não previstos no checklist inicial' },
 ] as const
@@ -287,6 +291,201 @@ const inferEvidenceFileMetadata = (file: File) => {
       ? `${brMatch[3]}-${brMatch[2].padStart(2,'0')}-${brMatch[1].padStart(2,'0')}`
       : ''
   return { title, evidenceType, referenceDate }
+}
+
+
+const FOLDER_EVIDENCE_EXTENSIONS = new Set([
+  'pdf','doc','docx','xls','xlsx','csv','txt','md','json','xml',
+  'ppt','pptx','png','jpg','jpeg','webp','mp3','wav','m4a','ogg','mp4','mov','webm',
+])
+
+const decodeXmlEvidenceText = (value:string) =>
+  value
+    .replace(/<w:tab\/?\s*>/gi,' ')
+    .replace(/<a:br\/?\s*>/gi,'\n')
+    .replace(/<[^>]+>/g,' ')
+    .replace(/&amp;/g,'&')
+    .replace(/&lt;/g,'<')
+    .replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"')
+    .replace(/&#39;/g,"'")
+    .replace(/\s+/g,' ')
+    .trim()
+
+const extractFolderEvidenceText = async (file:File): Promise<string> => {
+  const extension=file.name.split('.').pop()?.toLowerCase() ?? ''
+  if (file.size > 20 * 1024 * 1024) return ''
+  try {
+    if (['txt','md','csv','json','xml'].includes(extension)) {
+      return (await file.text()).slice(0,12000)
+    }
+    if (extension === 'xlsx') {
+      const workbook=new ExcelJS.Workbook()
+      await workbook.xlsx.load(await file.arrayBuffer() as unknown as ExcelJS.Buffer)
+      const parts:string[]=[]
+      workbook.worksheets.slice(0,6).forEach((sheet) => {
+        parts.push(sheet.name)
+        let rows=0
+        sheet.eachRow((row) => {
+          if (rows >= 120 || parts.join(' ').length >= 12000) return
+          const values=row.values
+          if (Array.isArray(values)) {
+            const text=values.slice(1,22).map((value) => {
+              if (value == null) return ''
+              if (typeof value === 'object' && 'text' in value && typeof value.text === 'string') return value.text
+              if (typeof value === 'object' && 'result' in value) return String(value.result ?? '')
+              return String(value)
+            }).filter(Boolean).join(' | ')
+            if (text) parts.push(text)
+          }
+          rows+=1
+        })
+      })
+      return parts.join('\n').slice(0,12000)
+    }
+    if (extension === 'docx') {
+      const zip=await JSZip.loadAsync(await file.arrayBuffer())
+      const documentXml=zip.file('word/document.xml')
+      return documentXml ? decodeXmlEvidenceText(await documentXml.async('string')).slice(0,12000) : ''
+    }
+    if (extension === 'pptx') {
+      const zip=await JSZip.loadAsync(await file.arrayBuffer())
+      const slideNames=Object.keys(zip.files)
+        .filter((name) => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
+        .sort((a,b) => {
+          const ai=Number(a.match(/slide(\d+)/i)?.[1] ?? 0)
+          const bi=Number(b.match(/slide(\d+)/i)?.[1] ?? 0)
+          return ai-bi
+        })
+        .slice(0,20)
+      const parts:string[]=[]
+      for (const name of slideNames) {
+        const entry=zip.file(name)
+        if (!entry) continue
+        parts.push(decodeXmlEvidenceText(await entry.async('string')))
+        if (parts.join(' ').length >= 12000) break
+      }
+      return parts.join('\n').slice(0,12000)
+    }
+  } catch {
+    return ''
+  }
+  return ''
+}
+
+const folderEvidenceGroup = (relativePath:string, extractedText:string) => {
+  const text=normalizeSearchText(relativePath+' '+extractedText.slice(0,12000))
+  const test=(pattern:RegExp) => pattern.test(text)
+
+  if (test(/balanco|balancete|\bdre\b|\bdsp\b|demonstracao do resultado|fluxo de caixa|\bdfc\b|liquidez|solvencia|endividamento|capital de giro|fleuriet|dupont|\broa\b|\broe\b|\broic\b|margem|sobras|reservas|\bfates\b|orcamento|financeir|economico/)) {
+    return {
+      code:'financeiro',
+      title:'Saúde econômico-financeira',
+      hint:'Balanços, DRE/DSP, balancetes, DFC, orçamento, solvência, liquidez, margens, sobras e indicadores',
+      tags:['financeiro','resultados','indicadores'],
+      confidence:94,
+    }
+  }
+  if (test(/autoavaliacao|avaliacoop|relatorio governanca 2026|relatorio gestao 2026/)) {
+    return { code:'autoavaliacao',title:'Autoavaliação vigente',hint:'Respostas, comentários e relatórios oficiais',tags:['autoavaliacao'],confidence:94 }
+  }
+  if (test(/diagnostico assistido.*governanca|relatorio governanca 202[0-5]|governanca 202[0-5].*diagnostico/)) {
+    return { code:'historico-governanca',title:'Diagnósticos anteriores de Governança',hint:'Relatórios, devolutivas e resultados por ciclo',tags:['historico','governanca'],confidence:91 }
+  }
+  if (test(/diagnostico assistido.*gestao|relatorio gestao 202[0-5]|gestao 202[0-5].*diagnostico/)) {
+    return { code:'historico-gestao',title:'Diagnósticos anteriores de Gestão',hint:'Relatórios, devolutivas e resultados por ciclo',tags:['historico','gestao'],confidence:91 }
+  }
+  if (test(/5w2h|plano de acao|plano acao|acompanhamento de acao|projeto de melhoria|kanban|pdca/)) {
+    return { code:'planos-acao',title:'Planos de ação e acompanhamento',hint:'Planos anteriores, responsáveis, prazos e execução',tags:['plano-acao','execucao'],confidence:88 }
+  }
+  if (test(/entrevista|transcricao|gravacao|depoimento|roteiro de entrevista/)) {
+    return { code:'entrevistas',title:'Entrevistas e verificações',hint:'Atas, gravações, transcrições e complementos',tags:['entrevista'],confidence:86 }
+  }
+  if (test(/estatuto|regimento|assembleia|conselho|governanca|quadro social|cooperado|filiad|politica de relacionamento|comite|auditoria/)) {
+    return { code:'governanca',title:'Governança e quadro social',hint:'Estatuto, regimentos, atas, políticas e registros',tags:['governanca'],confidence:82 }
+  }
+  if (test(/planejamento estrateg|estrategia|processo|cliente|sociedade|pessoa|indicador|conhecimento|resultado|procedimento|sipoc|pesquisa|meta/)) {
+    return { code:'gestao',title:'Gestão e resultados',hint:'Estratégia, processos, indicadores e controles',tags:['gestao'],confidence:78 }
+  }
+  return { code:'complementar',title:'Outras evidências',hint:'Documentos não previstos no checklist inicial',tags:['descoberta'],confidence:55 }
+}
+
+const folderEvidenceQuestionSuggestions = (
+  groupCode:string,
+  relativePath:string,
+  extractedText:string,
+  questions:Question[],
+) => {
+  const evidenceText=normalizeSearchText(relativePath+' '+extractedText.slice(0,12000))
+  const groupTerms:Record<string,string[]> = {
+    financeiro:['resultado','resultados','financeir','econom','indicador','desempenho','liquidez','solvencia','sobras','orcamento','margem'],
+    governanca:['governanca','cooperado','assembleia','conselho','fiscal','diretoria','comite','auditoria','quadro social'],
+    gestao:['lideranca','estrategia','planos','clientes','sociedade','informacoes','conhecimento','pessoas','processos','resultados'],
+    'planos-acao':['plano de acao','acao','melhoria','acompanhamento','responsavel','prazo'],
+    entrevistas:['entrevista','evidencia','pratica','execucao'],
+    autoavaliacao:['autoavaliacao','resposta','governanca','gestao'],
+    'historico-governanca':['governanca','resultado'],
+    'historico-gestao':['gestao','resultado'],
+  }
+  const evidenceTokens=Array.from(new Set(
+    evidenceText.split(/\s+/).filter((token) => token.length >= 5).slice(0,500),
+  ))
+  const ranked=questions.map((question) => {
+    const questionText=normalizeSearchText([
+      question.code,
+      question.axis_name ?? '',
+      question.criterion_name ?? '',
+      question.question_text,
+      question.guidance ?? '',
+    ].join(' '))
+    let score=0
+    for (const term of groupTerms[groupCode] ?? []) {
+      const normalizedTerm=normalizeSearchText(term)
+      if (questionText.includes(normalizedTerm)) score+=5
+      if (evidenceText.includes(normalizedTerm)) score+=2
+    }
+    const overlap=evidenceTokens.filter((token) => questionText.includes(token)).slice(0,8).length
+    score+=overlap
+    if (groupCode === 'financeiro' && /resultado|indicador|desempenho|financeir|econom/.test(questionText)) score+=10
+    if (groupCode === 'historico-governanca' && question.code.startsWith('GOV-')) score+=4
+    if (groupCode === 'historico-gestao' && question.code.startsWith('GES-')) score+=4
+    if (groupCode === 'autoavaliacao') score+=2
+    return { question,score }
+  }).filter((item) => item.score >= (groupCode === 'financeiro' ? 10 : 7))
+    .sort((a,b) => b.score-a.score || a.question.display_order-b.question.display_order)
+
+  const limit=groupCode === 'autoavaliacao' ? 12 : 8
+  return ranked.slice(0,limit).map((item) => item.question)
+}
+
+const classifyFolderEvidenceCandidate = async (file:File, questions:Question[]):Promise<FolderEvidenceCandidate> => {
+  const relativePath=file.webkitRelativePath || file.name
+  const inferred=inferEvidenceFileMetadata(file)
+  const extractedPreview=await extractFolderEvidenceText(file)
+  const group=folderEvidenceGroup(relativePath,extractedPreview)
+  const suggested=folderEvidenceQuestionSuggestions(group.code,relativePath,extractedPreview,questions)
+  const triageSummary=suggested.length > 0
+    ? `Triagem automática: ${group.title}. Relevância sugerida para ${suggested.length} questão(ões) (${suggested.map((item)=>item.code).join(', ')}). Validar aderência e suficiência antes de concluir o diagnóstico.`
+    : `Triagem automática: ${group.title}. Nenhuma questão foi associada automaticamente com confiança suficiente; manter para revisão humana.`
+  return {
+    id:crypto.randomUUID(),
+    file,
+    relativePath,
+    selected:true,
+    status:'ready',
+    errorMessage:null,
+    groupCode:group.code,
+    groupTitle:group.title,
+    groupHint:group.hint,
+    evidenceType:inferred.evidenceType,
+    referenceDate:inferred.referenceDate,
+    confidence:group.confidence,
+    discoveryTags:group.tags,
+    suggestedQuestionIds:suggested.map((item)=>item.id),
+    suggestedQuestionCodes:suggested.map((item)=>item.code),
+    triageSummary,
+    extractedPreview:extractedPreview.slice(0,500),
+  }
 }
 
 const selectOrganizationContractSection = (text: string, organizationName: string) => {
@@ -524,6 +723,10 @@ export function SkdaWorkspace(props: Props) {
   const [interviewQuestionDraft, setInterviewQuestionDraft] = useState<InterviewQuestionDraft>({ observedPractice:'', interviewNotes:'', evidenceCited:'', evidenceRequested:'', gapSummary:'', outputType:'', nextAction:'', executionDate:'' })
   const [interviewSessionNotes, setInterviewSessionNotes] = useState('')
   const [showEvidenceCreate, setShowEvidenceCreate] = useState(false)
+  const [showFolderEvidenceScan, setShowFolderEvidenceScan] = useState(false)
+  const [folderEvidenceCandidates, setFolderEvidenceCandidates] = useState<FolderEvidenceCandidate[]>([])
+  const [folderScanLabel, setFolderScanLabel] = useState('')
+  const [folderScanProgress, setFolderScanProgress] = useState({ current:0,total:0,label:'' })
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null)
   const [evidenceForm, setEvidenceForm] = useState({
     title:'',
@@ -1089,6 +1292,7 @@ export function SkdaWorkspace(props: Props) {
       setShowCreate(false)
       setShowInterviewCreate(false)
       setShowEvidenceCreate(false)
+      setShowFolderEvidenceScan(false)
       setShowFindingCreate(false)
       setEditingFindingId(null)
       setShowTacticalCreate(false)
@@ -2378,6 +2582,213 @@ export function SkdaWorkspace(props: Props) {
       changeReason:'Evidência identificada durante a Jornada de Diagnóstico Assistido.',
     })
     setShowEvidenceCreate(false)
+  }
+
+
+  const prepareFolderEvidenceScan = async (files:FileList | null) => {
+    if (!files || files.length === 0) return
+    const incoming=Array.from(files)
+    const supported=incoming.filter((file) => {
+      const extension=file.name.split('.').pop()?.toLowerCase() ?? ''
+      return FOLDER_EVIDENCE_EXTENSIONS.has(extension) && file.size > 0 && file.size <= 50 * 1024 * 1024
+    })
+    if (supported.length === 0) {
+      setError('A pasta não contém arquivos suportados de até 50 MB.')
+      return
+    }
+    if (supported.length > 300) {
+      setError('A varredura atual aceita até 300 arquivos por lote. Selecione uma subpasta para manter a revisão controlável.')
+      return
+    }
+
+    const firstRelative=supported[0]?.webkitRelativePath || supported[0]?.name || ''
+    const label=firstRelative.includes('/') ? firstRelative.split('/')[0] : 'Pasta selecionada'
+    setFolderScanLabel(label)
+    setFolderEvidenceCandidates([])
+    setFolderScanProgress({ current:0,total:supported.length,label:'Lendo estrutura e conteúdo...' })
+    setError('')
+
+    const prepared:FolderEvidenceCandidate[]=[]
+    for (let index=0; index<supported.length; index+=1) {
+      const file=supported[index]
+      setFolderScanProgress({ current:index+1,total:supported.length,label:file.webkitRelativePath || file.name })
+      prepared.push(await classifyFolderEvidenceCandidate(file,questions))
+    }
+    setFolderEvidenceCandidates(prepared)
+    setFolderScanProgress({ current:supported.length,total:supported.length,label:'Triagem concluída. Revise as sugestões antes de importar.' })
+  }
+
+  const changeFolderCandidateGroup = (candidateId:string, groupCode:string) => {
+    const group=DA_EVIDENCE_CHECKLIST.find((item) => item.code === groupCode)
+    if (!group) return
+    setFolderEvidenceCandidates((current) => current.map((candidate) => {
+      if (candidate.id !== candidateId) return candidate
+      const suggested=folderEvidenceQuestionSuggestions(groupCode,candidate.relativePath,candidate.extractedPreview,questions)
+      return {
+        ...candidate,
+        groupCode,
+        groupTitle:group.title,
+        groupHint:group.hint,
+        discoveryTags:[groupCode],
+        confidence:groupCode === 'complementar' ? 55 : 80,
+        suggestedQuestionIds:suggested.map((item)=>item.id),
+        suggestedQuestionCodes:suggested.map((item)=>item.code),
+        triageSummary:suggested.length > 0
+          ? `Classificação revisada para ${group.title}; associação sugerida a ${suggested.map((item)=>item.code).join(', ')}. Validar aderência e suficiência.`
+          : `Classificação revisada para ${group.title}; manter para revisão humana sem associação automática a questões.`,
+      }
+    }))
+  }
+
+  const ingestFolderEvidenceCandidate = async (candidate:FolderEvidenceCandidate, scanId:string) => {
+    if (!selected) throw new Error('Jornada não selecionada.')
+    const contentHash=await sha256Hex(candidate.file)
+    const { data:duplicateData, error:duplicateError }=await supabase
+      .from('sparks_evidence_assets' as never)
+      .select('id' as never)
+      .eq('organization_id',props.organizationId)
+      .eq('content_hash',contentHash)
+      .is('archived_at',null)
+      .maybeSingle()
+
+    if (duplicateError) throw duplicateError
+    let assetId=(duplicateData as unknown as { id?:string } | null)?.id ?? null
+    let storagePath:string | null=null
+
+    if (!assetId) {
+      const safeRelative=(candidate.relativePath || candidate.file.name)
+        .split('/')
+        .filter(Boolean)
+        .map(storageSafeFileName)
+        .join('/')
+      storagePath=`${props.organizationId}/${selected.id}/folder-scans/${scanId}/${safeRelative}`
+      const { error:uploadError }=await supabase.storage
+        .from('sparks-evidence')
+        .upload(storagePath,candidate.file,{
+          cacheControl:'3600',
+          contentType:candidate.file.type || 'application/octet-stream',
+          upsert:false,
+        })
+      if (uploadError) throw new Error(`Falha no upload de ${candidate.relativePath}: ${uploadError.message}`)
+
+      const inferred=inferEvidenceFileMetadata(candidate.file)
+      const registration=await supabase.rpc(
+        'register_sparks_evidence_asset_for_module' as never,
+        {
+          target_organization_id:props.organizationId,
+          target_module_code:'SK-DA',
+          evidence_title:inferred.title || candidate.file.name,
+          evidence_description:candidate.triageSummary,
+          target_evidence_type:candidate.evidenceType,
+          target_source_type:'internal',
+          target_reference_date:candidate.referenceDate || null,
+          target_validity_date:null,
+          target_confidentiality_level:'internal',
+          target_content_hash:contentHash,
+          target_file_name:candidate.file.name,
+          target_mime_type:candidate.file.type || null,
+          target_file_size_bytes:candidate.file.size,
+          target_storage_bucket:'sparks-evidence',
+          target_storage_path:storagePath,
+          change_reason:'Evidência importada por varredura inteligente de pasta na Jornada de Diagnóstico Assistido.',
+        } as never,
+      )
+      if (registration.error || !registration.data) {
+        throw new Error(registration.error?.message ?? 'Não foi possível registrar a evidência descoberta no Core.')
+      }
+      assetId=registration.data as unknown as string
+    }
+
+    const discovery=await supabase.rpc(
+      'register_skda_folder_evidence_discovery' as never,
+      {
+        target_organization_id:props.organizationId,
+        target_diagnosis_id:selected.id,
+        target_evidence_asset_id:assetId,
+        target_question_ids:candidate.suggestedQuestionIds,
+        target_group_code:candidate.groupCode,
+        target_group_title:candidate.groupTitle,
+        target_relative_path:candidate.relativePath,
+        target_scan_id:scanId,
+        target_discovery_tags:candidate.discoveryTags,
+        target_relevance_confidence:candidate.confidence,
+        target_triage_summary:candidate.triageSummary,
+        change_reason:'Triagem e associações sugeridas pela varredura inteligente de pasta do Diagnóstico Assistido.',
+      } as never,
+    )
+    if (discovery.error) throw new Error(discovery.error.message)
+
+    const [{ data:assetData,error:assetError },{ data:correlationData,error:correlationError },{ data:intelligenceData,error:intelligenceError }]=await Promise.all([
+      supabase.from('sparks_evidence_assets' as never)
+        .select('id,title,evidence_type,validation_status,reliability_level,reference_date,current_version_id' as never)
+        .eq('id',assetId as never)
+        .eq('organization_id',props.organizationId)
+        .single(),
+      supabase.from('skda_evidence_correlations' as never)
+        .select('id,evidence_asset_id,usage_type,validation_status,metadata' as never)
+        .eq('diagnosis_id',selected.id)
+        .eq('evidence_asset_id',assetId as never)
+        .eq('target_type','diagnosis')
+        .eq('target_id',selected.id)
+        .single(),
+      supabase.from('skda_evidence_question_intelligence' as never)
+        .select('id,evidence_asset_id,question_id,document_intake_status,evidence_coverage_status,practice_state,relevance_score,adequacy_score,sufficiency_score,reliability_score,actuality_score,coverage_score,confidence_score,gap_description,complement_needed,improvement_suggestion,interview_question_suggestion,self_assessment_guidance,diagnostic_hypothesis,analysis_status,source_excerpt,source_locator,metadata' as never)
+        .eq('diagnosis_id',selected.id)
+        .eq('evidence_asset_id',assetId as never),
+    ])
+
+    if (assetError || !assetData) throw new Error(assetError?.message ?? 'Evidência registrada, mas não foi possível recarregar o ativo.')
+    if (correlationError || !correlationData) throw new Error(correlationError?.message ?? 'Evidência registrada, mas a triagem não foi recuperada.')
+    if (intelligenceError) throw new Error(intelligenceError.message)
+
+    const asset=assetData as unknown as EvidenceAsset
+    const correlation=correlationData as unknown as EvidenceCorrelation
+    const intelligence=(intelligenceData ?? []) as unknown as EvidenceQuestionIntelligence[]
+    const wasKnown=evidenceAssets.some((item) => item.id === asset.id)
+
+    setEvidenceAssets((current) => [asset,...current.filter((item)=>item.id!==asset.id)])
+    setEvidenceCorrelations((current) => [...current.filter((item)=>item.id!==correlation.id && item.evidence_asset_id!==asset.id),correlation])
+    setEvidenceQuestionIntelligence((current) => [...current.filter((item)=>item.evidence_asset_id!==asset.id),...intelligence])
+    if (!wasKnown) setMetrics((current) => ({ ...current,evidence:current.evidence+1 }))
+  }
+
+  const importFolderEvidenceCandidates = async () => {
+    if (!selected || !canRegisterEvidence) return
+    const selectedCandidates=folderEvidenceCandidates.filter((candidate) => candidate.selected && candidate.status !== 'imported')
+    if (selectedCandidates.length === 0) {
+      setError('Selecione ao menos um arquivo da pasta para importar.')
+      return
+    }
+
+    const scanId=`${new Date().toISOString().replace(/[:.]/g,'-')}-${crypto.randomUUID().slice(0,8)}`
+    setSaving(true)
+    setError('')
+    setFolderScanProgress({ current:0,total:selectedCandidates.length,label:'Iniciando importação...' })
+
+    let failures=0
+    for (let index=0; index<selectedCandidates.length; index+=1) {
+      const candidate=selectedCandidates[index]
+      setFolderEvidenceCandidates((current) => current.map((item) => item.id===candidate.id ? { ...item,status:'importing',errorMessage:null } : item))
+      setFolderScanProgress({ current:index+1,total:selectedCandidates.length,label:candidate.relativePath })
+      try {
+        await ingestFolderEvidenceCandidate(candidate,scanId)
+        setFolderEvidenceCandidates((current) => current.map((item) => item.id===candidate.id ? { ...item,status:'imported',errorMessage:null } : item))
+      } catch (error) {
+        failures+=1
+        const message=error instanceof Error ? error.message : String(error)
+        setFolderEvidenceCandidates((current) => current.map((item) => item.id===candidate.id ? { ...item,status:'error',errorMessage:message } : item))
+      }
+    }
+
+    setSaving(false)
+    setFolderScanProgress({
+      current:selectedCandidates.length,
+      total:selectedCandidates.length,
+      label:failures === 0
+        ? 'Importação concluída. As associações sugeridas aguardam validação humana.'
+        : `Importação concluída com ${failures} arquivo(s) que exigem revisão.`,
+    })
+    if (failures > 0) setError(`${failures} arquivo(s) não puderam ser importados. Revise os itens marcados com erro.`)
   }
 
   const openIntelligenceEditor = (item:EvidenceQuestionIntelligence) => {
@@ -3816,6 +4227,7 @@ export function SkdaWorkspace(props: Props) {
               <div><h4>Gestão das Evidências</h4><small>O Core organiza a fonte, sua integridade, confiabilidade, aderência às questões do catálogo e o que ainda precisa ser confirmado para transformar documento em evidência de prática e resultado.</small></div>
               <div className="skda-phase-workspace-actions">
                 <span>{evidenceAssets.length} ativo(s)</span>
+                {canRegisterEvidence && <button type="button" onClick={() => { setFolderEvidenceCandidates([]); setFolderScanLabel(''); setFolderScanProgress({current:0,total:0,label:''}); setShowFolderEvidenceScan(true) }}>Varrer pasta de evidências</button>}
                 {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceFile(null); setShowEvidenceCreate(true) }}>Adicionar e analisar evidência</button>}
               </div>
             </div>
@@ -4618,6 +5030,89 @@ export function SkdaWorkspace(props: Props) {
         </div>
         {error && <div className="skda-alert">{error}</div>}
         <div className="skda-modal-actions"><button type="button" onClick={() => {setShowFindingCreate(false);setEditingFindingId(null)}}>Cancelar</button><button type="button" className="skda-primary" disabled={saving} onClick={() => void createFinding()}>{saving?'Salvando...':editingFindingId ? 'Salvar alterações' : 'Registrar achado'}</button></div>
+      </section>
+    </div>}
+    {showFolderEvidenceScan && selected && <div className="skda-modal-backdrop">
+      <section className="skda-modal skda-modal-wide skda-folder-scan-modal" role="dialog" aria-modal="true">
+        <div className="skda-modal-head">
+          <div><p className="skda-eyebrow">Entrada inteligente de evidências</p><h2>Varrer pasta de evidências</h2></div>
+          <button type="button" disabled={saving} onClick={() => setShowFolderEvidenceScan(false)}>×</button>
+        </div>
+        <p>Selecione uma pasta da organização. O SK-DA percorre subpastas, elimina duplicidades por hash, classifica os documentos por domínio e sugere as questões mais aderentes. As associações entram como <strong>sugestões pendentes de validação humana</strong>, nunca como conclusão diagnóstica.</p>
+        <div className="skda-folder-scan-picker">
+          <label>
+            <span>Pasta a analisar</span>
+            <input
+              type="file"
+              multiple
+              {...({ webkitdirectory:'', directory:'' } as any)}
+              disabled={saving}
+              onChange={(event) => void prepareFolderEvidenceScan(event.target.files)}
+            />
+            <small>PDF, Word, Excel, PowerPoint, CSV, texto, imagens, áudio e vídeo · até 50 MB por arquivo · até 300 arquivos por lote.</small>
+          </label>
+          {folderScanLabel && <div><span>Pasta selecionada</span><b>{folderScanLabel}</b></div>}
+        </div>
+        {folderScanProgress.total > 0 && <div className="skda-folder-scan-progress">
+          <div><strong>{folderScanProgress.current}/{folderScanProgress.total}</strong><span>{folderScanProgress.label}</span></div>
+          <span><i style={{width:`${Math.max(0,Math.min(100,(folderScanProgress.current/folderScanProgress.total)*100))}%`}} /></span>
+        </div>}
+        {folderEvidenceCandidates.length > 0 && (() => {
+          const selectedCount=folderEvidenceCandidates.filter((item)=>item.selected).length
+          const financeCount=folderEvidenceCandidates.filter((item)=>item.selected && item.groupCode==='financeiro').length
+          const suggestedLinks=folderEvidenceCandidates.filter((item)=>item.selected).reduce((total,item)=>total+item.suggestedQuestionIds.length,0)
+          const importedCount=folderEvidenceCandidates.filter((item)=>item.status==='imported').length
+          return <>
+            <div className="skda-folder-scan-summary">
+              <article><span>Arquivos reconhecidos</span><strong>{folderEvidenceCandidates.length}</strong></article>
+              <article><span>Selecionados</span><strong>{selectedCount}</strong></article>
+              <article className={financeCount>0?'is-discovered':''}><span>Saúde econômico-financeira</span><strong>{financeCount}</strong></article>
+              <article><span>Associações sugeridas</span><strong>{suggestedLinks}</strong></article>
+              <article><span>Já importados</span><strong>{importedCount}</strong></article>
+            </div>
+            <div className="skda-folder-scan-note">
+              <strong>Descoberta orientada por conteúdo</strong>
+              <span>TXT/CSV/JSON, XLSX, DOCX e PPTX têm conteúdo lido localmente para a triagem. PDF, imagens, áudio e vídeo usam inicialmente nome/caminho e seguem para análise posterior. Saúde econômico-financeira é tratada explicitamente como fonte potencial do eixo Resultados.</span>
+            </div>
+            <div className="skda-folder-scan-list">
+              {folderEvidenceCandidates.map((candidate) => <article key={candidate.id} className={`skda-folder-scan-item ${candidate.status==='error'?'has-error':candidate.status==='imported'?'is-imported':''}`}>
+                <label className="skda-folder-scan-select">
+                  <input
+                    type="checkbox"
+                    checked={candidate.selected}
+                    disabled={saving || candidate.status==='imported'}
+                    onChange={(event)=>setFolderEvidenceCandidates((current)=>current.map((item)=>item.id===candidate.id?{...item,selected:event.target.checked}:item))}
+                  />
+                  <div>
+                    <strong>{candidate.file.name}</strong>
+                    <small>{candidate.relativePath}</small>
+                  </div>
+                </label>
+                <label>
+                  <span>Categoria sugerida</span>
+                  <select value={candidate.groupCode} disabled={saving || candidate.status==='imported'} onChange={(event)=>changeFolderCandidateGroup(candidate.id,event.target.value)}>
+                    {DA_EVIDENCE_CHECKLIST.map((group)=><option key={group.code} value={group.code}>{group.title}</option>)}
+                  </select>
+                </label>
+                <div className="skda-folder-scan-relevance">
+                  <span>Confiança da triagem <b>{candidate.confidence}%</b></span>
+                  <small>{candidate.suggestedQuestionCodes.length>0 ? `Questões sugeridas: ${candidate.suggestedQuestionCodes.join(', ')}` : 'Sem associação automática a questão; revisão humana necessária.'}</small>
+                  {candidate.extractedPreview && <small className="skda-folder-scan-preview">{candidate.extractedPreview.slice(0,220)}{candidate.extractedPreview.length>220?'…':''}</small>}
+                  {candidate.status==='importing' && <b>Importando...</b>}
+                  {candidate.status==='imported' && <b>Importada e encaminhada para validação</b>}
+                  {candidate.errorMessage && <b>{candidate.errorMessage}</b>}
+                </div>
+              </article>)}
+            </div>
+          </>
+        })()}
+        {error && <div className="skda-alert">{error}</div>}
+        <div className="skda-modal-actions">
+          <button type="button" disabled={saving} onClick={() => setShowFolderEvidenceScan(false)}>Fechar</button>
+          <button type="button" className="skda-primary" disabled={saving || folderEvidenceCandidates.filter((item)=>item.selected && item.status!=='imported').length===0} onClick={() => void importFolderEvidenceCandidates()}>
+            {saving ? 'Importando e associando...' : 'Importar selecionadas e analisar'}
+          </button>
+        </div>
       </section>
     </div>}
     {showEvidenceCreate && selected && <div className="skda-modal-backdrop">

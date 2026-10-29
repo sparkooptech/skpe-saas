@@ -4692,3 +4692,225 @@
     flex-direction:column;
   }
 }
+
+
+.skda-folder-scan-modal { max-width: 1180px; }
+
+.skda-folder-scan-picker {
+  display:grid;
+  grid-template-columns:minmax(0,1.6fr) minmax(180px,.6fr);
+  gap:.8rem;
+  align-items:end;
+  margin:.8rem 0;
+}
+
+.skda-folder-scan-picker label,
+.skda-folder-scan-picker > div {
+  display:grid;
+  gap:.3rem;
+}
+
+.skda-folder-scan-picker label > span,
+.skda-folder-scan-picker > div > span {
+  color:var(--skda-muted);
+  font-size:.68rem;
+  font-weight:800;
+}
+
+.skda-folder-scan-picker > div {
+  padding:.6rem .7rem;
+  border:1px solid var(--skda-border);
+  border-radius:8px;
+  background:#fbfcfc;
+}
+
+.skda-folder-scan-progress {
+  display:grid;
+  gap:.35rem;
+  margin:.75rem 0;
+}
+
+.skda-folder-scan-progress > div {
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  min-width:0;
+}
+
+.skda-folder-scan-progress > div > span {
+  overflow:hidden;
+  color:var(--skda-muted);
+  font-size:.7rem;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.skda-folder-scan-progress > span {
+  display:block;
+  height:6px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#e8eeec;
+}
+
+.skda-folder-scan-progress > span > i {
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--skda-primary);
+  transition:width .2s ease;
+}
+
+.skda-folder-scan-summary {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:.55rem;
+  margin:.8rem 0;
+}
+
+.skda-folder-scan-summary article {
+  display:grid;
+  place-items:center;
+  gap:.2rem;
+  min-height:64px;
+  padding:.55rem;
+  border:1px solid var(--skda-border);
+  border-radius:9px;
+  background:#fff;
+  text-align:center;
+}
+
+.skda-folder-scan-summary article span {
+  color:var(--skda-muted);
+  font-size:.66rem;
+  font-weight:800;
+}
+
+.skda-folder-scan-summary article strong {
+  color:var(--skda-primary);
+  font-size:1.08rem;
+}
+
+.skda-folder-scan-summary article.is-discovered {
+  border-color:color-mix(in srgb,var(--skda-primary) 45%,var(--skda-border));
+  background:color-mix(in srgb,var(--skda-primary) 4%,white);
+}
+
+.skda-folder-scan-note {
+  display:grid;
+  gap:.25rem;
+  padding:.65rem .75rem;
+  border-left:3px solid var(--skda-primary);
+  border-radius:7px;
+  background:#f7faf9;
+}
+
+.skda-folder-scan-note strong { color:var(--skda-text); }
+.skda-folder-scan-note span { color:var(--skda-muted); font-size:.72rem; line-height:1.45; }
+
+.skda-folder-scan-list {
+  display:grid;
+  gap:.5rem;
+  max-height:48vh;
+  margin-top:.75rem;
+  padding-right:.2rem;
+  overflow:auto;
+}
+
+.skda-folder-scan-item {
+  display:grid;
+  grid-template-columns:minmax(260px,1.3fr) minmax(180px,.7fr) minmax(280px,1.2fr);
+  gap:.65rem;
+  align-items:start;
+  padding:.65rem;
+  border:1px solid var(--skda-border);
+  border-radius:9px;
+  background:#fff;
+}
+
+.skda-folder-scan-item.is-imported {
+  background:#f7faf8;
+}
+
+.skda-folder-scan-item.has-error {
+  border-color:#c86d6d;
+  background:#fff8f8;
+}
+
+.skda-folder-scan-select {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:.5rem;
+  align-items:start;
+}
+
+.skda-folder-scan-select > div {
+  display:grid;
+  gap:.16rem;
+  min-width:0;
+}
+
+.skda-folder-scan-select strong,
+.skda-folder-scan-select small {
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.skda-folder-scan-select small {
+  color:var(--skda-muted);
+  font-size:.64rem;
+  white-space:nowrap;
+}
+
+.skda-folder-scan-item > label:not(.skda-folder-scan-select) {
+  display:grid;
+  gap:.22rem;
+}
+
+.skda-folder-scan-item > label > span {
+  color:var(--skda-muted);
+  font-size:.65rem;
+  font-weight:800;
+}
+
+.skda-folder-scan-relevance {
+  display:grid;
+  gap:.22rem;
+  min-width:0;
+}
+
+.skda-folder-scan-relevance > span {
+  color:var(--skda-text);
+  font-size:.69rem;
+}
+
+.skda-folder-scan-relevance > small {
+  color:var(--skda-muted);
+  font-size:.65rem;
+  line-height:1.4;
+}
+
+.skda-folder-scan-relevance > b {
+  color:var(--skda-primary);
+  font-size:.68rem;
+}
+
+.skda-folder-scan-item.has-error .skda-folder-scan-relevance > b {
+  color:#a43d3d;
+}
+
+.skda-folder-scan-preview {
+  padding:.35rem .45rem;
+  border-radius:6px;
+  background:#f5f7f6;
+}
+
+@media (max-width: 980px) {
+  .skda-folder-scan-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .skda-folder-scan-item { grid-template-columns:1fr; }
+}
+
+@media (max-width: 680px) {
+  .skda-folder-scan-picker,
+  .skda-folder-scan-summary { grid-template-columns:1fr; }
+}
