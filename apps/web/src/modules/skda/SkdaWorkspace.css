@@ -4914,3 +4914,95 @@
   .skda-folder-scan-picker,
   .skda-folder-scan-summary { grid-template-columns:1fr; }
 }
+
+
+.skda-journey-project-card {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(190px,.28fr);
+  gap:1rem;
+  margin:.75rem 0 1rem;
+  padding:.85rem .95rem;
+  border:1px solid color-mix(in srgb,var(--skda-primary) 40%,var(--skda-border));
+  border-radius:10px;
+  background:color-mix(in srgb,var(--skda-primary) 4%,white);
+}
+
+.skda-journey-project-main {
+  display:grid;
+  gap:.25rem;
+  min-width:0;
+}
+
+.skda-journey-project-main > small {
+  color:var(--skda-primary);
+  font-size:.68rem;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.035em;
+}
+
+.skda-journey-project-main > strong {
+  color:var(--skda-text);
+  font-size:.93rem;
+}
+
+.skda-journey-project-main > span {
+  color:var(--skda-muted);
+  font-size:.72rem;
+  line-height:1.4;
+}
+
+.skda-journey-project-meta {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.35rem .5rem;
+  margin-top:.2rem;
+}
+
+.skda-journey-project-meta span {
+  padding:.22rem .4rem;
+  border:1px solid var(--skda-border);
+  border-radius:999px;
+  background:#fff;
+  color:var(--skda-text);
+  font-size:.64rem;
+  font-weight:700;
+}
+
+.skda-journey-project-progress {
+  display:grid;
+  align-content:center;
+  gap:.35rem;
+  text-align:right;
+}
+
+.skda-journey-project-progress > b {
+  color:var(--skda-primary);
+  font-size:1.35rem;
+}
+
+.skda-journey-project-progress > span {
+  display:block;
+  height:7px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#dfe8e4;
+}
+
+.skda-journey-project-progress > span > i {
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--skda-primary);
+}
+
+.skda-journey-project-progress > small {
+  color:var(--skda-muted);
+  font-size:.62rem;
+  line-height:1.35;
+}
+
+@media (max-width: 780px) {
+  .skda-journey-project-card { grid-template-columns:1fr; }
+  .skda-journey-project-progress { text-align:left; }
+}

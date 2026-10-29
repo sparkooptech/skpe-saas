@@ -99,6 +99,7 @@ type AssessmentDraft = { classification: string; answerText: string; rationale: 
 type Finding = { id: string; finding_type: string; title: string; description: string; priority: string; status: string; recommendation: string | null; question_id: string | null; interview_id: string | null; owner_user_id: string | null; due_date: string | null }
 type InitiativeOrigin = { initiative_id: string; source_entity_id: string }
 type LinkedInitiative = { id: string; code: string; name: string; initiative_class: string; status: string; progress: number; sourceFindingId: string }
+type JourneyInitiative = { id:string; code:string; name:string; description:string|null; initiative_class:string; status:string; progress:number; start_date:string|null; target_end_date:string|null; baseline_start_date:string|null; baseline_target_end_date:string|null; priority:string; criticality:string; source_module_code:string|null }
 type JourneyExecutionAction = {
   id: string
   parent_action_id: string | null
@@ -772,6 +773,7 @@ export function SkdaWorkspace(props: Props) {
   const [assessmentDrafts, setAssessmentDrafts] = useState<Record<string,AssessmentDraft>>({})
   const [findings, setFindings] = useState<Finding[]>([])
   const [linkedInitiatives, setLinkedInitiatives] = useState<LinkedInitiative[]>([])
+  const [journeyInitiative, setJourneyInitiative] = useState<JourneyInitiative | null>(null)
   const [actionFollowup, setActionFollowup] = useState<ActionFollowup[]>([])
   const [journeyEap, setJourneyEap] = useState<JourneyExecutionAction[]>([])
   const [journeyArtifacts, setJourneyArtifacts] = useState<JourneyArtifact[]>([])
@@ -1657,11 +1659,18 @@ export function SkdaWorkspace(props: Props) {
   useEffect(() => {
     const run = async () => {
       if (!selected?.execution_initiative_id) {
+        setJourneyInitiative(null)
         setJourneyEap([])
         setJourneyArtifacts([])
         return
       }
-      const [actionsResult, artifactsResult] = await Promise.all([
+      const [initiativeResult, actionsResult, artifactsResult] = await Promise.all([
+        supabase
+          .from('sparks_initiatives' as never)
+          .select('id,code,name,description,initiative_class,status,progress,start_date,target_end_date,baseline_start_date,baseline_target_end_date,priority,criticality,source_module_code' as never)
+          .eq('organization_id', props.organizationId)
+          .eq('id', selected.execution_initiative_id)
+          .maybeSingle(),
         supabase
           .from('sparks_initiative_actions' as never)
           .select('id,parent_action_id,code,name,status,progress,baseline_start_date,baseline_due_date,planned_start_date,planned_due_date,started_at,completed_at,metadata' as never)
@@ -1677,6 +1686,7 @@ export function SkdaWorkspace(props: Props) {
           .eq('module_code', 'SK-DA')
           .order('artifact_code', { ascending:true }),
       ])
+      setJourneyInitiative((initiativeResult.data ?? null) as unknown as JourneyInitiative | null)
       setJourneyEap((actionsResult.data ?? []) as unknown as JourneyExecutionAction[])
       setJourneyArtifacts((artifactsResult.data ?? []) as unknown as JourneyArtifact[])
     }
@@ -1870,6 +1880,129 @@ export function SkdaWorkspace(props: Props) {
     }
   }
 
+
+  const buildAssistedArtifactDraft = (artifact:JourneyArtifact) => {
+    if (!selected) return ''
+    const metadata=selected.metadata ?? {}
+    const lead=organizationUsers.find((user)=>user.user_id===selected.lead_user_id)
+    const scope=typeof metadata.scope_statement === 'string' && metadata.scope_statement.trim()
+      ? metadata.scope_statement.trim()
+      : selected.description || 'Conduzir a Jornada de Diagnóstico Assistido do ciclo de referência.'
+    const methodology=typeof metadata.methodology_notes === 'string' && metadata.methodology_notes.trim()
+      ? metadata.methodology_notes.trim()
+      : 'Aplicar o Diagnóstico Assistido com base no referencial vigente, evidências, entrevistas, validação humana e rastreabilidade das decisões.'
+    const contractedHours=typeof metadata.contracted_hours === 'number' || typeof metadata.contracted_hours === 'string'
+      ? String(metadata.contracted_hours)
+      : 'não informada'
+    const formatDate=(value:string|null|undefined) => value ? new Date(value+'T12:00:00').toLocaleDateString('pt-BR') : 'não informada'
+    const initiativeLabel=journeyInitiative
+      ? `${journeyInitiative.code} — ${journeyInitiative.name}`
+      : selected.execution_initiative_id
+        ? `Iniciativa transversal vinculada (${selected.execution_initiative_id})`
+        : 'Iniciativa transversal ainda não vinculada'
+    const macroActions=journeyEap.filter((item)=>!item.parent_action_id && item.code===artifact.macrophase_code)
+    const macroAction=macroActions[0]
+    const common=[
+      `# ${artifact.title}`,
+      '',
+      '> Rascunho assistido pelo SPARKs DA a partir das informações já registradas na Jornada. Revisar e adequar antes de criar a versão governada.',
+      '',
+      '## Identificação',
+      `- Organização: ${props.organizationName} (${props.organizationCode})`,
+      `- Jornada: ${selected.code} — ${selected.name}`,
+      `- Ciclo de referência: ${selected.reference_year ?? 'não informado'}`,
+      `- MegaFase: ${artifact.macrophase_code ?? 'não informada'}`,
+      `- Artefato: ${artifact.artifact_code}`,
+      `- Iniciativa de execução: ${initiativeLabel}`,
+      `- Líder SPARKOOP: ${lead?.user_display_name || lead?.user_email || 'não definido'}`,
+      `- Período vigente: ${formatDate(selected.started_on)} a ${formatDate(selected.planned_end_on)}`,
+      `- Carga contratada registrada: ${contractedHours}h`,
+      '',
+      '## Finalidade do artefato',
+      artifact.purpose || 'Entregável metodológico governado da Jornada de Diagnóstico Assistido.',
+      '',
+      '## Escopo da Jornada',
+      scope,
+      '',
+      '## Premissas metodológicas',
+      methodology,
+    ]
+
+    if (artifact.artifact_code === 'MF0-A01') {
+      return [
+        ...common,
+        '',
+        '## Termo de Abertura da Jornada',
+        '',
+        '### 1. Autorização e enquadramento',
+        `A Jornada ${selected.code} da ${props.organizationName} está constituída no SPARKs DA e vinculada à iniciativa transversal ${initiativeLabel}. A fonte autorizadora e a linha de base contratual devem permanecer rastreáveis às evidências e registros de abertura já associados à Jornada.`,
+        '',
+        '### 2. Objetivo',
+        scope,
+        '',
+        '### 3. Entregas esperadas',
+        '- Preparação e abertura governada da Jornada;',
+        '- consolidação do intake, histórico, Autoavaliação e evidências;',
+        '- entrevistas orientadas às lacunas de Governança e Gestão;',
+        '- avaliação de suficiência das evidências, PDCL e maturidade;',
+        '- consolidação de achados, forças, riscos, oportunidades e lacunas;',
+        '- priorização 80/20 e Plano de Ação por ciclos;',
+        '- devolutiva executiva, decisões e próximos passos rastreáveis.',
+        '',
+        '### 4. Governança e papéis',
+        `- Líder da Jornada: ${lead?.user_display_name || lead?.user_email || 'a definir'}.`,
+        '- Organização: disponibilizar interlocutores, documentos, evidências e validações necessárias.',
+        '- SPARKOOP: conduzir o método, organizar evidências, registrar hipóteses/achados e preservar a rastreabilidade.',
+        '- Validações relevantes: dependem de decisão humana explícita; geração automática de conteúdo não equivale a aprovação.',
+        '',
+        '### 5. Estrutura de execução',
+        `A execução é representada pela iniciativa ${initiativeLabel}, do tipo Projeto, com EAP baseada nas MegaFases MF0 a MF10.`,
+        `MegaFase corrente: ${selected.current_megaphase_code || 'MF0'}.`,
+        macroAction ? `Situação da MegaFase de abertura: ${macroAction.status}; plano vigente ${formatDate(macroAction.planned_start_date)} a ${formatDate(macroAction.planned_due_date)}.` : 'MegaFase de abertura ainda sem ação operacional carregada.',
+        '',
+        '### 6. Período e carga',
+        `- Início: ${formatDate(selected.started_on)}.`,
+        `- Término planejado: ${formatDate(selected.planned_end_on)}.`,
+        `- Carga contratada registrada: ${contractedHours}h.`,
+        '',
+        '### 7. Critérios de condução',
+        '- O DA é processo de desenvolvimento organizacional e aprendizagem, não auditoria.',
+        '- Autoavaliação é declaração inicial e não substitui validação por evidências.',
+        '- Documento não comprova, isoladamente, execução, recorrência, resultado ou melhoria.',
+        '- Hipóteses devem permanecer separadas de achados formalizados.',
+        '- Impacto potencial em pontuação é estimativa condicionada às evidências e nunca garantia.',
+        '',
+        '### 8. Riscos e premissas iniciais',
+        '- disponibilidade dos participantes e das evidências;',
+        '- qualidade, vigência e suficiência das fontes apresentadas;',
+        '- necessidade de aprofundamentos adicionais quando houver contradições ou lacunas;',
+        '- execução posterior das ações priorizadas como condição para evolução sustentável.',
+        '',
+        '### 9. Aprovação',
+        'Este Termo permanece em preparação até validação humana explícita pelos responsáveis definidos na governança da Jornada.',
+      ].join('\n')
+    }
+
+    return [
+      ...common,
+      '',
+      '## Situação atual relacionada',
+      `- Evidências ativas no Core vinculadas à Jornada: ${evidenceAssets.length}.`,
+      `- Entrevistas registradas: ${interviews.length}.`,
+      `- Achados formalizados: ${findings.length}.`,
+      `- Questões do catálogo: ${questions.length}.`,
+      macroAction ? `- Ação da MegaFase: ${macroAction.code} — ${macroAction.name}; situação ${macroAction.status}; avanço ${Math.round(Number(macroAction.progress || 0))}%.` : '- Ação da MegaFase: ainda não identificada.',
+      '',
+      '## Conteúdo proposto',
+      'Consolidar neste artefato as informações já registradas no SPARKs DA que atendem à sua finalidade, preservando fonte, situação de validação, pendências e decisões humanas.',
+      '',
+      '## Pontos para revisão humana',
+      '- confirmar aderência do conteúdo às evidências efetivamente disponíveis;',
+      '- completar decisões, responsáveis, prazos ou ressalvas ainda não registrados;',
+      '- validar antes de avançar o estado de governança do entregável.',
+    ].join('\n')
+  }
+
   const openJourneyArtifact = async (artifact:JourneyArtifact) => {
     setSaving(true)
     setError('')
@@ -1901,9 +2034,10 @@ export function SkdaWorkspace(props: Props) {
     const latestContent = latest && typeof latest.content_json === 'object' && latest.content_json
       ? (latest.content_json as Record<string,unknown>).content
       : ''
-    setArtifactDraftContent(typeof latestContent === 'string' ? latestContent : '')
-    setArtifactVersionSummary('')
-    setArtifactStatusReason('')
+    const existingContent=typeof latestContent === 'string' ? latestContent.trim() : ''
+    setArtifactDraftContent(existingContent || buildAssistedArtifactDraft(detail.artifact))
+    setArtifactVersionSummary(existingContent ? '' : `Versão inicial assistida de ${detail.artifact.title}, estruturada a partir dos registros vigentes da Jornada.`)
+    setArtifactStatusReason(existingContent ? '' : `Conteúdo inicial preparado automaticamente a partir dos dados governados da Jornada para revisão e validação humana.`)
   }
 
   const createJourneyArtifactVersion = async () => {
@@ -4665,11 +4799,29 @@ export function SkdaWorkspace(props: Props) {
             <div className="skda-phase-workspace-head">
               <div>
                 <h4>Plano de Ação</h4>
-                <small>Somente recomendações aprovadas originadas nesta Jornada DA. A execução integral pertence à Gestão Tática/Operacional transversal.</small>
+                <small>O Plano de Ação distingue a iniciativa-base que executa a própria Jornada das iniciativas derivadas de recomendações aprovadas nos Ciclos 1–3. A execução integral pertence à Gestão Tática/Operacional transversal.</small>
               </div>
               <span>{actionPlanAllocations.length} ação(ões) priorizada(s)</span>
             </div>
-            {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação aprovada está disponível para o Plano de Ação.</p> : <>
+            {journeyInitiative && <section className="skda-journey-project-card">
+              <div className="skda-journey-project-main">
+                <small>Iniciativa-base da Jornada</small>
+                <strong>{journeyInitiative.code} — {journeyInitiative.name}</strong>
+                <span>{journeyInitiative.description || 'Projeto transversal que materializa a execução da Jornada de Diagnóstico Assistido.'}</span>
+                <div className="skda-journey-project-meta">
+                  <span>Classe: {INITIATIVE_CLASSES[journeyInitiative.initiative_class] ?? journeyInitiative.initiative_class}</span>
+                  <span>Situação: {journeyInitiative.status === 'planned' ? 'Planejada' : journeyInitiative.status === 'in_progress' ? 'Em andamento' : journeyInitiative.status === 'completed' ? 'Concluída' : journeyInitiative.status}</span>
+                  <span>Período: {journeyInitiative.start_date ? new Date(journeyInitiative.start_date+'T12:00:00').toLocaleDateString('pt-BR') : '—'} a {journeyInitiative.target_end_date ? new Date(journeyInitiative.target_end_date+'T12:00:00').toLocaleDateString('pt-BR') : '—'}</span>
+                  <span>EAP: {journeyEap.filter((item)=>!item.parent_action_id).length} MegaFases</span>
+                </div>
+              </div>
+              <div className="skda-journey-project-progress">
+                <b>{Math.round(Number(journeyInitiative.progress || 0))}%</b>
+                <span><i style={{width:`${Math.max(0,Math.min(100,Number(journeyInitiative.progress || 0)))}%`}} /></span>
+                <small>Execução da própria Jornada · não pertence aos Ciclos 1–3</small>
+              </div>
+            </section>}
+            {findings.filter((finding) => finding.status === 'accepted' || finding.status === 'in_action').length === 0 ? <p className="skda-phase-empty">Nenhuma recomendação aprovada está disponível para os Ciclos 1–3 do Plano de Ação.</p> : <>
               <div className="skda-action-plan-unallocated">
                 <div className="skda-phase-workspace-head"><h4>A priorizar</h4><span>Deliberação necessária</span></div>
                 {findings.filter((finding) => (finding.status === 'accepted' || finding.status === 'in_action') && !actionPlanAllocations.some((allocation) => allocation.finding_id === finding.id)).length === 0 ? <p className="skda-phase-empty">Todas as recomendações aprovadas já foram alocadas em ciclos.</p> : <div className="skda-finding-list">

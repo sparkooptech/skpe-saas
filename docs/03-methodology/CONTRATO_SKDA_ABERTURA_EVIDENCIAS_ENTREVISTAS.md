@@ -98,6 +98,21 @@ Regras obrigatórias:
 
 A descoberta automática deve reduzir a carga da cooperativa e ampliar cobertura documental, nunca transformar associação algorítmica em evidência validada.
 
+### 5.2 Artefatos assistidos e iniciativa-base da Jornada
+
+Os artefatos governados do SK-DA não devem abrir vazios quando a Jornada já possuir informações suficientes para compor um rascunho. Ao abrir um artefato ainda sem versão, a aplicação deve pré-preencher conteúdo, resumo da versão e justificativa a partir dos dados governados já existentes, preservando a possibilidade de edição pelo usuário e exigindo validação humana antes de qualquer avanço de estado.
+
+O Termo de Abertura da Jornada deve ser pré-preenchido, no mínimo, com organização, ciclo, escopo, premissas metodológicas, período, carga registrada, liderança, governança, entregas, riscos/premissas e referência à iniciativa transversal que executa a Jornada.
+
+A Jornada DA deve possuir uma iniciativa-base transversal do tipo Projeto, distinta das iniciativas posteriores derivadas de achados e recomendações. Essa iniciativa:
+
+- representa a execução e coordenação da própria Jornada;
+- deve permanecer vinculada ao diagnóstico por `execution_initiative_id`;
+- deve possuir EAP coerente com as MegaFases MF0..MF10;
+- deve aparecer no Plano de Ação como iniciativa-base da Jornada, separada dos Ciclos 1..3;
+- não deve ser artificialmente alocada a um Ciclo 1..3, pois esses ciclos representam ações de desenvolvimento derivadas do diagnóstico;
+- deve preservar origem SK-DA e rastreabilidade transversal para a Gestão Tática/Operacional.
+
 ## 6. Regra das Entrevistas
 
 As seis dimensões funcionam como grade de controle, não como questionário repetitivo.
