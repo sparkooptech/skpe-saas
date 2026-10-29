@@ -73,8 +73,8 @@ type OrganizationUser = {
 type Metrics = { responses: number; interviews: number; evidence: number; findings: number }
 type Phase = { code: string; title: string; description: string; statusKey: string }
 type Interview = { id: string; code: string; title: string; interviewee_name: string | null; interviewee_role: string | null; status: string; channel: string; scheduled_start: string | null; scheduled_end: string | null; actual_start: string | null; actual_end: string | null; event_id: string | null }
-type InterviewQuestionRecord = { id:string; interview_id:string; question_id:string; sequence_order:number; status:'pending'|'in_progress'|'completed'|'skipped'; observed_practice:string|null; interview_notes:string|null; evidence_cited:string|null; evidence_requested:string|null; gap_summary:string|null; output_type:string|null; next_action:string|null; started_at:string|null; completed_at:string|null; metadata:Record<string,unknown> }
-type InterviewQuestionDraft = { observedPractice:string; interviewNotes:string; evidenceCited:string; evidenceRequested:string; gapSummary:string; outputType:string; nextAction:string }
+type InterviewQuestionRecord = { id:string; interview_id:string; question_id:string; sequence_order:number; status:'pending'|'in_progress'|'completed'|'skipped'; observed_practice:string|null; interview_notes:string|null; evidence_cited:string|null; evidence_requested:string|null; gap_summary:string|null; output_type:string|null; next_action:string|null; execution_date:string|null; started_at:string|null; completed_at:string|null; metadata:Record<string,unknown> }
+type InterviewQuestionDraft = { observedPractice:string; interviewNotes:string; evidenceCited:string; evidenceRequested:string; gapSummary:string; outputType:string; nextAction:string; executionDate:string }
 type ActionPlanAllocation = { id: string; finding_id: string; initiative_id: string | null; cycle_number: number; sequence_order: number; rationale: string | null }
 type ManagedInterviewEvent = { event_id: string; journey_item_code: string; journey_item_title: string; event_type: string; event_title: string; event_description: string | null; starts_at: string | null; ends_at: string | null; all_day: boolean; timezone_name: string; event_status: string; priority: string; location_text: string | null; meeting_reference: string | null; participant_count: number; accepted_count: number; attended_count: number }
 type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null; current_version_id: string | null }
@@ -148,6 +148,7 @@ const DA_EVIDENCE_CHECKLIST = [
 ] as const
 
 const EMPTY: Metrics = { responses: 0, interviews: 0, evidence: 0, findings: 0 }
+const localDateInputValue = (value = new Date()) => new Date(value.getTime() - value.getTimezoneOffset() * 60000).toISOString().slice(0,10)
 
 const INTERVIEW_OUTPUT_TYPES: Record<string,string> = {
   evidence_identified:'Evidência identificada',
@@ -517,7 +518,10 @@ export function SkdaWorkspace(props: Props) {
   const [interviewQuestionRecords, setInterviewQuestionRecords] = useState<InterviewQuestionRecord[]>([])
   const [activeInterviewSessionId, setActiveInterviewSessionId] = useState<string | null>(null)
   const [activeInterviewQuestionId, setActiveInterviewQuestionId] = useState<string | null>(null)
-  const [interviewQuestionDraft, setInterviewQuestionDraft] = useState<InterviewQuestionDraft>({ observedPractice:'', interviewNotes:'', evidenceCited:'', evidenceRequested:'', gapSummary:'', outputType:'', nextAction:'' })
+  const [activeInterviewBlock, setActiveInterviewBlock] = useState<'GOVERNANCA'|'GESTAO'|''>('')
+  const [activeInterviewAxis, setActiveInterviewAxis] = useState('')
+  const [showInterviewCapture, setShowInterviewCapture] = useState(false)
+  const [interviewQuestionDraft, setInterviewQuestionDraft] = useState<InterviewQuestionDraft>({ observedPractice:'', interviewNotes:'', evidenceCited:'', evidenceRequested:'', gapSummary:'', outputType:'', nextAction:'', executionDate:'' })
   const [interviewSessionNotes, setInterviewSessionNotes] = useState('')
   const [showEvidenceCreate, setShowEvidenceCreate] = useState(false)
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null)
@@ -640,7 +644,7 @@ export function SkdaWorkspace(props: Props) {
   )
 
   const interviewQuestionFlow = useMemo(() => {
-    const blockOf = (question:Question) => /governan/i.test(question.axis_name ?? '') ? 'GOVERNANCA' : /gest/i.test(question.axis_name ?? '') ? 'GESTAO' : 'OUTRO'
+    const blockOf = (question:Question) => question.code.startsWith('GOV-') ? 'GOVERNANCA' : question.code.startsWith('GES-') ? 'GESTAO' : 'OUTRO'
     const rows = questions.map((question,index) => {
       const response = responses.find((item) => item.question_id === question.id)
       const fieldRecords = interviewQuestionRecords.filter((item) => item.question_id === question.id)
@@ -648,7 +652,7 @@ export function SkdaWorkspace(props: Props) {
         question,
         index:index + 1,
         block:blockOf(question),
-        traversed:Boolean(response?.evaluated_at) || fieldRecords.some((item) => ['completed','skipped'].includes(item.status)),
+        traversed:Boolean(response?.evaluated_at) || fieldRecords.some((item) => item.status === 'completed'),
         validated:response?.response_status === 'validated',
       }
     })
@@ -679,31 +683,48 @@ export function SkdaWorkspace(props: Props) {
     }))
   }, [activeInterviewSessionId,interviewQuestionFlow.rows,interviewQuestionRecords])
 
+  const activeInterviewAxisOptions = useMemo(() => {
+    if (!activeInterviewBlock) return []
+    const values = activeInterviewSessionRows
+      .filter((row) => row.block === activeInterviewBlock)
+      .map((row) => row.question.axis_name?.trim() || row.question.criterion_name?.trim() || 'Sem eixo')
+    return Array.from(new Set(values))
+  }, [activeInterviewBlock,activeInterviewSessionRows])
+
+  const visibleInterviewSessionRows = useMemo(() => {
+    if (!activeInterviewBlock) return []
+    return activeInterviewSessionRows.filter((row) => {
+      if (row.block !== activeInterviewBlock) return false
+      const axis = row.question.axis_name?.trim() || row.question.criterion_name?.trim() || 'Sem eixo'
+      return !activeInterviewAxis || axis === activeInterviewAxis
+    })
+  }, [activeInterviewBlock,activeInterviewAxis,activeInterviewSessionRows])
+
   const activeInterviewQuestion = useMemo(
     () => questions.find((item) => item.id === activeInterviewQuestionId) ?? null,
     [questions,activeInterviewQuestionId],
   )
 
   const activeInterviewQuestionIndex = useMemo(
-    () => activeInterviewQuestionId ? activeInterviewSessionRows.findIndex((item) => item.question.id === activeInterviewQuestionId) : -1,
-    [activeInterviewQuestionId,activeInterviewSessionRows],
+    () => activeInterviewQuestionId ? visibleInterviewSessionRows.findIndex((item) => item.question.id === activeInterviewQuestionId) : -1,
+    [activeInterviewQuestionId,visibleInterviewSessionRows],
   )
 
   useEffect(() => {
-    if (!activeInterviewSessionId) {
+    if (!activeInterviewSessionId || !activeInterviewBlock) {
       setActiveInterviewQuestionId(null)
       return
     }
-    if (activeInterviewQuestionId && activeInterviewSessionRows.some((item) => item.question.id === activeInterviewQuestionId)) return
-    const next = activeInterviewSessionRows.find((item) => !['completed','skipped'].includes(item.record?.status ?? 'pending'))
-      ?? activeInterviewSessionRows[0]
+    if (activeInterviewQuestionId && visibleInterviewSessionRows.some((item) => item.question.id === activeInterviewQuestionId)) return
+    const next = visibleInterviewSessionRows.find((item) => !['completed','skipped'].includes(item.record?.status ?? 'pending'))
+      ?? visibleInterviewSessionRows[0]
       ?? null
     setActiveInterviewQuestionId(next?.question.id ?? null)
-  }, [activeInterviewSessionId,activeInterviewQuestionId,activeInterviewSessionRows])
+  }, [activeInterviewSessionId,activeInterviewBlock,activeInterviewAxis,activeInterviewQuestionId,visibleInterviewSessionRows])
 
   useEffect(() => {
     if (!activeInterviewSessionId || !activeInterviewQuestionId) {
-      setInterviewQuestionDraft({ observedPractice:'', interviewNotes:'', evidenceCited:'', evidenceRequested:'', gapSummary:'', outputType:'', nextAction:'' })
+      setInterviewQuestionDraft({ observedPractice:'', interviewNotes:'', evidenceCited:'', evidenceRequested:'', gapSummary:'', outputType:'', nextAction:'', executionDate:localDateInputValue() })
       return
     }
     const record = interviewQuestionRecords.find((item) => item.interview_id === activeInterviewSessionId && item.question_id === activeInterviewQuestionId)
@@ -715,6 +736,7 @@ export function SkdaWorkspace(props: Props) {
       gapSummary:record?.gap_summary ?? '',
       outputType:record?.output_type ?? '',
       nextAction:record?.next_action ?? '',
+      executionDate:record?.execution_date ?? localDateInputValue(),
     })
   }, [activeInterviewSessionId,activeInterviewQuestionId,interviewQuestionRecords])
 
@@ -745,7 +767,7 @@ export function SkdaWorkspace(props: Props) {
       .toLocaleLowerCase('pt-BR')
       .replace(/[^a-z0-9]+/g,' ')
       .trim()
-    const blockOf = (question:Question | undefined) => /governan/i.test(question?.axis_name ?? '') ? 'GOVERNANCA' : /gest/i.test(question?.axis_name ?? '') ? 'GESTAO' : 'OUTRO'
+    const blockOf = (question:Question | undefined) => question?.code.startsWith('GOV-') ? 'GOVERNANCA' : question?.code.startsWith('GES-') ? 'GESTAO' : 'OUTRO'
     const groups = new Map<string,{
       key:string
       prompt:string
@@ -1394,7 +1416,7 @@ export function SkdaWorkspace(props: Props) {
       if (!selectedId) { setInterviewQuestionRecords([]); return }
       const { data } = await supabase
         .from('skda_interview_question_records' as never)
-        .select('id,interview_id,question_id,sequence_order,status,observed_practice,interview_notes,evidence_cited,evidence_requested,gap_summary,output_type,next_action,started_at,completed_at,metadata' as never)
+        .select('id,interview_id,question_id,sequence_order,status,observed_practice,interview_notes,evidence_cited,evidence_requested,gap_summary,output_type,next_action,execution_date,started_at,completed_at,metadata' as never)
         .eq('diagnosis_id', selectedId)
         .order('sequence_order', { ascending:true })
       setInterviewQuestionRecords((data ?? []) as unknown as InterviewQuestionRecord[])
@@ -2714,7 +2736,7 @@ export function SkdaWorkspace(props: Props) {
     }
     const { data } = await supabase
       .from('skda_interview_question_records' as never)
-      .select('id,interview_id,question_id,sequence_order,status,observed_practice,interview_notes,evidence_cited,evidence_requested,gap_summary,output_type,next_action,started_at,completed_at,metadata' as never)
+      .select('id,interview_id,question_id,sequence_order,status,observed_practice,interview_notes,evidence_cited,evidence_requested,gap_summary,output_type,next_action,execution_date,started_at,completed_at,metadata' as never)
       .eq('diagnosis_id', selectedId)
       .order('sequence_order', { ascending:true })
     setInterviewQuestionRecords((data ?? []) as unknown as InterviewQuestionRecord[])
@@ -2740,21 +2762,31 @@ export function SkdaWorkspace(props: Props) {
     setInterviews((current) => current.map((item) => item.id === interview.id ? { ...item, ...started } : item))
     await reloadInterviewQuestionRecords()
     setActiveInterviewSessionId(interview.id)
+    setActiveInterviewBlock('')
+    setActiveInterviewAxis('')
+    setActiveInterviewQuestionId(null)
+    setShowInterviewCapture(false)
   }
 
   const openInterviewSession = (interview:Interview) => {
     setActiveInterviewSessionId(interview.id)
     setInterviewSessionNotes('')
-    const pendingGlobal = interviewQuestionFlow.rows.find((row) => !row.traversed)
-    const pendingSession = interviewQuestionRecords.find((item) => item.interview_id === interview.id && !['completed','skipped'].includes(item.status))
-    setActiveInterviewQuestionId(pendingSession?.question_id ?? pendingGlobal?.question.id ?? questions[0]?.id ?? null)
+    setShowInterviewCapture(false)
+    const touched = interviewQuestionRecords
+      .filter((item) => item.interview_id === interview.id && item.execution_date)
+      .sort((a,b) => (b.execution_date ?? '').localeCompare(a.execution_date ?? '') || (b.started_at ?? '').localeCompare(a.started_at ?? ''))[0]
+    const touchedQuestion = questions.find((item) => item.id === touched?.question_id)
+    const block = touchedQuestion?.code.startsWith('GOV-') ? 'GOVERNANCA' : touchedQuestion?.code.startsWith('GES-') ? 'GESTAO' : ''
+    setActiveInterviewBlock(block)
+    setActiveInterviewAxis(touchedQuestion?.axis_name?.trim() ?? '')
+    setActiveInterviewQuestionId(touchedQuestion?.id ?? null)
   }
 
-  const saveInterviewQuestionRecord = async (status:'in_progress'|'completed'|'skipped', moveNext = true) => {
-    if (!activeInterviewSessionId || !activeInterviewQuestionId || !canEditInterviews) return
+  const saveInterviewQuestionRecord = async (status:'in_progress'|'completed'|'skipped', moveNext = true): Promise<boolean> => {
+    if (!activeInterviewSessionId || !activeInterviewQuestionId || !canEditInterviews) return false
     if (status === 'completed' && !interviewQuestionDraft.outputType) {
       setError('Classifique a saída desta questão antes de concluí-la.')
-      return
+      return false
     }
     setSaving(true)
     setError('')
@@ -2771,6 +2803,7 @@ export function SkdaWorkspace(props: Props) {
         target_gap_summary:interviewQuestionDraft.gapSummary.trim() || null,
         target_output_type:interviewQuestionDraft.outputType || null,
         target_next_action:interviewQuestionDraft.nextAction.trim() || null,
+        target_execution_date:interviewQuestionDraft.executionDate || localDateInputValue(),
         change_reason:status === 'completed'
           ? 'Conclusão do registro de campo desta questão na entrevista do Diagnóstico Assistido.'
           : status === 'skipped'
@@ -2781,7 +2814,7 @@ export function SkdaWorkspace(props: Props) {
     setSaving(false)
     if (recordError || !data) {
       setError(recordError?.message ?? 'Não foi possível salvar o registro da questão.')
-      return
+      return false
     }
     const saved = data as unknown as InterviewQuestionRecord
     setInterviewQuestionRecords((current) => [
@@ -2789,14 +2822,71 @@ export function SkdaWorkspace(props: Props) {
       saved,
     ])
     if (moveNext && ['completed','skipped'].includes(status)) {
-      const currentIndex = activeInterviewSessionRows.findIndex((row) => row.question.id === activeInterviewQuestionId)
-      const next = activeInterviewSessionRows.slice(Math.max(currentIndex + 1,0)).find((row) => !['completed','skipped'].includes(row.record?.status ?? 'pending'))
-      if (next) setActiveInterviewQuestionId(next.question.id)
+      const currentIndex = visibleInterviewSessionRows.findIndex((row) => row.question.id === activeInterviewQuestionId)
+      const next = visibleInterviewSessionRows.slice(Math.max(currentIndex + 1,0)).find((row) => !['completed','skipped'].includes(row.record?.status ?? 'pending'))
+      if (next) {
+        setActiveInterviewQuestionId(next.question.id)
+        setShowInterviewCapture(false)
+      }
     }
+    return true
+  }
+
+  const interviewDraftHasContent = () => Boolean(
+    interviewQuestionDraft.observedPractice.trim()
+    || interviewQuestionDraft.interviewNotes.trim()
+    || interviewQuestionDraft.evidenceCited.trim()
+    || interviewQuestionDraft.evidenceRequested.trim()
+    || interviewQuestionDraft.gapSummary.trim()
+    || interviewQuestionDraft.outputType
+    || interviewQuestionDraft.nextAction.trim()
+  )
+
+  const preserveInterviewDraftBeforeNavigation = async () => {
+    if (!interviewDraftHasContent()) return true
+    return saveInterviewQuestionRecord('in_progress',false)
+  }
+
+  const navigateInterviewQuestion = async (questionId:string | null) => {
+    if (!questionId) return
+    const preserved = await preserveInterviewDraftBeforeNavigation()
+    if (!preserved) return
+    setActiveInterviewQuestionId(questionId)
+    setShowInterviewCapture(false)
+  }
+
+  const changeInterviewScope = async (block:'GOVERNANCA'|'GESTAO', axis = '') => {
+    const preserved = await preserveInterviewDraftBeforeNavigation()
+    if (!preserved) return
+    setActiveInterviewBlock(block)
+    setActiveInterviewAxis(axis)
+    setActiveInterviewQuestionId(null)
+    setShowInterviewCapture(false)
+  }
+
+  const resetInterviewBlockChoice = async () => {
+    const preserved = await preserveInterviewDraftBeforeNavigation()
+    if (!preserved) return
+    setActiveInterviewBlock('')
+    setActiveInterviewAxis('')
+    setActiveInterviewQuestionId(null)
+    setShowInterviewCapture(false)
+  }
+
+  const closeInterviewPanel = async () => {
+    const preserved = await preserveInterviewDraftBeforeNavigation()
+    if (!preserved) return
+    setActiveInterviewSessionId(null)
+    setActiveInterviewBlock('')
+    setActiveInterviewAxis('')
+    setActiveInterviewQuestionId(null)
+    setShowInterviewCapture(false)
   }
 
   const finishInterviewSession = async () => {
     if (!activeInterviewSessionId || !canEditInterviews) return
+    const preserved = await preserveInterviewDraftBeforeNavigation()
+    if (!preserved) return
     setSaving(true)
     setError('')
     const { data, error: finishError } = await supabase.rpc(
@@ -2815,7 +2905,10 @@ export function SkdaWorkspace(props: Props) {
     const finished = data as unknown as Interview
     setInterviews((current) => current.map((item) => item.id === finished.id ? { ...item, ...finished } : item))
     setActiveInterviewSessionId(null)
+    setActiveInterviewBlock('')
+    setActiveInterviewAxis('')
     setActiveInterviewQuestionId(null)
+    setShowInterviewCapture(false)
     setInterviewSessionNotes('')
   }
 
@@ -3860,7 +3953,25 @@ export function SkdaWorkspace(props: Props) {
               </article>)}
             </div>}
           </div>}
-          {activePhase.code === 'DA-01' && activeInterviewSession && activeInterviewQuestion && (() => {
+          {activePhase.code === 'DA-01' && activeInterviewSession && !activeInterviewBlock && <div className="skda-phase-workspace skda-interview-start-choice">
+            <div className="skda-interview-cockpit-head">
+              <div>
+                <span>Modo entrevista · {activeInterviewSession.code}</span>
+                <h4>Por qual bloco iniciaremos?</h4>
+                <small>O cronograma é uma proposição. As questões serão registradas na data em que forem efetivamente trabalhadas e poderão ser retomadas em qualquer encontro.</small>
+              </div>
+              <button type="button" onClick={() => void closeInterviewPanel()}>Fechar painel</button>
+            </div>
+            <div className="skda-interview-block-choice">
+              <button type="button" onClick={() => { setActiveInterviewBlock('GOVERNANCA'); setActiveInterviewAxis(''); setShowInterviewCapture(false) }}>
+                <b>Governança</b><span>{interviewQuestionFlow.governanceTraversed}/{interviewQuestionFlow.governance.length} percorridas na Jornada</span>
+              </button>
+              <button type="button" onClick={() => { setActiveInterviewBlock('GESTAO'); setActiveInterviewAxis(''); setShowInterviewCapture(false) }}>
+                <b>Gestão</b><span>{interviewQuestionFlow.managementTraversed}/{interviewQuestionFlow.management.length} percorridas na Jornada</span>
+              </button>
+            </div>
+          </div>}
+          {activePhase.code === 'DA-01' && activeInterviewSession && activeInterviewBlock && activeInterviewQuestion && (() => {
             const aaAnswer = selfAssessmentAnswers.find((item) => item.question_id === activeInterviewQuestion.id)
             const alternatives = questionAlternatives.filter((item) => item.question_id === activeInterviewQuestion.id)
             const currentAnswerLevel = (aaAnswer?.declared_code ?? '').toUpperCase()
@@ -3884,23 +3995,38 @@ export function SkdaWorkspace(props: Props) {
                 </div>
                 <div className="skda-interview-cockpit-head-actions">
                   {activeInterviewSession.status === 'in_progress' && <button type="button" disabled={saving} onClick={() => void finishInterviewSession()}>Encerrar encontro</button>}
-                  <button type="button" onClick={() => { setActiveInterviewSessionId(null); setActiveInterviewQuestionId(null) }}>Fechar painel</button>
+                  <button type="button" onClick={() => void closeInterviewPanel()}>Fechar painel</button>
                 </div>
               </div>
-              <div className="skda-interview-question-nav">
-                <button type="button" disabled={activeInterviewQuestionIndex <= 0} onClick={() => setActiveInterviewQuestionId(activeInterviewSessionRows[activeInterviewQuestionIndex-1]?.question.id ?? null)}>← Anterior</button>
+              <div className="skda-interview-question-nav skda-interview-question-nav-flexible">
+                <button type="button" onClick={() => void resetInterviewBlockChoice()}>Trocar bloco</button>
                 <label>
+                  <span>Bloco</span>
+                  <select value={activeInterviewBlock} onChange={(event) => void changeInterviewScope(event.target.value as 'GOVERNANCA'|'GESTAO','')}>
+                    <option value="GOVERNANCA">Governança</option>
+                    <option value="GESTAO">Gestão</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Eixo</span>
+                  <select value={activeInterviewAxis} onChange={(event) => void changeInterviewScope(activeInterviewBlock as 'GOVERNANCA'|'GESTAO',event.target.value)}>
+                    <option value="">Todos os eixos</option>
+                    {activeInterviewAxisOptions.map((axis) => <option key={axis} value={axis}>{axis}</option>)}
+                  </select>
+                </label>
+                <button type="button" disabled={activeInterviewQuestionIndex <= 0} onClick={() => void navigateInterviewQuestion(visibleInterviewSessionRows[activeInterviewQuestionIndex-1]?.question.id ?? null)}>← Anterior</button>
+                <label className="skda-interview-question-picker">
                   <span>Questão em campo</span>
-                  <select value={activeInterviewQuestion.id} onChange={(event) => setActiveInterviewQuestionId(event.target.value)}>
-                    {activeInterviewSessionRows.map((row) => <option key={row.question.id} value={row.question.id}>
-                      {row.question.code} · {row.block === 'GOVERNANCA' ? 'Governança' : row.block === 'GESTAO' ? 'Gestão' : 'Outras'} · {row.record?.status === 'completed' ? 'concluída' : row.record?.status === 'skipped' ? 'pendente para continuidade' : 'a percorrer'}
+                  <select value={activeInterviewQuestion.id} onChange={(event) => void navigateInterviewQuestion(event.target.value)}>
+                    {visibleInterviewSessionRows.map((row) => <option key={row.question.id} value={row.question.id}>
+                      {row.question.code} · {row.question.axis_name || row.question.criterion_name || 'Sem eixo'} · {row.record?.status === 'completed' ? 'concluída' : row.record?.status === 'skipped' ? 'continuidade' : row.record?.status === 'in_progress' ? 'em registro' : 'a percorrer'}
                     </option>)}
                   </select>
                 </label>
-                <button type="button" disabled={activeInterviewQuestionIndex < 0 || activeInterviewQuestionIndex >= activeInterviewSessionRows.length-1} onClick={() => setActiveInterviewQuestionId(activeInterviewSessionRows[activeInterviewQuestionIndex+1]?.question.id ?? null)}>Próxima →</button>
+                <button type="button" disabled={activeInterviewQuestionIndex < 0 || activeInterviewQuestionIndex >= visibleInterviewSessionRows.length-1} onClick={() => void navigateInterviewQuestion(visibleInterviewSessionRows[activeInterviewQuestionIndex+1]?.question.id ?? null)}>Próxima →</button>
               </div>
-              <div className="skda-interview-cockpit-grid">
-                <section className="skda-interview-context-panel">
+              <div className="skda-interview-cockpit-grid skda-interview-slide-layout">
+                <section className="skda-interview-context-panel skda-interview-slide-left">
                   <div className="skda-interview-question-official">
                     <small>{activeInterviewQuestion.code}{activeInterviewQuestion.axis_name ? ' · '+activeInterviewQuestion.axis_name : ''}</small>
                     <strong>{activeInterviewQuestion.question_text}</strong>
@@ -3909,38 +4035,60 @@ export function SkdaWorkspace(props: Props) {
                   {alternatives.length > 0 && <div className="skda-interview-alternatives">
                     {alternatives.map((alternative) => <div key={alternative.id} className={alternative.code === currentAnswerLevel ? 'is-declared' : ''}><b>{alternative.code}</b><span>{alternative.alternative_text}</span></div>)}
                   </div>}
-                  <div className="skda-interview-context-card">
+                  <div className="skda-interview-context-card skda-interview-aa-card">
                     <strong>Autoavaliação declarada</strong>
-                    <span>{aaAnswer ? `${aaAnswer.declared_code ?? '—'} · ${aaAnswer.declared_text ?? 'Sem texto descritivo importado.'}` : 'Resposta da Autoavaliação não localizada.'}</span>
+                    <span>{aaAnswer ? `${aaAnswer.declared_code ?? '-'} · ${aaAnswer.declared_text ?? 'Sem texto descritivo importado.'}` : 'Resposta da Autoavaliação não localizada.'}</span>
                     {aaAnswer?.rationale && <small>{aaAnswer.rationale}</small>}
+                  </div>
+                  <div className="skda-interview-context-card">
+                    <strong>Evidências já localizadas / inteligência disponível</strong>
+                    {intelligenceRows.length === 0
+                      ? <small>Nenhuma inteligência documental validável foi associada a esta questão.</small>
+                      : intelligenceRows.slice(0,8).map((item) => {
+                        const asset = evidenceAssets.find((row) => row.id === item.evidence_asset_id)
+                        return <span key={item.id}><b>{asset?.title || 'Evidência vinculada'}:</b> {item.diagnostic_hypothesis || item.gap_description || item.complement_needed || 'Vínculo existente; aprofundar suficiência durante a entrevista.'}</span>
+                      })}
+                  </div>
+                </section>
+                <section className="skda-interview-guidance-panel skda-interview-slide-right">
+                  <div className="skda-interview-context-card is-prompts skda-interview-central-question">
+                    <strong>Condução da entrevista</strong>
+                    {governedPrompts.filter((item) => item.prompt_type === 'central').map((item) => <span key={item.prompt_id}><b>Pergunta central:</b> {item.prompt_text}</span>)}
+                    {governedPrompts.filter((item) => item.prompt_type === 'deepening').slice(0,6).map((item) => <span key={item.prompt_id}><b>Aprofundamento:</b> {item.prompt_text}</span>)}
+                    {prompts.length > 0 && prompts.slice(0,5).map((row) => <span key={row.key}><b>Inteligência dinâmica:</b> {row.prompt}</span>)}
+                    {governedPrompts.length === 0 && prompts.length === 0 && <small>Investigue apenas as dimensões ainda não comprovadas, solicitando casos recentes, registros, resultados e decisões decorrentes.</small>}
                   </div>
                   <div className="skda-interview-context-card">
                     <strong>Evidências para sustentar a resposta {currentAnswerLevel || 'declarada'}</strong>
                     {supportExpectations.length > 0
                       ? supportExpectations.map((item) => <span key={item.expectation_id}><b>{EXPECTATION_DIMENSION_LABELS[item.evidence_dimension] ?? item.evidence_dimension}:</b> {item.title}</span>)
                       : (activeInterviewQuestion.expected_evidence?.length ?? 0) > 0
-                        ? <><small>Fallback do catálogo legado; ainda não substitui a curadoria A–D governada.</small>{activeInterviewQuestion.expected_evidence?.slice(0,8).map((item,index)=><span key={'legacy-'+index}>{typeof item === 'string' ? item : JSON.stringify(item)}</span>)}</>
+                        ? <><small>Fallback do catálogo legado; ainda não substitui a curadoria A-D governada.</small>{activeInterviewQuestion.expected_evidence?.slice(0,8).map((item,index)=><span key={'legacy-'+index}>{typeof item === 'string' ? item : JSON.stringify(item)}</span>)}</>
                         : <small>Curadoria governada ainda não disponível para este nível.</small>}
                   </div>
                   {currentAnswerLevel !== 'D' && <div className="skda-interview-context-card is-evolution">
                     <strong>Para avançar até D</strong>
                     {evolutionExpectations.length === 0 ? <small>Curadoria adicional ainda não disponível.</small> : evolutionExpectations.slice(0,8).map((item) => <span key={item.expectation_id}><b>{item.answer_level} · {EXPECTATION_DIMENSION_LABELS[item.evidence_dimension] ?? item.evidence_dimension}:</b> {item.title}</span>)}
                   </div>}
-                  <div className="skda-interview-context-card">
-                    <strong>O que já sabemos pelas evidências</strong>
-                    {intelligenceRows.length === 0 ? <small>Nenhuma inteligência documental validável foi associada a esta questão.</small> : intelligenceRows.slice(0,6).map((item) => <span key={item.id}>{item.diagnostic_hypothesis || item.gap_description || item.complement_needed || 'Evidência correlacionada sem hipótese textual.'}</span>)}
-                  </div>
-                  <div className="skda-interview-context-card is-prompts">
-                    <strong>Roteiro preparado e perguntas orientadas às lacunas</strong>
-                    {governedPrompts.length > 0 && <>{governedPrompts.slice(0,10).map((item) => <span key={item.prompt_id}><b>{item.prompt_type === 'central' ? 'Pergunta central' : item.prompt_type === 'deepening' ? 'Aprofundamento' : item.prompt_type === 'evidence_request' ? 'Evidência a solicitar' : item.prompt_type === 'systemic_connection' ? 'Conexão sistêmica' : 'Investigação'}:</b> {item.prompt_text}</span>)}</>}
-                    {prompts.length > 0 && prompts.slice(0,6).map((row) => <span key={row.key}><b>Inteligência dinâmica:</b> {row.prompt}</span>)}
-                    {governedPrompts.length === 0 && prompts.length === 0 && <small>Use a questão oficial e investigue apenas as dimensões ainda não comprovadas. O roteiro governado desta questão ainda não foi importado.</small>}
-                  </div>
+                  {governedPrompts.filter((item) => ['evidence_request','systemic_connection'].includes(item.prompt_type)).length > 0 && <div className="skda-interview-context-card">
+                    <strong>Evidências a solicitar e conexões</strong>
+                    {governedPrompts.filter((item) => ['evidence_request','systemic_connection'].includes(item.prompt_type)).slice(0,8).map((item) => <span key={item.prompt_id}><b>{item.prompt_type === 'evidence_request' ? 'Solicitar' : 'Conexão'}:</b> {item.prompt_text}</span>)}
+                  </div>}
                 </section>
-                <section className="skda-interview-capture-panel">
+              </div>
+              <div className="skda-interview-record-drawer">
+                <button type="button" className="skda-interview-record-toggle" onClick={() => setShowInterviewCapture((current) => !current)}>
+                  <span>Registro da entrevista</span>
+                  <b>{currentRow?.record?.status === 'completed' ? 'Concluída' : currentRow?.record?.status === 'skipped' ? 'Continuidade' : currentRow?.record?.status === 'in_progress' ? 'Rascunho salvo' : 'Ainda não registrado'} · {showInterviewCapture ? 'Recolher' : 'Abrir'}</b>
+                </button>
+                {showInterviewCapture && <section className="skda-interview-capture-panel">
                   <div className="skda-interview-capture-state">
                     <div><span>Registro da questão</span><b>{currentRow?.record?.status === 'completed' ? 'Concluída' : currentRow?.record?.status === 'skipped' ? 'Pendente para continuidade' : currentRow?.record?.status === 'in_progress' ? 'Em registro' : 'Não iniciada'}</b></div>
                     {currentRow?.record?.completed_at && <small>Último fechamento: {new Date(currentRow.record.completed_at).toLocaleString('pt-BR')}</small>}
+                  </div>
+                  <div className="skda-interview-record-meta">
+                    <label><span>Data efetiva da execução *</span><input type="date" value={interviewQuestionDraft.executionDate} onChange={(e)=>setInterviewQuestionDraft((current)=>({...current,executionDate:e.target.value}))}/><small>Independente da data planejada do encontro; pode ser corrigida posteriormente.</small></label>
+                    <div><span>Encontro</span><b>{activeInterviewSession.code}</b><small>{activeInterviewSession.scheduled_start ? `Planejado para ${new Date(activeInterviewSession.scheduled_start).toLocaleDateString('pt-BR')}` : 'Sem data planejada'}</small></div>
                   </div>
                   <label><span>Prática observada / relato verificável</span><textarea rows={4} value={interviewQuestionDraft.observedPractice} onChange={(e)=>setInterviewQuestionDraft((current)=>({...current,observedPractice:e.target.value}))} placeholder="Registre o que a organização efetivamente faz, quem faz, frequência, abrangência e exemplo recente."/></label>
                   <label><span>Notas da conversa</span><textarea rows={4} value={interviewQuestionDraft.interviewNotes} onChange={(e)=>setInterviewQuestionDraft((current)=>({...current,interviewNotes:e.target.value}))} placeholder="Falas relevantes, contexto, responsáveis, datas, exceções e decisões."/></label>
@@ -3958,7 +4106,7 @@ export function SkdaWorkspace(props: Props) {
                     {canRegisterEvidence && <button type="button" onClick={() => { setEvidenceForm((current) => ({ ...current, interviewId:activeInterviewSession.id, checklistGroupCode:'entrevistas', description:`Evidência relacionada à questão ${activeInterviewQuestion.code} identificada durante ${activeInterviewSession.code}.` })); setShowEvidenceCreate(true) }}>Registrar evidência no Core</button>}
                     {canEditFindings && <button type="button" onClick={() => prepareFindingFromQuestion(activeInterviewQuestion)}>Preparar achado</button>}
                   </div>
-                </section>
+                </section>}
               </div>
               {activeInterviewSession.status === 'in_progress' && <div className="skda-interview-session-close">
                 <label><span>Notas gerais do encontro</span><textarea rows={2} value={interviewSessionNotes} onChange={(e)=>setInterviewSessionNotes(e.target.value)} placeholder="Síntese do encontro, participantes-chave, decisões e pendências transversais."/></label>

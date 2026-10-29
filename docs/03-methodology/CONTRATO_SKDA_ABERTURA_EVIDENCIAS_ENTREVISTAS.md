@@ -1,13 +1,13 @@
 ---
 id: SKDA-MET-001
 title: Contrato Canônico de Abertura, Evidências, Checklist e Entrevistas do SK-DA
-version: 1.0.0
+version: 1.1.0
 status: canonical
 canonical: true
 domain: sk-da
 owner: SPARKOOP
 created_at: 2026-10-28
-updated_at: 2026-10-28
+updated_at: 2026-10-29
 dependencies:
   - docs/07-homologacao/SKDA_MATRIZ_EVIDENCIAS_ESPERADAS_QUESTAO_20261028.md
 ---
@@ -101,6 +101,23 @@ Para cada questão, o roteiro deve apresentar:
 Perguntar por casos recentes e verificáveis: quem, quando, registro, frequência, abrangência, indicador, decisão e efeito.
 
 Não induzir alteração de resposta. Investigar capacidade e evidência.
+
+### 6.1 Planejamento é proposição; execução é factual
+
+O cronograma de entrevistas pode sugerir blocos, eixos e quantidade esperada de questões por encontro, mas não deve fixar rigidamente a execução. O ritmo real depende da profundidade necessária, da disponibilidade e da competência dos participantes, das evidências apresentadas e das lacunas que surgirem durante a conversa.
+
+A execução deve permitir:
+
+- escolher no início do encontro o bloco Governança ou Gestão;
+- filtrar e navegar por eixo;
+- avançar e retroceder livremente entre questões sem perda de registros;
+- retomar uma questão em encontro posterior;
+- registrar data efetiva de execução da questão separadamente da data planejada do encontro;
+- corrigir posteriormente a data efetiva com rastreabilidade;
+- preservar o histórico de registros por encontro, sem sobrescrever falas, evidências ou pendências anteriores;
+- tratar a pauta prevista como referência operacional, nunca como restrição metodológica.
+
+A tela de condução deve priorizar a leitura técnica da questão, aproximando-se do caderno de entrevistas: conteúdo oficial e Autoavaliação de um lado; pergunta central, aprofundamentos, evidências esperadas, lacunas e conexões do outro. O registro de campo deve permanecer acessível sem dominar a tela.
 
 ## 7. Saídas por questão
 

@@ -86,6 +86,7 @@ jobs:
           cp supabase/migrations/20261028113000_govern_skda_question_evidence_expectations.sql "${release_root}/"
           cp supabase/migrations/20261029130000_operationalize_skda_interview_execution.sql "${release_root}/"
           cp supabase/migrations/20261029133000_govern_skda_interview_question_prompts.sql "${release_root}/"
+          cp supabase/migrations/20261029150000_decouple_skda_interview_plan_from_question_execution.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -227,7 +228,8 @@ jobs:
             20261028020000_govern_skda_contractual_lb0_and_current_plan.sql \
             20261028113000_govern_skda_question_evidence_expectations.sql \
             20261029130000_operationalize_skda_interview_execution.sql \
-            20261029133000_govern_skda_interview_question_prompts.sql
+            20261029133000_govern_skda_interview_question_prompts.sql \
+            20261029150000_decouple_skda_interview_plan_from_question_execution.sql
           do
             echo "Applying ${migration_file}"
             ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
