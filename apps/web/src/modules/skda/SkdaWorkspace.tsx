@@ -3755,27 +3755,61 @@ export function SkdaWorkspace(props: Props) {
   const workloadReference = workloadLevelCode
     ? PDGC_WORKLOAD_REFERENCES[workloadLevelCode]
     : null
+  const contractualSchedule = useMemo(() => {
+    const raw = selected?.metadata?.contractual_baseline_schedule ?? selected?.metadata?.contractual_schedule_proposal
+    if (!Array.isArray(raw)) return [] as ContractMeetingProposal[]
+    return raw
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null
+        const row=item as Record<string,unknown>
+        const duration=Number(row.durationHours ?? row.duration_hours ?? 0)
+        return {
+          date:String(row.date ?? ''),
+          start:String(row.start ?? ''),
+          durationHours:Number.isFinite(duration) ? duration : 0,
+          location:row.location == null ? null : String(row.location),
+        } satisfies ContractMeetingProposal
+      })
+      .filter((item):item is ContractMeetingProposal => Boolean(item && item.date && item.durationHours > 0))
+  },[selected?.metadata?.contractual_baseline_schedule,selected?.metadata?.contractual_schedule_proposal])
   const contractedHours = contractIntakeProposal?.contractedHours ?? [
     selected?.metadata?.contracted_hours,
     selected?.metadata?.workload_hours,
     selected?.metadata?.total_contracted_hours,
+    contractualSchedule.reduce((total,item)=>total+item.durationHours,0),
   ]
     .map((value) => Number(value))
     .find((value) => Number.isFinite(value) && value > 0) ?? null
-  const contractOrganizationHours = contractIntakeProposal
+  const effectiveContractMeetings = contractIntakeProposal?.meetings?.length
     ? contractIntakeProposal.meetings
+    : contractualSchedule
+  const contractOrganizationHours = effectiveContractMeetings.length > 0
+    ? effectiveContractMeetings
       .filter((meeting) => {
         const location = normalizeSearchText(meeting.location ?? '')
         return !location.includes('off-line')
           && !location.includes('offline')
           && !location.includes('off line')
           && !location.includes('atividade interna')
+          && !location.includes('preparacao')
+          && !location.includes('consolidacao')
       })
       .reduce((total, meeting) => total + meeting.durationHours, 0)
-    : null
+    : Number.isFinite(Number(selected?.metadata?.contractual_organization_hours))
+      ? Number(selected?.metadata?.contractual_organization_hours)
+      : null
   const contractTechnicalHours = contractedHours != null && contractOrganizationHours != null
     ? Math.max(0, contractedHours - contractOrganizationHours)
-    : null
+    : Number.isFinite(Number(selected?.metadata?.contractual_technical_hours))
+      ? Number(selected?.metadata?.contractual_technical_hours)
+      : null
+  const contractualSourceReference = String(
+    selected?.metadata?.contractual_source_reference
+      ?? selected?.metadata?.contractual_source_title
+      ?? (selected?.metadata?.contractual_baseline_reconciliation_reason as string | undefined)?.match(/OI\s+\d+\/\d{4}/i)?.[0]
+      ?? ''
+  ).trim()
+  const technicalResponsible = organizationUsers.find((user)=>user.user_id===selected?.lead_user_id)
   const workloadPlanningRatio = workloadReference && contractedHours
     ? contractedHours / workloadReference.totalHours
     : null
@@ -4303,18 +4337,30 @@ export function SkdaWorkspace(props: Props) {
               </div>
 
               {contractedHours ? <>
+                <div className="skda-contract-workload-source">
+                  <div>
+                    <small>Fonte contratual da carga</small>
+                    <strong>{contractualSourceReference || 'Fonte contratual validada da Jornada'}</strong>
+                    <span>Período ratificado: {selected?.started_on ? new Date(selected.started_on+'T12:00:00').toLocaleDateString('pt-BR') : '—'} a {selected?.planned_end_on ? new Date(selected.planned_end_on+'T12:00:00').toLocaleDateString('pt-BR') : '—'}</span>
+                  </div>
+                  <div>
+                    <small>Responsável técnico</small>
+                    <strong>{technicalResponsible?.user_display_name || technicalResponsible?.user_email || 'Responsável técnico registrado na Jornada'}</strong>
+                    <span>{technicalResponsible?.job_title || 'Liderança técnica do Diagnóstico Assistido'}</span>
+                  </div>
+                </div>
                 <div className="skda-workload-grid">
                   <article className="is-organization">
                     <div><small>Carga total contratada</small><strong>{workloadPlanningModel}</strong><span>Todo o rito do DA é organizado dentro da carga e do período contratados, com prioridade para evidências, entrevistas, validação, devolutiva e Plano de Ação.</span></div>
                     <b>{contractedHours}h</b>
                   </article>
                   <article className="is-organization">
-                    <div><small>Com a Organização</small><strong>Entrevistas e validações assistidas</strong><span>{contractIntakeProposal ? 'Blocos síncronos identificados diretamente na agenda contratual.' : 'Horas de interação serão distribuídas conforme a agenda ratificada da Jornada.'}</span></div>
-                    <b>{contractOrganizationHours != null ? contractOrganizationHours+'h' : 'A definir'}</b>
+                    <div><small>Com a Organização</small><strong>Entrevistas e validações assistidas</strong><span>{contractOrganizationHours != null ? `${contractOrganizationHours}h de interação síncrona previstas na agenda contratual, destinadas às entrevistas, validações, esclarecimentos e alinhamentos com a Organização.` : 'Horas de interação serão distribuídas conforme a agenda ratificada da Jornada.'}</span></div>
+                    <b>{contractOrganizationHours != null ? contractOrganizationHours+'h' : 'Carga síncrona não identificada'}</b>
                   </article>
-                  <article className="is-internal">
-                    <div><small>Trabalho técnico / off-line</small><strong>Preparação, gestão de evidências e consolidação</strong><span>Leitura e correlação documental, preparação do roteiro, consolidação das entrevistas, devolutiva e estruturação do Plano de Ação.</span></div>
-                    <b>{contractTechnicalHours != null ? contractTechnicalHours+'h' : 'A definir'}</b>
+                  <article className="is-internal is-full">
+                    <div><small>Trabalho técnico / off-line</small><strong>Preparação, inteligência de evidências, análise e consolidação</strong><span>Leitura, organização e correlação documental; varredura e qualificação de evidências; atualização da Matriz de Evidências Esperadas por Questão; análise das Autoavaliações e do histórico; construção e revisão de hipóteses; preparação e refinamento dos roteiros de entrevista; registro e tratamento das evidências citadas; validação cruzada das informações; análise de suficiência, PDCL e maturidade; consolidação de achados, forças, lacunas, riscos e oportunidades; preparação da priorização 80/20; estruturação do Plano de Ação; preparação da devolutiva; registro de decisões, artefatos e rastreabilidade da Jornada.</span></div>
+                    <b>{contractTechnicalHours != null ? contractTechnicalHours+'h' : 'Carga técnica derivada da agenda'}</b>
                   </article>
                 </div>
                 <div className="skda-evidence-loop-note">

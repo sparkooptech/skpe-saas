@@ -5006,3 +5006,51 @@
   .skda-journey-project-card { grid-template-columns:1fr; }
   .skda-journey-project-progress { text-align:left; }
 }
+
+
+.skda-contract-workload-source {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:.55rem;
+}
+
+.skda-contract-workload-source > div {
+  display:grid;
+  gap:.18rem;
+  padding:.65rem .75rem;
+  border:1px solid var(--skda-border);
+  border-radius:9px;
+  background:#fbfcfc;
+}
+
+.skda-contract-workload-source small {
+  color:var(--skda-muted);
+  font-size:.63rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.025em;
+}
+
+.skda-contract-workload-source strong {
+  color:var(--skda-text);
+  font-size:.78rem;
+}
+
+.skda-contract-workload-source span {
+  color:var(--skda-muted);
+  font-size:.68rem;
+  line-height:1.4;
+}
+
+.skda-workload-grid article.is-full {
+  grid-column:1 / -1;
+}
+
+.skda-workload-grid article.is-full > div {
+  max-width:none;
+}
+
+@media (max-width:760px) {
+  .skda-contract-workload-source { grid-template-columns:1fr; }
+  .skda-workload-grid article.is-full { grid-column:auto; }
+}
