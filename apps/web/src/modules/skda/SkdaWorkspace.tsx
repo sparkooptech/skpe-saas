@@ -771,6 +771,12 @@ export function SkdaWorkspace(props: Props) {
   const [questions, setQuestions] = useState<Question[]>([])
   const [responses, setResponses] = useState<Response[]>([])
   const [assessmentDrafts, setAssessmentDrafts] = useState<Record<string,AssessmentDraft>>({})
+  const [assessmentConsolidationMode, setAssessmentConsolidationMode] = useState(false)
+  const [consolidationBlock, setConsolidationBlock] = useState<'ALL'|'GOVERNANCA'|'GESTAO'>('ALL')
+  const [consolidationAxis, setConsolidationAxis] = useState('')
+  const [consolidationStatus, setConsolidationStatus] = useState<'all'|'pending'|'draft'|'validated'>('pending')
+  const [consolidationQuestionId, setConsolidationQuestionId] = useState<string | null>(null)
+  const [consolidationInterviewId, setConsolidationInterviewId] = useState('')
   const [findings, setFindings] = useState<Finding[]>([])
   const [linkedInitiatives, setLinkedInitiatives] = useState<LinkedInitiative[]>([])
   const [journeyInitiative, setJourneyInitiative] = useState<JourneyInitiative | null>(null)
@@ -1147,6 +1153,97 @@ export function SkdaWorkspace(props: Props) {
     return counts
   }, [actionFollowup])
 
+
+  const questionBlockCode = (question:Question) =>
+    question.code.startsWith('GOV-') ? 'GOVERNANCA' : question.code.startsWith('GES-') ? 'GESTAO' : 'OUTRO'
+
+  const assessmentCloseout = useMemo(() => {
+    const evaluated = responses.filter((item) => Boolean(item.evaluated_at)).length
+    const validated = responses.filter((item) => item.response_status === 'validated' && Boolean(item.validated_at)).length
+    const governanceQuestions = questions.filter((item) => questionBlockCode(item) === 'GOVERNANCA')
+    const managementQuestions = questions.filter((item) => questionBlockCode(item) === 'GESTAO')
+    const governanceEvaluated = governanceQuestions.filter((question) => responses.some((item) => item.question_id === question.id && Boolean(item.evaluated_at))).length
+    const managementEvaluated = managementQuestions.filter((question) => responses.some((item) => item.question_id === question.id && Boolean(item.evaluated_at))).length
+    const completedInterviews = interviews.filter((item) => ['completed','validated'].includes(item.status)).length
+    return {
+      total:questions.length,
+      evaluated,
+      validated,
+      pending:Math.max(0,questions.length-evaluated),
+      governanceTotal:governanceQuestions.length,
+      governanceEvaluated,
+      managementTotal:managementQuestions.length,
+      managementEvaluated,
+      completedInterviews,
+    }
+  },[questions,responses,interviews])
+
+  const consolidationAxisOptions = useMemo(() => {
+    const rows=questions.filter((question)=>consolidationBlock==='ALL' || questionBlockCode(question)===consolidationBlock)
+    return Array.from(new Set(rows.map((question)=>question.axis_name?.trim() || question.criterion_name?.trim() || 'Sem eixo')))
+  },[questions,consolidationBlock])
+
+  const consolidationQuestions = useMemo(() => {
+    return questions.filter((question) => {
+      if (consolidationBlock!=='ALL' && questionBlockCode(question)!==consolidationBlock) return false
+      const axis=question.axis_name?.trim() || question.criterion_name?.trim() || 'Sem eixo'
+      if (consolidationAxis && axis!==consolidationAxis) return false
+      const response=responses.find((item)=>item.question_id===question.id)
+      if (consolidationStatus==='pending') return !response?.evaluated_at
+      if (consolidationStatus==='draft') return Boolean(response?.evaluated_at) && response?.response_status!=='validated'
+      if (consolidationStatus==='validated') return response?.response_status==='validated'
+      return true
+    }).sort((a,b)=>a.display_order-b.display_order)
+  },[questions,responses,consolidationBlock,consolidationAxis,consolidationStatus])
+
+  const currentConsolidationQuestion = useMemo(() => {
+    if (consolidationQuestionId) {
+      const selectedQuestion=consolidationQuestions.find((item)=>item.id===consolidationQuestionId)
+      if (selectedQuestion) return selectedQuestion
+    }
+    return consolidationQuestions[0] ?? null
+  },[consolidationQuestions,consolidationQuestionId])
+
+  const suggestedInterviewForQuestion = (question:Question | null) => {
+    if (!question) return null
+    const existingResponse=responses.find((item)=>item.question_id===question.id)
+    const existingInterviewId=typeof existingResponse?.metadata?.last_interview_id==='string'
+      ? existingResponse.metadata.last_interview_id
+      : null
+    if (existingInterviewId) {
+      const existing=interviews.find((item)=>item.id===existingInterviewId)
+      if (existing) return existing
+    }
+    const normalizedInterviews=[...interviews].sort((a,b)=>(a.scheduled_start ?? '').localeCompare(b.scheduled_start ?? ''))
+    if (question.code.startsWith('GOV-')) {
+      return normalizedInterviews.find((item)=>/governan/i.test(item.title+' '+item.code))
+        ?? normalizedInterviews[0]
+        ?? null
+    }
+    const number=Number(question.code.match(/Q(\d+)/i)?.[1] ?? 0)
+    const target=/gest/i
+    const management=normalizedInterviews.filter((item)=>target.test(item.title+' '+item.code))
+    if (number>=31) return management.find((item)=>/iii|3\b/i.test(item.title+' '+item.code)) ?? management[2] ?? normalizedInterviews.at(-1) ?? null
+    if (number>=16) return management.find((item)=>/ii|2\b/i.test(item.title+' '+item.code)) ?? management[1] ?? management[0] ?? null
+    return management.find((item)=>/\bi\b|1\b/i.test(item.title+' '+item.code)) ?? management[0] ?? normalizedInterviews[1] ?? null
+  }
+
+
+  useEffect(() => {
+    if (!assessmentConsolidationMode) return
+    const current=currentConsolidationQuestion
+    if (!current) {
+      setConsolidationQuestionId(null)
+      setConsolidationInterviewId('')
+      return
+    }
+    if (consolidationQuestionId !== current.id) setConsolidationQuestionId(current.id)
+    const response=responses.find((item)=>item.question_id===current.id)
+    const existingInterviewId=typeof response?.metadata?.last_interview_id==='string' ? response.metadata.last_interview_id : ''
+    const suggested=suggestedInterviewForQuestion(current)
+    setConsolidationInterviewId(existingInterviewId || suggested?.id || '')
+  },[assessmentConsolidationMode,currentConsolidationQuestion?.id,consolidationQuestionId,responses,interviews])
+
   const phaseReadiness = useMemo(() => {
     const recognizedContract = evidenceAssets.some((asset) => {
       const version = evidenceVersionTexts.find((item) => item.evidence_asset_id === asset.id)
@@ -1174,6 +1271,8 @@ export function SkdaWorkspace(props: Props) {
         { label:'Questões do instrumento preparadas', ok:interviewQuestionFlow.rows.length > 0, critical:true },
         { label:'Governança percorrida integralmente', ok:interviewQuestionFlow.governance.length > 0 && interviewQuestionFlow.governanceTraversed === interviewQuestionFlow.governance.length, critical:true },
         { label:'Gestão percorrida integralmente', ok:interviewQuestionFlow.management.length > 0 && interviewQuestionFlow.managementTraversed === interviewQuestionFlow.management.length, critical:true },
+        { label:'Avaliações registradas ('+assessmentCloseout.evaluated+'/'+assessmentCloseout.total+')', ok:assessmentCloseout.total > 0 && assessmentCloseout.evaluated === assessmentCloseout.total, critical:true },
+        { label:'Avaliações validadas ('+assessmentCloseout.validated+'/'+assessmentCloseout.total+')', ok:assessmentCloseout.total > 0 && assessmentCloseout.validated === assessmentCloseout.total, critical:true },
         { label:'Ao menos uma entrevista realizada', ok:completedInterviews > 0, critical:true },
         { label:'Hipóteses propostas revisadas', ok:evidenceQuestionIntelligence.every((item) => item.analysis_status !== 'proposed'), critical:true },
         { label:'Fila de inteligência sem processamento pendente', ok:evidenceQuestionIntelligence.every((item) => !['queued','processing'].includes(item.analysis_status)), critical:false },
@@ -1201,7 +1300,7 @@ export function SkdaWorkspace(props: Props) {
       },
     ])) as Record<string,{items:Array<{label:string;ok:boolean;critical:boolean}>;ready:boolean;completed:number;total:number}>
     return byPhase
-  }, [actionFollowup.length, actionPlanAllocations, evidenceAssets, evidenceQuestionIntelligence, evidenceVersionTexts, findings, interviews, interviewQuestionFlow, journeyArtifacts, linkedInitiatives, metrics.evidence, props.organizationName, selected?.catalog_version_id, selected?.lead_user_id, selected?.metadata, selected?.planned_end_on, selected?.started_on, selfAssessmentSnapshots.length])
+  }, [actionFollowup.length, actionPlanAllocations, assessmentCloseout, evidenceAssets, evidenceQuestionIntelligence, evidenceVersionTexts, findings, interviews, interviewQuestionFlow, journeyArtifacts, linkedInitiatives, metrics.evidence, props.organizationName, selected?.catalog_version_id, selected?.lead_user_id, selected?.metadata, selected?.planned_end_on, selected?.started_on, selfAssessmentSnapshots.length])
 
   const selfAssessmentRadar = useMemo(() => {
     const metricsFor = (block: 'GOVERNANCA' | 'GESTAO') => selfAssessmentMetrics
@@ -1404,7 +1503,7 @@ export function SkdaWorkspace(props: Props) {
       ])
       const loadedQuestions = (questionsResult.data ?? []) as unknown as Question[]
       loadedQuestions.sort((a,b) => {
-        const blockRank = (item:Question) => /governan/i.test(item.axis_name ?? '') ? 0 : /gest/i.test(item.axis_name ?? '') ? 1 : 2
+        const blockRank = (item:Question) => item.code.startsWith('GOV-') ? 0 : item.code.startsWith('GES-') ? 1 : 2
         const rankDiff = blockRank(a) - blockRank(b)
         return rankDiff !== 0 ? rankDiff : a.display_order - b.display_order
       })
@@ -1777,6 +1876,11 @@ export function SkdaWorkspace(props: Props) {
 
   const advanceJourneyPhase = async (phaseCode:string) => {
     if (!selected || !canManage) return
+    const currentFormalPhase=normalizeJourneyPhaseCode(selected.current_phase_code)
+    if (currentFormalPhase !== phaseCode) {
+      setError(`A fase formal atual é ${currentFormalPhase}. Regularize as fases na sequência antes de avançar ${phaseCode}.`)
+      return
+    }
     const readiness = phaseReadiness[phaseCode]
     if (!readiness?.ready) {
       setError('Ainda existem requisitos críticos pendentes para concluir esta fase.')
@@ -2316,32 +2420,60 @@ export function SkdaWorkspace(props: Props) {
     })
   }
 
-  const saveAssessment = async (question: Question) => {
-    if (!selected || !canEditAssessment) return
+  const saveAssessment = async (
+    question: Question,
+    options?: { validateAfter?:boolean; sourceInterviewId?:string; moveNext?:boolean },
+  ): Promise<boolean> => {
+    if (!selected || !canEditAssessment) return false
     const draft = assessmentDrafts[question.id]
-    if (!draft) return
+    if (!draft) return false
+    if (options?.validateAfter && !canValidateAssessment) {
+      setError('Seu perfil pode registrar a avaliação, mas não validá-la.')
+      return false
+    }
+    if (options?.validateAfter && !draft.alternativeId) {
+      setError('Selecione a alternativa do DA antes de salvar e validar.')
+      return false
+    }
+    if (options?.validateAfter && draft.classification === 'not_evaluated') {
+      setError('Classifique a constatação antes de salvar e validar.')
+      return false
+    }
+    if (options?.validateAfter && draft.confidenceLevel === 'not_assessed') {
+      setError('Informe o nível de confiança antes de salvar e validar.')
+      return false
+    }
+
     setSaving(true)
     setError('')
     const previousResponse = responses.find((item) => item.question_id === question.id)
     const hadResponse = Boolean(previousResponse)
-    const activeInterview = interviews.find((item) => item.status === 'in_progress') ?? null
+    const sourceInterview = options?.sourceInterviewId
+      ? interviews.find((item)=>item.id===options.sourceInterviewId) ?? null
+      : interviews.find((item) => item.status === 'in_progress') ?? suggestedInterviewForQuestion(question)
     const previousMetadata = previousResponse?.metadata ?? {}
     const previousTrace = Array.isArray(previousMetadata.interview_trace)
       ? previousMetadata.interview_trace.filter((item) => item && typeof item === 'object')
       : []
-    const interviewTrace = activeInterview
+    const interviewTrace = sourceInterview
       ? [
-          ...previousTrace.filter((item) => (item as Record<string,unknown>).interview_id !== activeInterview.id),
+          ...previousTrace.filter((item) => (item as Record<string,unknown>).interview_id !== sourceInterview.id),
           {
-            interview_id:activeInterview.id,
-            interview_code:activeInterview.code,
-            event_id:activeInterview.event_id,
+            interview_id:sourceInterview.id,
+            interview_code:sourceInterview.code,
+            event_id:sourceInterview.event_id,
+            scheduled_start:sourceInterview.scheduled_start,
+            actual_start:sourceInterview.actual_start,
+            actual_end:sourceInterview.actual_end,
             captured_at:new Date().toISOString(),
+            source:assessmentConsolidationMode ? 'post_interview_consolidation' : 'assessment',
           },
         ]
       : previousTrace
     const { data: authData } = await supabase.auth.getUser()
     const userId = authData.user?.id ?? null
+    const validateAfter=Boolean(options?.validateAfter)
+    const now=new Date().toISOString()
     const { data, error: saveError } = await supabase
       .from('skda_responses' as never)
       .upsert({
@@ -2353,30 +2485,48 @@ export function SkdaWorkspace(props: Props) {
         rationale:draft.rationale.trim() || null,
         score:null,
         evidenced_alternative_id:draft.alternativeId || null,
+        validated_alternative_id:validateAfter ? (draft.alternativeId || null) : null,
         confidence_level:draft.confidenceLevel,
-        response_status:'draft',
+        response_status:validateAfter ? 'validated' : 'draft',
         metadata:{
           ...previousMetadata,
           interview_trace:interviewTrace,
-          last_interview_id:activeInterview?.id ?? previousMetadata.last_interview_id ?? null,
-          last_interview_code:activeInterview?.code ?? previousMetadata.last_interview_code ?? null,
-          last_interview_event_id:activeInterview?.event_id ?? previousMetadata.last_interview_event_id ?? null,
+          last_interview_id:sourceInterview?.id ?? previousMetadata.last_interview_id ?? null,
+          last_interview_code:sourceInterview?.code ?? previousMetadata.last_interview_code ?? null,
+          last_interview_event_id:sourceInterview?.event_id ?? previousMetadata.last_interview_event_id ?? null,
+          consolidation_mode:assessmentConsolidationMode || previousMetadata.consolidation_mode === true,
+          consolidated_at:assessmentConsolidationMode ? now : previousMetadata.consolidated_at ?? null,
         },
-        evaluated_at:new Date().toISOString(),
+        evaluated_at:now,
         evaluated_by:userId,
-        validated_at:null,
-        validated_by:null,
+        validated_at:validateAfter ? now : null,
+        validated_by:validateAfter ? userId : null,
       } as never, { onConflict:'diagnosis_id,question_id' })
       .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at,metadata' as never)
       .single()
 
     setSaving(false)
-    if (saveError) { setError(saveError.message); return }
+    if (saveError) { setError(saveError.message); return false }
     const saved = data as unknown as Response
     const nextResponses = [...responses.filter((item) => item.question_id !== question.id), saved]
     setResponses(nextResponses)
     setMetrics((current) => ({ ...current, responses:hadResponse ? current.responses : current.responses + 1 }))
-    if (activePhaseCode === 'DA-01') {
+
+    if (assessmentConsolidationMode && options?.moveNext !== false) {
+      const ordered=questions
+        .filter((item)=>consolidationBlock==='ALL' || questionBlockCode(item)===consolidationBlock)
+        .filter((item)=>!consolidationAxis || (item.axis_name?.trim() || item.criterion_name?.trim() || 'Sem eixo')===consolidationAxis)
+        .sort((a,b)=>a.display_order-b.display_order)
+      const currentIndex=ordered.findIndex((item)=>item.id===question.id)
+      const next=ordered.slice(Math.max(0,currentIndex+1)).find((item)=>{
+        const response=nextResponses.find((row)=>row.question_id===item.id)
+        return consolidationStatus==='validated' ? response?.response_status==='validated'
+          : consolidationStatus==='draft' ? Boolean(response?.evaluated_at) && response?.response_status!=='validated'
+          : consolidationStatus==='all' ? true
+          : !response?.evaluated_at
+      })
+      if (next) setConsolidationQuestionId(next.id)
+    } else if (activePhaseCode === 'DA-01') {
       const ordered = [...questions].sort((a,b) => a.display_order - b.display_order)
       const currentIndex = ordered.findIndex((item) => item.id === question.id)
       const nextQuestion = ordered.slice(currentIndex + 1).find((item) => !nextResponses.some((response) => response.question_id === item.id && Boolean(response.evaluated_at)))
@@ -2384,6 +2534,7 @@ export function SkdaWorkspace(props: Props) {
         window.setTimeout(() => document.getElementById('skda-question-'+nextQuestion.id)?.scrollIntoView({ behavior:'smooth',block:'start' }),80)
       }
     }
+    return true
   }
 
   const validateAssessment = async (question: Question) => {
@@ -2416,6 +2567,104 @@ export function SkdaWorkspace(props: Props) {
     if (saveError) { setError(saveError.message); return }
     const saved = data as unknown as Response
     setResponses((current) => [...current.filter((item) => item.question_id !== question.id), saved])
+  }
+
+
+  const ratifyScheduledInterviewsAsCompleted = async () => {
+    if (!canEditInterviews) return
+    const pending=interviews.filter((item)=>!['completed','validated'].includes(item.status) && item.scheduled_start && item.scheduled_end)
+    if (pending.length===0) {
+      setError('Não há entrevistas planejadas pendentes com início e término suficientes para ratificação.')
+      return
+    }
+    if (!window.confirm(`Ratificar ${pending.length} entrevista(s) como realizadas usando os horários já registrados na Agenda?`)) return
+    setSaving(true)
+    setError('')
+    for (const interview of pending) {
+      const { error }=await supabase.rpc(
+        'record_skda_interview_realization' as never,
+        {
+          target_interview_id:interview.id,
+          target_actual_start:new Date(interview.scheduled_start!).toISOString(),
+          target_actual_end:new Date(interview.scheduled_end!).toISOString(),
+          target_notes:'Realização ratificada após a conclusão das entrevistas, com base na agenda contratual já registrada e no relato do responsável técnico.',
+          change_reason:'Regularização pós-entrevista: encontro realizado conforme agenda registrada da Jornada DA.',
+        } as never,
+      )
+      if (error) {
+        setSaving(false)
+        setError(`Não foi possível ratificar ${interview.code}: ${error.message}`)
+        return
+      }
+    }
+    const { data } = await supabase
+      .from('skda_interviews' as never)
+      .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start,scheduled_end,actual_start,actual_end,event_id' as never)
+      .eq('diagnosis_id', selected?.id ?? '')
+      .order('scheduled_start', { ascending:true, nullsFirst:false })
+    setInterviews((data ?? []) as unknown as Interview[])
+    setSaving(false)
+  }
+
+  const validateAllReadyAssessments = async () => {
+    if (!selected || !canValidateAssessment) return
+    const candidates=responses.filter((response) => {
+      const draft=assessmentDrafts[response.question_id]
+      return response.evaluated_at
+        && response.response_status!=='validated'
+        && Boolean(draft?.alternativeId)
+        && draft?.classification!=='not_evaluated'
+        && draft?.confidenceLevel!=='not_assessed'
+    })
+    if (candidates.length===0) {
+      setError('Não há avaliações registradas aptas para validação em lote.')
+      return
+    }
+    if (!window.confirm(`Validar ${candidates.length} avaliação(ões) já registradas e completas? Essa ação registra sua validação humana em cada questão.`)) return
+    setSaving(true)
+    setError('')
+    const { data: authData }=await supabase.auth.getUser()
+    const userId=authData.user?.id ?? null
+    const now=new Date().toISOString()
+    const updated:Response[]=[]
+    for (const response of candidates) {
+      const draft=assessmentDrafts[response.question_id]
+      if (!draft) continue
+      const { data,error }=await supabase
+        .from('skda_responses' as never)
+        .update({
+          classification:draft.classification,
+          answer_text:draft.answerText.trim() || null,
+          rationale:draft.rationale.trim() || null,
+          evidenced_alternative_id:draft.alternativeId || null,
+          validated_alternative_id:draft.alternativeId || null,
+          confidence_level:draft.confidenceLevel,
+          response_status:'validated',
+          validated_at:now,
+          validated_by:userId,
+          metadata:{
+            ...(response.metadata ?? {}),
+            bulk_validation:true,
+            bulk_validated_at:now,
+          },
+        } as never)
+        .eq('id',response.id)
+        .eq('diagnosis_id',selected.id)
+        .eq('organization_id',props.organizationId)
+        .select('id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at,metadata' as never)
+        .single()
+      if (error || !data) {
+        setSaving(false)
+        setError(error?.message ?? 'Falha durante a validação em lote.')
+        return
+      }
+      updated.push(data as unknown as Response)
+    }
+    setResponses((current) => {
+      const ids=new Set(updated.map((item)=>item.id))
+      return [...current.filter((item)=>!ids.has(item.id)),...updated]
+    })
+    setSaving(false)
   }
 
   const linkEvidence = async (asset: EvidenceAsset) => {
@@ -4276,8 +4525,8 @@ export function SkdaWorkspace(props: Props) {
               {phaseReadiness[activePhase.code].items.map((item) => <span key={item.label} className={item.ok ? 'is-ok' : item.critical ? 'is-critical' : 'is-pending'}><i>{item.ok ? '✓' : item.critical ? '!' : '·'}</i>{item.label}{!item.critical && <small>recomendado</small>}</span>)}
             </div>
             {canManage && <div className="skda-phase-readiness-actions">
-              <button type="button" className="skda-primary" disabled={saving || !phaseReadiness[activePhase.code].ready || selected.status === 'completed'} onClick={() => void advanceJourneyPhase(activePhase.code)}>
-                {activePhase.code === 'DA-03' ? 'Concluir Jornada' : 'Concluir fase e avançar'}
+              <button type="button" className="skda-primary" disabled={saving || !phaseReadiness[activePhase.code].ready || selected.status === 'completed' || normalizeJourneyPhaseCode(selected.current_phase_code) !== activePhase.code} onClick={() => void advanceJourneyPhase(activePhase.code)}>
+                {normalizeJourneyPhaseCode(selected.current_phase_code) !== activePhase.code ? 'Fase disponível para consulta' : activePhase.code === 'DA-03' ? 'Concluir Jornada' : 'Concluir fase e avançar'}
               </button>
             </div>}
           </div>}
@@ -4706,7 +4955,129 @@ export function SkdaWorkspace(props: Props) {
               </div>}
             </div>
           })()}
-          {activePhase.code === 'DA-01' && <div className="skda-phase-workspace">
+          {activePhase.code === 'DA-01' && <div className="skda-phase-workspace skda-closeout-workspace">
+            <div className="skda-phase-workspace-head">
+              <div>
+                <h4>Fechamento pós-entrevistas</h4>
+                <small>Consolide o que foi apurado nos encontros, registre a alternativa final do DA e valide questão a questão sem precisar reencenar as entrevistas no módulo.</small>
+              </div>
+              <div className="skda-closeout-head-actions">
+                <button type="button" className={assessmentConsolidationMode ? 'skda-primary' : ''} onClick={() => { setAssessmentConsolidationMode((current)=>!current); setConsolidationStatus('pending'); setConsolidationQuestionId(null) }}>
+                  {assessmentConsolidationMode ? 'Ocultar consolidação rápida' : 'Consolidar pós-entrevistas'}
+                </button>
+              </div>
+            </div>
+            {normalizeJourneyPhaseCode(selected.current_phase_code) === 'DA-00' && <div className="skda-closeout-phase-sync"><div><strong>Abertura ainda é a fase formal da Jornada</strong><span>As entrevistas já ocorreram, mas o fluxo governado ainda não registrou a conclusão da preparação. Regularize a abertura antes de concluir a fase diagnóstica.</span></div>{canManage && <button type="button" className="skda-primary" disabled={saving || !phaseReadiness['DA-00']?.ready} onClick={()=>void advanceJourneyPhase('DA-00')}>{phaseReadiness['DA-00']?.ready ? 'Concluir abertura e avançar para entrevistas' : 'Abertura ainda possui pendências críticas'}</button>}</div>}
+            <div className="skda-closeout-scorecard">
+              <article><span>Questões do instrumento</span><strong>{assessmentCloseout.total}</strong><small>24 Governança + 46 Gestão</small></article>
+              <article><span>Avaliadas no DA</span><strong>{assessmentCloseout.evaluated}/{assessmentCloseout.total}</strong><small>{assessmentCloseout.pending} pendente(s)</small></article>
+              <article><span>Validadas</span><strong>{assessmentCloseout.validated}/{assessmentCloseout.total}</strong><small>validação humana final</small></article>
+              <article><span>Governança</span><strong>{assessmentCloseout.governanceEvaluated}/{assessmentCloseout.governanceTotal}</strong><small>questões avaliadas</small></article>
+              <article><span>Gestão</span><strong>{assessmentCloseout.managementEvaluated}/{assessmentCloseout.managementTotal}</strong><small>questões avaliadas</small></article>
+              <article><span>Entrevistas realizadas</span><strong>{assessmentCloseout.completedInterviews}/{interviews.length}</strong><small>encontros ratificados</small></article>
+            </div>
+            <div className="skda-closeout-actions">
+              {canEditInterviews && assessmentCloseout.completedInterviews < interviews.length && <button type="button" disabled={saving} onClick={() => void ratifyScheduledInterviewsAsCompleted()}>Ratificar entrevistas realizadas pela agenda</button>}
+              {canValidateAssessment && assessmentCloseout.evaluated > assessmentCloseout.validated && <button type="button" disabled={saving} onClick={() => void validateAllReadyAssessments()}>Validar avaliações completas já registradas</button>}
+              <button type="button" onClick={() => setAssessmentConsolidationMode(false)}>Abrir avaliação detalhada</button>
+            </div>
+            {assessmentConsolidationMode && <div className="skda-closeout-console">
+              <div className="skda-closeout-filters">
+                <label><span>Bloco</span><select value={consolidationBlock} onChange={(e)=>{setConsolidationBlock(e.target.value as 'ALL'|'GOVERNANCA'|'GESTAO');setConsolidationAxis('');setConsolidationQuestionId(null)}}>
+                  <option value="ALL">Governança + Gestão</option>
+                  <option value="GOVERNANCA">Governança</option>
+                  <option value="GESTAO">Gestão</option>
+                </select></label>
+                <label><span>Eixo / critério</span><select value={consolidationAxis} onChange={(e)=>{setConsolidationAxis(e.target.value);setConsolidationQuestionId(null)}}>
+                  <option value="">Todos</option>
+                  {consolidationAxisOptions.map((axis)=><option key={axis} value={axis}>{axis}</option>)}
+                </select></label>
+                <label><span>Situação</span><select value={consolidationStatus} onChange={(e)=>{setConsolidationStatus(e.target.value as 'all'|'pending'|'draft'|'validated');setConsolidationQuestionId(null)}}>
+                  <option value="pending">Pendentes de avaliação</option>
+                  <option value="draft">Avaliadas, aguardando validação</option>
+                  <option value="validated">Validadas</option>
+                  <option value="all">Todas</option>
+                </select></label>
+                <label className="skda-closeout-question-picker"><span>Questão</span><select value={currentConsolidationQuestion?.id ?? ''} onChange={(e)=>setConsolidationQuestionId(e.target.value)}>
+                  {consolidationQuestions.map((question)=><option key={question.id} value={question.id}>{question.code} · {question.axis_name || question.criterion_name || 'Sem eixo'}</option>)}
+                </select></label>
+              </div>
+              {currentConsolidationQuestion ? (() => {
+                const question=currentConsolidationQuestion
+                const response=responses.find((item)=>item.question_id===question.id)
+                const draft=assessmentDrafts[question.id] ?? { classification:'not_evaluated',answerText:'',rationale:'',confidenceLevel:'not_assessed',alternativeId:'' }
+                const aaAnswer=selfAssessmentAnswers.find((item)=>item.question_id===question.id)
+                const alternatives=questionAlternatives.filter((item)=>item.question_id===question.id)
+                const selectedAlternative=alternatives.find((item)=>item.id===draft.alternativeId)
+                const intelligence=evidenceQuestionIntelligence.filter((item)=>item.question_id===question.id)
+                const fieldRecords=interviewQuestionRecords.filter((item)=>item.question_id===question.id && ['in_progress','completed','skipped'].includes(item.status))
+                const expectations=questionEvidenceExpectations.filter((item)=>item.question_id===question.id)
+                const sourceInterview=interviews.find((item)=>item.id===consolidationInterviewId) ?? suggestedInterviewForQuestion(question)
+                const currentIndex=consolidationQuestions.findIndex((item)=>item.id===question.id)
+                return <div className="skda-closeout-question">
+                  <div className="skda-closeout-nav">
+                    <button type="button" disabled={currentIndex<=0} onClick={()=>setConsolidationQuestionId(consolidationQuestions[currentIndex-1]?.id ?? null)}>← Anterior</button>
+                    <span>{currentIndex+1} de {consolidationQuestions.length} no filtro atual</span>
+                    <button type="button" disabled={currentIndex<0 || currentIndex>=consolidationQuestions.length-1} onClick={()=>setConsolidationQuestionId(consolidationQuestions[currentIndex+1]?.id ?? null)}>Próxima →</button>
+                  </div>
+                  <div className="skda-closeout-question-grid">
+                    <section className="skda-closeout-reference">
+                      <div className="skda-question-copy">
+                        <small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small>
+                        <strong>{question.question_text}</strong>
+                        {question.criterion_name && <span>{question.criterion_name}</span>}
+                      </div>
+                      <div className="skda-closeout-aa">
+                        <div><span>Autoavaliação declarada</span><b>{aaAnswer?.declared_code ?? '—'}</b></div>
+                        <p>{aaAnswer?.declared_text ?? 'Resposta declarada não localizada.'}</p>
+                        {aaAnswer?.rationale && <small>{aaAnswer.rationale}</small>}
+                      </div>
+                      <div className="skda-closeout-alternatives">
+                        {alternatives.map((alternative)=><button type="button" key={alternative.id} className={draft.alternativeId===alternative.id?'active':''} disabled={!canEditAssessment || saving} onClick={()=>updateAssessmentDraft(question.id,{alternativeId:alternative.id})}>
+                          <b>{alternative.code}</b><span>{alternative.alternative_text}</span>
+                        </button>)}
+                      </div>
+                      <div className="skda-closeout-source">
+                        <label><span>Entrevista / encontro de origem</span><select value={consolidationInterviewId || sourceInterview?.id || ''} onChange={(e)=>setConsolidationInterviewId(e.target.value)}>
+                          <option value="">Sem encontro específico</option>
+                          {interviews.map((interview)=><option key={interview.id} value={interview.id}>{interview.code} · {interview.title} · {interview.scheduled_start ? new Date(interview.scheduled_start).toLocaleDateString('pt-BR') : 'sem data'}</option>)}
+                        </select></label>
+                        {sourceInterview && <small>Planejado: {sourceInterview.scheduled_start ? new Date(sourceInterview.scheduled_start).toLocaleString('pt-BR') : '—'} · Realizado: {sourceInterview.actual_start ? new Date(sourceInterview.actual_start).toLocaleString('pt-BR') : 'a ratificar'}</small>}
+                      </div>
+                      <div className="skda-closeout-context">
+                        <strong>Contexto já disponível</strong>
+                        <span>{intelligence.length} correlação(ões) de inteligência · {expectations.length} expectativa(s) de evidência · {fieldRecords.length} registro(s) de campo</span>
+                        {fieldRecords.slice(-3).map((record)=><p key={record.id}>{record.observed_practice || record.interview_notes || record.evidence_cited || record.gap_summary || 'Registro de entrevista sem síntese textual.'}</p>)}
+                        {intelligence.filter((item)=>item.diagnostic_hypothesis || item.gap_description).slice(0,4).map((item)=><p key={item.id}>{item.diagnostic_hypothesis || item.gap_description}</p>)}
+                      </div>
+                    </section>
+                    <section className="skda-closeout-entry">
+                      <div className="skda-closeout-entry-head">
+                        <div><span>Resultado consolidado do DA</span><b>{selectedAlternative?.code ?? 'Alternativa ainda não definida'}</b></div>
+                        <small>{response?.response_status==='validated' ? 'Validada' : response?.evaluated_at ? 'Avaliada · aguardando validação' : 'Pendente de avaliação'}</small>
+                      </div>
+                      <label><span>Constatação / resposta consolidada</span><textarea rows={6} value={draft.answerText} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{answerText:e.target.value})} placeholder="Registre a conclusão objetiva após entrevistas e evidências: prática existente, execução, abrangência, resultado e limitações."/></label>
+                      <div className="skda-closeout-entry-row">
+                        <label><span>Classificação</span><select value={draft.classification} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{classification:e.target.value})}>{Object.entries(CLASSIFICATION).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+                        <label><span>Confiança</span><select value={draft.confidenceLevel} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{confidenceLevel:e.target.value})}>{Object.entries(CONFIDENCE_LEVELS).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+                      </div>
+                      <label><span>Fundamentação / por que esta alternativa</span><textarea rows={5} value={draft.rationale} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{rationale:e.target.value})} placeholder="Fundamente com o que foi relatado, evidências apresentadas, lacunas e limites de suficiência."/></label>
+                      <div className="skda-closeout-entry-actions">
+                        {canEditAssessment && <button type="button" disabled={saving} onClick={()=>void saveAssessment(question,{sourceInterviewId:consolidationInterviewId || sourceInterview?.id,moveNext:true})}>Salvar rascunho e próxima</button>}
+                        {canEditAssessment && canValidateAssessment && <button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveAssessment(question,{validateAfter:true,sourceInterviewId:consolidationInterviewId || sourceInterview?.id,moveNext:true})}>Salvar, validar e próxima</button>}
+                        {canEditFindings && (response?.evaluated_at || draft.classification!=='not_evaluated') && <button type="button" onClick={()=>prepareFindingFromQuestion(question)}>Preparar achado</button>}
+                      </div>
+                      {response?.validated_at && <small className="skda-closeout-validation">Última validação: {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}
+                    </section>
+                  </div>
+                </div>
+              })() : <div className="skda-closeout-empty">
+                <strong>Nenhuma questão nesta situação.</strong>
+                <span>Altere o filtro de situação para continuar a consolidação ou revisar questões já validadas.</span>
+              </div>}
+            </div>}
+          </div>}
+          {activePhase.code === 'DA-01' && !assessmentConsolidationMode && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head"><div><h4>Avaliação por questão</h4><small>Parta da Autoavaliação importada, ratifique ou revise a alternativa do instrumento, complemente a constatação e registre confiança e fundamentação.</small></div><span>{selectedCatalog ? selectedCatalog.name : 'Catálogo não definido'}</span></div>
             <div className="skda-assessment-method-note"><strong>Escala do instrumento</strong><span>No PDGC, a avaliação da questão usa as alternativas oficiais A–D. O DA não converte artificialmente A–D em nota de 0 a 100; percentuais permanecem restritos aos índices e resultados oficiais fornecidos pelo próprio instrumento.</span></div>
             {!selected.catalog_version_id ? <p className="skda-phase-empty">Defina o catálogo na fase DA-00 antes de iniciar a avaliação.</p> : questions.length === 0 ? <p className="skda-phase-empty">O catálogo selecionado ainda não possui questões disponíveis.</p> : <div className="skda-question-list skda-assessment-list">

@@ -1,13 +1,13 @@
 ---
 id: SKDA-MET-001
 title: Contrato Canônico de Abertura, Evidências, Checklist e Entrevistas do SK-DA
-version: 1.1.0
+version: 1.2.0
 status: canonical
 canonical: true
 domain: sk-da
 owner: SPARKOOP
 created_at: 2026-10-28
-updated_at: 2026-10-29
+updated_at: 2026-10-30
 dependencies:
   - docs/07-homologacao/SKDA_MATRIZ_EVIDENCIAS_ESPERADAS_QUESTAO_20261028.md
 ---
@@ -151,6 +151,21 @@ A execução deve permitir:
 - tratar a pauta prevista como referência operacional, nunca como restrição metodológica.
 
 A tela de condução deve priorizar a leitura técnica da questão, aproximando-se do caderno de entrevistas: conteúdo oficial e Autoavaliação de um lado; pergunta central, aprofundamentos, evidências esperadas, lacunas e conexões do outro. O registro de campo deve permanecer acessível sem dominar a tela.
+
+### 6.2 Consolidação pós-entrevistas
+
+Quando entrevistas forem conduzidas total ou parcialmente fora do módulo, a aplicação não deve exigir sua reencenação para permitir o fechamento do DA. Deve existir uma esteira de consolidação pós-entrevistas que permita percorrer as questões oficiais, selecionar o encontro de origem, registrar a constatação consolidada, manter separada a resposta da Autoavaliação, definir a alternativa final do DA, classificar a constatação, registrar confiança e fundamentação e preservar a rastreabilidade.
+
+O modo de consolidação deve:
+
+- trabalhar sobre as mesmas 70 questões oficiais do catálogo vigente, sem criar instrumento paralelo;
+- oferecer filtros por Governança/Gestão, eixo/critério e situação da avaliação;
+- permitir salvar rascunho e avançar para a próxima questão;
+- permitir salvar e validar uma questão na mesma operação quando o usuário possuir competência de validação;
+- manter o modo detalhado disponível para revisão de evidências, hipóteses e auditoria;
+- permitir ratificação explícita dos encontros realizados a partir da agenda registrada, preservando a possibilidade de correção posterior;
+- considerar a fase diagnóstica concluível somente quando todas as questões aplicáveis estiverem avaliadas e validadas por usuário autorizado;
+- nunca transformar a alternativa declarada na Autoavaliação em alternativa validada do DA sem ação humana explícita.
 
 ## 7. Saídas por questão
 
