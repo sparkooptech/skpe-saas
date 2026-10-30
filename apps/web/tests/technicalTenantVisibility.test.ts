@@ -20,8 +20,8 @@ test('module routes wait for the module list of the routed organization', () => 
 })
 
 
-test('strategic network dashboard labels its module flag explicitly as SK-PE', () => {
+test('strategic network dashboard keeps SK-PE as the strategic metric source while exposing transversal module visibility', () => {
   assert.match(app, /target_module_code:\s*'SK-PE'/)
-  assert.match(app, /<th>SK-PE<\/th>/)
+  assert.match(app, /<th>Módulos ativos<\/th>/)
   assert.doesNotMatch(app, /<th>Módulo<\/th><th>Projetos<\/th>/)
 })

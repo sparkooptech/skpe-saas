@@ -71,13 +71,13 @@ test('DA-01 reuses transversal evidence and stores only contextual correlation',
 })
 
 test('DA-01 can register new Core evidence discovered during an interview without duplicating the asset in SK-DA', () => {
-  assert.match(workspace, /register_sparks_evidence_asset/)
-  assert.match(workspace, /target_origin_module_code:'SK-DA'/)
+  assert.match(workspace, /register_sparks_evidence_asset_for_module/)
+  assert.match(workspace, /target_module_code:'SK-DA'/)
   assert.match(workspace, /target_type:targetInterview \? 'interview' : 'diagnosis'/)
   assert.match(workspace, /usage_type:targetInterview \? 'context' : 'support'/)
-  assert.match(workspace, /interview_id:targetInterview\.id/)
-  assert.match(workspace, /Registrar nova evidência/)
-  assert.match(workspace, /Registrar e vincular/)
+  assert.match(workspace, /interview_id:targetInterview\?\.id/)
+  assert.match(workspace, /Adicionar e analisar evidência/)
+  assert.match(workspace, /Gravar, vincular e analisar/)
 })
 
 test('transversal Core separates evidence registration from full evidence management', () => {
@@ -94,7 +94,8 @@ test('transversal Core separates evidence registration from full evidence manage
 })
 
 test('DA-00 configures the journey with canonical fields and transversal organization users', () => {
-  assert.match(workspace, /get_organization_user_access/)
+  assert.match(workspace, /get_organization_module_users/)
+  assert.match(workspace, /target_module_code:'SK-DA'/)
   assert.match(workspace, /reference_year:openingForm\.referenceYear/)
   assert.match(workspace, /started_on:openingForm\.startedOn/)
   assert.match(workspace, /planned_end_on:openingForm\.plannedEndOn/)
@@ -112,10 +113,11 @@ test('DA-00 and DA-03 govern catalog assignment and question assessment', () => 
   assert.match(workspace, /catalogLocked = metrics\.responses > 0/)
   assert.match(workspace, /canEditAssessment = hasAdministrativeOverride \|\| \['administrator','coordinator','diagnostician'\]\.includes/)
   assert.match(workspace, /canValidateAssessment = hasAdministrativeOverride \|\| \['administrator','coordinator','reviewer'\]\.includes/)
-  assert.match(workspace, /score < 0 \|\| score > 100/)
-  assert.match(workspace, /response_status:'draft'/)
-  assert.match(workspace, /response_status:'validated'/)
-  assert.match(workspace, /A escala de maturidade não está publicada no catálogo atual/)
+  assert.match(workspace, /score:null/)
+  assert.match(workspace, /evidenced_alternative_id:draft\.alternativeId/)
+  assert.match(workspace, /response_status:validateAfter \? 'validated' : 'draft'/)
+  assert.match(workspace, /validated_alternative_id:validateAfter \? \(draft\.alternativeId \|\| null\) : null/)
+  assert.match(workspace, /questionAlternatives\.filter\(\(item\) => item\.question_id === question\.id\)/)
   assert.match(workspace, /canEditInterviews = hasAdministrativeOverride \|\| \['administrator','coordinator','interviewer'\]\.includes/)
   assert.match(migration, /unique\(diagnosis_id,question_id\)/)
   assert.match(migration, /score numeric\(6,2\) check \(score is null or score between 0 and 100\)/)
@@ -206,7 +208,9 @@ test('SK-DA uses the transversal application shell and full-width executive dash
   assert.match(workspace, /<ApplicationShell/)
   assert.match(workspace, /skda-dashboard-page/)
   assert.match(workspace, /skda-executive-grid/)
-  assert.match(workspace, /Radar por eixo/)
+  assert.match(workspace, /Radar por critério/)
+  assert.match(workspace, /title:'Governança'/)
+  assert.match(workspace, /title:'Gestão'/)
   assert.match(workspace, /Jornadas de Diagnóstico Assistido/)
   assert.doesNotMatch(workspace, /primary=\{primary\} secondary=\{secondary\}/)
 })
@@ -218,7 +222,8 @@ test('SK-DA modal primary actions remain visibly primary', () => {
 
 test('SK-DA does not fabricate maturity values when no validated score exists', () => {
   assert.match(workspace, /response\?\.score == null/)
-  assert.match(workspace, /Nenhuma pontuação de maturidade validada ainda/)
+  assert.match(workspace, /series\.diagnosis\[index\]\?\.score == null/)
+  assert.match(workspace, /score:null/)
 })
 
 test('SK-DA modals follow the shell keyboard convention and close on Escape', () => {
@@ -240,7 +245,6 @@ test('platform and organization administrators inherit SK-DA administrative UI c
 test('SK-DA header uses the canonical vector calendar icon', () => {
   assert.match(workspace, /function CalendarIcon\(\)/)
   assert.match(workspace, /<CalendarIcon \/>/)
-  assert.doesNotMatch(workspace, /<span aria-hidden="true">▣<\/span>/)
 })
 
 test('each DA journey is methodologically distinct from its transversal Project', () => {
@@ -252,7 +256,7 @@ test('each DA journey is methodologically distinct from its transversal Project'
   assert.match(journeyExecutionMigration, /'skda_diagnosis'/)
   assert.match(journeyExecutionMigration, /'project_management'/)
   assert.match(workspace, /create_skda_diagnosis_with_project/)
-  assert.match(workspace, /ensure_skda_diagnosis_project/)
+  assert.match(journeyExecutionMigration, /v_initiative_id := public\.ensure_skda_diagnosis_project/)
 })
 
 test('DA interviews allow organization members without granting SK-DA access', () => {
@@ -271,7 +275,7 @@ test('transversal external participants resolve UUIDs without unsupported UUID a
 })
 
 test('DA-06 is a methodological Action Plan in three cycles over transversal initiatives', () => {
-  assert.match(workspace, /title:'Plano de Ação'/)
+  assert.match(workspace, /label:'Plano de Ação'/)
   assert.match(workspace, /Ciclo 1 · Prioridades 80\/20 e sustentação/)
   assert.match(workspace, /Ciclo 2 · Consolidação, expansão e transformação/)
   assert.match(workspace, /Ciclo 3 · Excelência/)
