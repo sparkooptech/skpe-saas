@@ -3667,6 +3667,26 @@ export function SkdaWorkspace(props: Props) {
     setActiveInterviewQuestionId(touchedQuestion?.id ?? null)
   }
 
+  const openGuidedInterview = async (block:'GOVERNANCA'|'GESTAO', questionId?:string) => {
+    const interview = interviews.find((item)=>item.status === 'in_progress')
+      ?? interviews.find((item)=>item.status === 'completed')
+      ?? interviews.find((item)=>item.status === 'planned')
+      ?? null
+    if (!interview) {
+      setError('Registre ou materialize ao menos um encontro da Jornada antes de abrir o cockpit guiado.')
+      return
+    }
+    if (interview.status === 'planned') {
+      await startInterviewSession(interview)
+    } else {
+      openInterviewSession(interview)
+    }
+    setActiveInterviewBlock(block)
+    setActiveInterviewAxis('')
+    setActiveInterviewQuestionId(questionId ?? null)
+    setShowInterviewCapture(true)
+  }
+
   const saveInterviewQuestionRecord = async (status:'in_progress'|'completed'|'skipped', moveNext = true): Promise<boolean> => {
     if (!activeInterviewSessionId || !activeInterviewQuestionId || !canEditInterviews) return false
     if (status === 'completed' && !interviewQuestionDraft.outputType) {
@@ -4835,6 +4855,30 @@ export function SkdaWorkspace(props: Props) {
               <div><h4>Entrevistas do diagnóstico</h4><small>Entrevistas são eventos da Agenda da Organização. Participantes planejados e presença efetiva são geridos pelo mesmo motor transversal do PE.</small></div>
               {canEditInterviews && <button type="button" className="skda-primary" onClick={() => setShowInterviewCreate(true)}>Nova entrevista</button>}
             </div>
+            <div className="skda-interview-launchpad">
+              <div>
+                <span>Cockpit guiado de entrevista</span>
+                <strong>Comece pelo bloco ou vá direto para uma questão</strong>
+                <small>A questão oficial é o centro do trabalho. O encontro serve como contexto de rastreabilidade; você pode avançar, voltar ou mudar de bloco sem perder os registros.</small>
+              </div>
+              <div className="skda-interview-launchpad-actions">
+                <button type="button" className="skda-primary" disabled={interviews.length === 0} onClick={()=>void openGuidedInterview('GOVERNANCA')}>Iniciar / retomar Governança</button>
+                <button type="button" className="skda-primary" disabled={interviews.length === 0} onClick={()=>void openGuidedInterview('GESTAO')}>Iniciar / retomar Gestão</button>
+                <label>
+                  <span>Ir para questão específica</span>
+                  <select defaultValue="" disabled={interviews.length === 0} onChange={(event)=>{
+                    const question=questions.find((item)=>item.id===event.target.value)
+                    if (!question) return
+                    void openGuidedInterview(question.code.startsWith('GOV-') ? 'GOVERNANCA' : 'GESTAO',question.id)
+                    event.currentTarget.value=''
+                  }}>
+                    <option value="">Selecione uma questão...</option>
+                    {questions.map((question)=><option key={question.id} value={question.id}>{question.code} · {question.axis_name || question.criterion_name || ''} · {question.question_text}</option>)}
+                  </select>
+                </label>
+              </div>
+              {interviews.length === 0 && <div className="skda-interview-launchpad-empty"><strong>Os encontros ainda não estão materializados no módulo.</strong><span>Use a ação de registro dos encontros realizados no gate acima; depois o cockpit ficará disponível sem exigir recriação das entrevistas.</span></div>}
+            </div>
             <div className="skda-interview-flow">
               <div className="skda-interview-flow-head">
                 <div>
@@ -4929,8 +4973,22 @@ export function SkdaWorkspace(props: Props) {
           </div>}
           {activePhase.code === 'DA-01' && activeInterviewSession && activeInterviewBlock && activeInterviewQuestion && (() => {
             const aaAnswer = selfAssessmentAnswers.find((item) => item.question_id === activeInterviewQuestion.id)
+            const response = responses.find((item) => item.question_id === activeInterviewQuestion.id)
             const alternatives = questionAlternatives.filter((item) => item.question_id === activeInterviewQuestion.id)
+            const assessmentDraft = assessmentDrafts[activeInterviewQuestion.id] ?? {
+              classification:response?.classification ?? 'not_evaluated',
+              answerText:response?.answer_text ?? '',
+              rationale:response?.rationale ?? '',
+              confidenceLevel:response?.confidence_level ?? 'not_assessed',
+              alternativeId:response?.validated_alternative_id ?? response?.evidenced_alternative_id ?? response?.declared_alternative_id ?? '',
+            }
+            const selectedDaAlternative = alternatives.find((item)=>item.id===assessmentDraft.alternativeId)
             const currentAnswerLevel = (aaAnswer?.declared_code ?? '').toUpperCase()
+            const practiceSignals = evidenceQuestionIntelligence
+              .filter((item) => item.question_id === activeInterviewQuestion.id && item.analysis_status !== 'rejected')
+              .map((item)=>item.diagnostic_hypothesis || item.gap_description || item.complement_needed)
+              .filter((item):item is string=>Boolean(item?.trim()))
+              .slice(0,4)
             const expectations = questionEvidenceExpectations.filter((item) => item.question_id === activeInterviewQuestion.id)
             const supportExpectations = expectations.filter((item) => currentAnswerLevel && item.answer_level === currentAnswerLevel && ['support_declared_answer','both'].includes(item.purpose))
             const answerRank = ANSWER_LEVEL_RANK[currentAnswerLevel] ?? 0
@@ -4987,9 +5045,22 @@ export function SkdaWorkspace(props: Props) {
                     <small>{activeInterviewQuestion.code}{activeInterviewQuestion.axis_name ? ' · '+activeInterviewQuestion.axis_name : ''}</small>
                     <strong>{activeInterviewQuestion.question_text}</strong>
                     {activeInterviewQuestion.criterion_name && <span>{activeInterviewQuestion.criterion_name}</span>}
-                  </div>
-                  {alternatives.length > 0 && <div className="skda-interview-alternatives">
-                    {alternatives.map((alternative) => <div key={alternative.id} className={alternative.code === currentAnswerLevel ? 'is-declared' : ''}><b>{alternative.code}</b><span>{alternative.alternative_text}</span></div>)}
+                  </div>                  {alternatives.length > 0 && <div className="skda-interview-answer-panel">
+                    <div className="skda-interview-answer-panel-head">
+                      <div><strong>Resposta desta questão no DA</strong><span>Escolha A–D com base no que foi efetivamente confirmado. A resposta da AA aparece destacada apenas como referência.</span></div>
+                      <small>{selectedDaAlternative ? 'Selecionada: '+selectedDaAlternative.code : 'Ainda não definida'}</small>
+                    </div>
+                    <div className="skda-interview-alternatives">
+                      {alternatives.map((alternative) => <button type="button" key={alternative.id} className={`${alternative.code === currentAnswerLevel ? 'is-declared ' : ''}${assessmentDraft.alternativeId === alternative.id ? 'is-selected' : ''}`} disabled={!canEditAssessment || saving} onClick={()=>updateAssessmentDraft(activeInterviewQuestion.id,{alternativeId:alternative.id})}><b>{alternative.code}</b><span>{alternative.alternative_text}</span><small>{alternative.code === currentAnswerLevel ? 'AA declarada' : assessmentDraft.alternativeId === alternative.id ? 'Resposta do DA' : ''}</small></button>)}
+                    </div>
+                    <div className="skda-interview-answer-meta">
+                      <label><span>Classificação da constatação</span><select value={assessmentDraft.classification} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(activeInterviewQuestion.id,{classification:e.target.value})}>{Object.entries(CLASSIFICATION).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+                      <label><span>Confiança</span><select value={assessmentDraft.confidenceLevel} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(activeInterviewQuestion.id,{confidenceLevel:e.target.value})}>{Object.entries(CONFIDENCE_LEVELS).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+                    </div>
+                    {canEditAssessment && <div className="skda-interview-answer-actions">
+                      <button type="button" disabled={saving || !assessmentDraft.alternativeId} onClick={()=>void saveAssessment(activeInterviewQuestion,{sourceInterviewId:activeInterviewSession.id})}>Salvar resposta do DA</button>
+                      {canValidateAssessment && <button type="button" className="skda-primary" disabled={saving || !assessmentDraft.alternativeId || assessmentDraft.classification === 'not_evaluated' || assessmentDraft.confidenceLevel === 'not_assessed'} onClick={()=>void saveAssessment(activeInterviewQuestion,{validateAfter:true,sourceInterviewId:activeInterviewSession.id})}>Salvar e validar resposta</button>}
+                    </div>}
                   </div>}
                   <div className="skda-interview-context-card skda-interview-aa-card">
                     <strong>Autoavaliação declarada</strong>
@@ -5007,6 +5078,17 @@ export function SkdaWorkspace(props: Props) {
                   </div>
                 </section>
                 <section className="skda-interview-guidance-panel skda-interview-slide-right">
+                  <div className="skda-interview-context-card skda-interview-practice-card">
+                    <div className="skda-interview-practice-head">
+                      <div><strong>Prática da Organização</strong><span>Descreva a prática efetivamente observada: quem executa, como funciona, frequência, abrangência, controles, resultados e melhoria.</span></div>
+                      <small>{interviewQuestionDraft.observedPractice.trim() ? 'Registro em construção' : 'Aguardando registro'}</small>
+                    </div>
+                    <textarea rows={6} value={interviewQuestionDraft.observedPractice} onChange={(e)=>setInterviewQuestionDraft((current)=>({...current,observedPractice:e.target.value}))} placeholder="Ex.: A prática está formalizada em..., é executada por..., ocorre com frequência..., abrange..., é monitorada por..., gera os seguintes resultados..."/>
+                    {practiceSignals.length > 0 && <div className="skda-interview-practice-signals">
+                      <strong>Leitura assistida a confrontar na entrevista</strong>
+                      {practiceSignals.map((signal,index)=><span key={index}>{signal}</span>)}
+                    </div>}
+                  </div>
                   <div className="skda-interview-context-card is-prompts skda-interview-central-question">
                     <strong>Condução da entrevista</strong>
                     {governedPrompts.filter((item) => item.prompt_type === 'central').map((item) => <span key={item.prompt_id}><b>Pergunta central:</b> {item.prompt_text}</span>)}

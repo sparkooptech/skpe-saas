@@ -62,6 +62,25 @@ test('DA-02 interview workspace uses the canonical interview domain and transver
   assert.doesNotMatch(journeyExecutionMigration, /create table public\.skda_interview_participants/)
 })
 
+test('DA interview cockpit is question-centered and supports guided navigation, evidence, prompts and practice capture', () => {
+  assert.match(workspace, /Cockpit guiado de entrevista/)
+  assert.match(workspace, /Iniciar \/ retomar Governança/)
+  assert.match(workspace, /Iniciar \/ retomar Gestão/)
+  assert.match(workspace, /Ir para questão específica/)
+  assert.match(workspace, /Resposta desta questão no DA/)
+  assert.match(workspace, /Salvar resposta do DA/)
+  assert.match(workspace, /Prática da Organização/)
+  assert.match(workspace, /Leitura assistida a confrontar na entrevista/)
+  assert.match(workspace, /Evidências já localizadas \/ inteligência disponível/)
+  assert.match(workspace, /Evidências para sustentar a resposta/)
+  assert.match(workspace, /Aprofundamento:/)
+  assert.match(workspace, /← Anterior/)
+  assert.match(workspace, /Próxima →/)
+  assert.match(workspaceCss, /\.skda-interview-launchpad/)
+  assert.match(workspaceCss, /\.skda-interview-answer-panel/)
+  assert.match(workspaceCss, /\.skda-interview-practice-card/)
+})
+
 test('DA-01 reuses transversal evidence and stores only contextual correlation', () => {
   assert.match(workspace, /\.from\('sparks_evidence_assets'/)
   assert.match(workspace, /\.from\('skda_evidence_correlations'/)
