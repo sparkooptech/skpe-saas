@@ -2570,6 +2570,97 @@ export function SkdaWorkspace(props: Props) {
   }
 
 
+
+  const materializeAndRatifyContractInterviews = async () => {
+    if (!selected || !canEditInterviews || contractInterviewMeetings.length === 0) return
+    if (!window.confirm(`Materializar e ratificar ${contractInterviewMeetings.length} encontro(s) realizados a partir da agenda contratual? Os horários poderão ser ajustados posteriormente.`)) return
+
+    setSaving(true)
+    setError('')
+    try {
+      const titles = [
+        'Entrevistas — Governança',
+        'Entrevistas — Gestão I',
+        'Entrevistas — Gestão II',
+        'Entrevistas — Gestão III',
+      ]
+      const working = new Map(interviews.map((item) => [item.code.toUpperCase(), item]))
+
+      for (let index = 0; index < contractInterviewMeetings.length; index += 1) {
+        const meeting = contractInterviewMeetings[index]
+        const code = 'ENT-' + String(index + 1).padStart(3,'0')
+        const start = new Date(`${meeting.date}T${meeting.start || '09:00'}:00`)
+        const end = new Date(start.getTime() + meeting.durationHours * 60 * 60 * 1000)
+        const location = (meeting.location ?? '').trim()
+        const normalized = normalizeSearchText(location)
+        const channel = normalized.includes('teams') ? 'teams'
+          : normalized.includes('meet') ? 'meet'
+          : location ? 'presential' : 'other'
+
+        let interviewId = working.get(code)?.id ?? null
+        if (!interviewId) {
+          const { data:createData,error:createError } = await supabase.rpc(
+            'create_skda_interview_with_event' as never,
+            {
+              target_diagnosis_id:selected.id,
+              target_code:code,
+              target_title:titles[index] ?? `Entrevistas — Encontro ${index + 1}`,
+              target_channel:channel,
+              target_scheduled_start:start.toISOString(),
+              target_scheduled_end:end.toISOString(),
+              target_meeting_reference:location || null,
+              change_reason:'Materialização retrospectiva dos encontros realizados conforme agenda contratual da Jornada DA.',
+            } as never,
+          )
+          if (createError || !createData) throw new Error(createError?.message ?? `Não foi possível criar ${code}.`)
+          interviewId=(createData as unknown as { interview_id?:string }).interview_id ?? null
+        }
+
+        if (!interviewId) throw new Error(`Entrevista ${code} criada sem identificador.`)
+        const existing=working.get(code)
+        if (!existing || !['completed','validated'].includes(existing.status)) {
+          const { error:realizationError } = await supabase.rpc(
+            'record_skda_interview_realization' as never,
+            {
+              target_interview_id:interviewId,
+              target_actual_start:start.toISOString(),
+              target_actual_end:end.toISOString(),
+              target_notes:'Realização ratificada após a conclusão das entrevistas, com base na agenda contratual e no relato do responsável técnico.',
+              change_reason:'Regularização pós-entrevista: encontro realizado conforme agenda contratual da Jornada DA.',
+            } as never,
+          )
+          if (realizationError) throw new Error(`Não foi possível ratificar ${code}: ${realizationError.message}`)
+        }
+      }
+
+      const { data,error:reloadError } = await supabase
+        .from('skda_interviews' as never)
+        .select('id,code,title,interviewee_name,interviewee_role,status,channel,scheduled_start,scheduled_end,actual_start,actual_end,event_id' as never)
+        .eq('diagnosis_id',selected.id)
+        .order('scheduled_start',{ascending:true,nullsFirst:false})
+      if (reloadError) throw reloadError
+
+      const reloaded=(data ?? []) as unknown as Interview[]
+      setInterviews(reloaded)
+      setMetrics((current)=>({...current,interviews:reloaded.length}))
+      await supabase
+        .from('skda_diagnoses' as never)
+        .update({ metadata:{
+          ...(selected.metadata ?? {}),
+          contractual_intake_status:'interviews_materialized_and_ratified',
+          interviews_ratified_at:new Date().toISOString(),
+          interviews_ratified_count:reloaded.filter((item)=>['completed','validated'].includes(item.status)).length,
+        }} as never)
+        .eq('id',selected.id)
+        .eq('organization_id',props.organizationId)
+      await loadDiagnoses()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Não foi possível materializar e ratificar as entrevistas.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const ratifyScheduledInterviewsAsCompleted = async () => {
     if (!canEditInterviews) return
     const pending=interviews.filter((item)=>!['completed','validated'].includes(item.status) && item.scheduled_start && item.scheduled_end)
@@ -4032,18 +4123,17 @@ export function SkdaWorkspace(props: Props) {
   const effectiveContractMeetings = contractIntakeProposal?.meetings?.length
     ? contractIntakeProposal.meetings
     : contractualSchedule
-  const contractOrganizationHours = effectiveContractMeetings.length > 0
-    ? effectiveContractMeetings
-      .filter((meeting) => {
-        const location = normalizeSearchText(meeting.location ?? '')
-        return !location.includes('off-line')
-          && !location.includes('offline')
-          && !location.includes('off line')
-          && !location.includes('atividade interna')
-          && !location.includes('preparacao')
-          && !location.includes('consolidacao')
-      })
-      .reduce((total, meeting) => total + meeting.durationHours, 0)
+  const contractInterviewMeetings = effectiveContractMeetings.filter((meeting) => {
+    const location = normalizeSearchText(meeting.location ?? '')
+    return !location.includes('off-line')
+      && !location.includes('offline')
+      && !location.includes('off line')
+      && !location.includes('atividade interna')
+      && !location.includes('preparacao')
+      && !location.includes('consolidacao')
+  })
+  const contractOrganizationHours = contractInterviewMeetings.length > 0
+    ? contractInterviewMeetings.reduce((total, meeting) => total + meeting.durationHours, 0)
     : Number.isFinite(Number(selected?.metadata?.contractual_organization_hours))
       ? Number(selected?.metadata?.contractual_organization_hours)
       : null
@@ -4974,10 +5064,11 @@ export function SkdaWorkspace(props: Props) {
               <article><span>Validadas</span><strong>{assessmentCloseout.validated}/{assessmentCloseout.total}</strong><small>validação humana final</small></article>
               <article><span>Governança</span><strong>{assessmentCloseout.governanceEvaluated}/{assessmentCloseout.governanceTotal}</strong><small>questões avaliadas</small></article>
               <article><span>Gestão</span><strong>{assessmentCloseout.managementEvaluated}/{assessmentCloseout.managementTotal}</strong><small>questões avaliadas</small></article>
-              <article><span>Entrevistas realizadas</span><strong>{assessmentCloseout.completedInterviews}/{interviews.length}</strong><small>encontros ratificados</small></article>
+              <article><span>Entrevistas realizadas</span><strong>{assessmentCloseout.completedInterviews}/{Math.max(interviews.length,contractInterviewMeetings.length)}</strong><small>encontros ratificados</small></article>
             </div>
             <div className="skda-closeout-actions">
-              {canEditInterviews && assessmentCloseout.completedInterviews < interviews.length && <button type="button" disabled={saving} onClick={() => void ratifyScheduledInterviewsAsCompleted()}>Ratificar entrevistas realizadas pela agenda</button>}
+              {canEditInterviews && interviews.length === 0 && contractInterviewMeetings.length > 0 && <button type="button" className="skda-primary" disabled={saving} onClick={() => void materializeAndRatifyContractInterviews()}>Materializar e ratificar {contractInterviewMeetings.length} entrevistas realizadas</button>}
+              {canEditInterviews && interviews.length > 0 && assessmentCloseout.completedInterviews < interviews.length && <button type="button" disabled={saving} onClick={() => void ratifyScheduledInterviewsAsCompleted()}>Ratificar entrevistas realizadas pela agenda</button>}
               {canValidateAssessment && assessmentCloseout.evaluated > assessmentCloseout.validated && <button type="button" disabled={saving} onClick={() => void validateAllReadyAssessments()}>Validar avaliações completas já registradas</button>}
               <button type="button" onClick={() => setAssessmentConsolidationMode(false)}>Abrir avaliação detalhada</button>
             </div>
