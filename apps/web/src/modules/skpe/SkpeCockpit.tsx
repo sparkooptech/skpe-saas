@@ -36,6 +36,7 @@ import { StrategicFormulationSection } from './features/strategy/StrategicFormul
 import { StrategicDiagnosisSection } from './features/diagnosis/StrategicDiagnosisSection'
 import { StrategicPositioningSection } from './features/strategy/StrategicPositioningSection'
 import { JourneyEventCreateDialog } from './features/journey/JourneyEventCreateDialog'
+import { MyWorkspacePage } from './workspace/MyWorkspacePage'
 import { PortabilityAdmin } from '../portability/PortabilityAdmin'
 import { AdminUserAvatarEditor } from '../platform-admin/AdminUserAvatarEditor'
 import { OrganizationUsersSmartGrid } from './components/OrganizationUsersSmartGrid'
@@ -8295,6 +8296,7 @@ export function SkpeCockpit({
   isOrganizationAdmin,
   isPlatformSuperAdmin,
   mode = 'module',
+  applyPrimaryLanding = false,
   initialSection,
   onNavigateSection,
   onReturnToModules,
@@ -8305,6 +8307,8 @@ export function SkpeCockpit({
   onOpenUserProfile,
   onLogout,
 }: SkpeCockpitProps) {
+  const [showPersonalWorkspace, setShowPersonalWorkspace] = useState(true)
+  const [primaryLandingHandled, setPrimaryLandingHandled] = useState(false)
   const [activeSection, setActiveSection] =
     useState<CockpitSection>(
       initialSection ??
@@ -8377,7 +8381,7 @@ export function SkpeCockpit({
 const [startingProject, setStartingProject] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [, setPersonalWorkspaceOverlay] =
+  const [personalWorkspaceOverlay, setPersonalWorkspaceOverlay] =
     useState<'favorites' | 'dashboards' | 'notifications' | null>(null)
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0)
   const [journeyRefreshRequestKey] = useState(0)
@@ -9117,6 +9121,7 @@ case 'monitoring':
                 onClick={() => {
                   setUserMenuOpen(false)
                   navigateToSection('overview')
+                  setShowPersonalWorkspace(true)
                   setPersonalWorkspaceOverlay('notifications')
                 }}
               >
@@ -9354,6 +9359,44 @@ case 'monitoring':
           )}
 
         {activeSection === 'overview' && (
+          <section aria-label="Escolha do painel inicial">
+            <button type="button" className="skpe-primary-button" onClick={() => setShowPersonalWorkspace((current) => !current)}>
+              {showPersonalWorkspace ? 'Abrir Visão Geral Executiva' : 'Abrir Meu Espaço de Trabalho'}
+            </button>
+          </section>
+        )}
+        {activeSection === 'overview' && showPersonalWorkspace && (
+          <MyWorkspacePage
+            organizationId={organizationId}
+            organizationName={organizationName}
+            organizationCode={organizationCode}
+            project={projectContext ? {
+              id: projectContext.project_id,
+              code: projectContext.project_code,
+              name: projectContext.project_name,
+              statusLabel: projectContext.project_status,
+              progress: projectContext.project_progress,
+              currentPhaseCode: projectContext.current_phase_code ?? '',
+              currentPhaseName: projectContext.current_phase_name,
+              strategicHorizon: [projectContext.planning_horizon_start_year, projectContext.planning_horizon_end_year].filter(Boolean).join('–'),
+              reviewCycle: projectContext.review_cycle ?? '',
+            } : null}
+            availableContext={{ organization: true, project: Boolean(projectContext), formulation: false, cycle: false, user: true }}
+            capabilities={{ ...capabilities, can_view_overview: canViewOverview, can_view_journey: canViewJourney, can_view_initiatives: canViewInitiatives, can_view_artifacts: canViewArtifacts, can_view_governance: canViewJourney }}
+            isReadOnly={!canManageJourney}
+            applyPrimaryLanding={applyPrimaryLanding && !primaryLandingHandled}
+            canStartProject={canManageJourney}
+            startingProject={startingProject}
+            onStartProject={() => void startStrategicProject()}
+            onNavigate={(section) => navigateToSection(section)}
+            onOpenExecutiveOverview={() => setShowPersonalWorkspace(false)}
+            onPrimaryLandingResolved={() => setPrimaryLandingHandled(true)}
+            personalWorkspaceOverlay={personalWorkspaceOverlay}
+            onClosePersonalWorkspaceOverlay={() => setPersonalWorkspaceOverlay(null)}
+            onUnreadNotificationCountChange={setUnreadNotificationCount}
+          />
+        )}
+        {activeSection === 'overview' && !showPersonalWorkspace && (
           <OverviewSection
             organizationId={organizationId}
             organizationName={organizationName}

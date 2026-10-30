@@ -63,6 +63,8 @@ type MyWorkspacePageProps = {
   startingProject: boolean
   onStartProject: () => void
   onNavigate: (section: WorkspaceNavigationSection) => void
+  onOpenExecutiveOverview?: () => void
+  onPrimaryLandingResolved?: () => void
   personalWorkspaceOverlay?: 'favorites' | 'dashboards' | 'notifications' | null
   onClosePersonalWorkspaceOverlay?: () => void
   onUnreadNotificationCountChange?: (count: number) => void
@@ -278,6 +280,8 @@ export function MyWorkspacePage({
   capabilities,
   applyPrimaryLanding = false,
   onNavigate,
+  onOpenExecutiveOverview,
+  onPrimaryLandingResolved,
   personalWorkspaceOverlay = null,
   onClosePersonalWorkspaceOverlay,
   onUnreadNotificationCountChange,
@@ -509,8 +513,14 @@ export function MyWorkspacePage({
     }
 
     primaryLandingAppliedRef.current = true
+    onPrimaryLandingResolved?.()
 
     if (!effectivePrimaryId) {
+      return
+    }
+
+    if (effectivePrimaryId === 'executive') {
+      onOpenExecutiveOverview?.()
       return
     }
 
@@ -523,6 +533,8 @@ export function MyWorkspacePage({
     applyPrimaryLanding,
     effectivePrimaryId,
     onNavigate,
+    onOpenExecutiveOverview,
+    onPrimaryLandingResolved,
     preferenceStatus,
   ])
 
@@ -712,6 +724,11 @@ export function MyWorkspacePage({
 
   function openDashboard(dashboard: ResolvedDashboard) {
     if (!dashboard.canOpen) return
+
+    if (dashboard.definition.id === 'executive') {
+      onOpenExecutiveOverview?.()
+      return
+    }
 
     const destination = dashboardNavigation[dashboard.definition.id]
 
