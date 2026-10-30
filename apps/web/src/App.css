@@ -2010,6 +2010,7 @@ td,
 .skpe-strategic-formulation > .sparks-workspace-tabs {
   background: transparent !important;
   isolation: isolate;
+  z-index: 100;
 }
 
 .skpe-strategic-formulation > .sparks-workspace-tabs + .skpe-formulation-tab-panel,
