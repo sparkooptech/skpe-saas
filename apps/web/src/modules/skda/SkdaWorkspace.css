@@ -352,6 +352,7 @@
   background: transparent;
   color: inherit;
   font: inherit;
+  font-weight: 400;
 }
 
 .skda-inline-field small {
@@ -1469,6 +1470,7 @@
   background: #fff;
   color: inherit;
   font: inherit;
+  font-weight: 400;
 }
 
 .skda-inline-field textarea {
@@ -1659,6 +1661,7 @@
   background: #fff;
   color: inherit;
   font: inherit;
+  font-weight: 400;
 }
 
 .skda-assessment-fields textarea {
@@ -4337,6 +4340,81 @@
   justify-content: flex-end;
 }
 
+.skda-phase-next-actions {
+  display: grid;
+  gap: .45rem;
+  padding: .7rem;
+  border: 1px solid color-mix(in srgb,var(--skda-primary) 24%,var(--skda-border));
+  border-radius: 10px;
+  background: color-mix(in srgb,var(--skda-primary) 3%,#fff);
+}
+
+.skda-phase-next-actions-head {
+  display: grid;
+  gap: .15rem;
+  padding-bottom: .35rem;
+  border-bottom: 1px solid var(--skda-border);
+}
+
+.skda-phase-next-actions-head strong {
+  color: var(--skda-text);
+  font-size: .78rem;
+}
+
+.skda-phase-next-actions-head span {
+  color: var(--skda-muted);
+  font-size: .69rem;
+  line-height: 1.45;
+}
+
+.skda-phase-next-action {
+  display: grid;
+  grid-template-columns: 26px minmax(0,1fr) auto;
+  gap: .6rem;
+  align-items: center;
+  padding: .5rem .55rem;
+  border: 1px solid var(--skda-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.skda-phase-next-action > b {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e8f3ef;
+  color: var(--skda-primary);
+  font-size: .7rem;
+}
+
+.skda-phase-next-action > div {
+  display: grid;
+  gap: .12rem;
+}
+
+.skda-phase-next-action > div strong {
+  color: var(--skda-text);
+  font-size: .72rem;
+}
+
+.skda-phase-next-action > div span {
+  color: var(--skda-muted);
+  font-size: .66rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .skda-phase-next-action {
+    grid-template-columns: 26px minmax(0,1fr);
+  }
+
+  .skda-phase-next-action > button {
+    grid-column: 1 / -1;
+  }
+}
+
 .skda-followup-list {
   display: grid;
   gap: .45rem;
@@ -5317,6 +5395,7 @@
 .skda-closeout-source select,
 .skda-closeout-filters select {
   width:100%;
+  font-weight:400;
 }
 
 .skda-closeout-entry-row {

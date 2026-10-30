@@ -4614,9 +4614,34 @@ export function SkdaWorkspace(props: Props) {
             <div className="skda-phase-readiness-items">
               {phaseReadiness[activePhase.code].items.map((item) => <span key={item.label} className={item.ok ? 'is-ok' : item.critical ? 'is-critical' : 'is-pending'}><i>{item.ok ? '✓' : item.critical ? '!' : '·'}</i>{item.label}{!item.critical && <small>recomendado</small>}</span>)}
             </div>
+            {activePhase.code === 'DA-01' && !phaseReadiness['DA-01'].ready && <div className="skda-phase-next-actions">
+              <div className="skda-phase-next-actions-head">
+                <strong>O que falta registrar no sistema</strong>
+                <span>Você não precisa refazer as entrevistas nem revalidar o que já foi apurado. O gate mostra somente o que ainda não foi materializado no SPARKs.</span>
+              </div>
+              {normalizeJourneyPhaseCode(selected.current_phase_code) === 'DA-00' && <div className="skda-phase-next-action">
+                <b>1</b>
+                <div><strong>Registrar a abertura já concluída</strong><span>A preparação já ocorreu, mas a Jornada ainda está formalmente gravada em DA-00.</span></div>
+                {canManage && <button type="button" className="skda-primary" disabled={saving || !phaseReadiness['DA-00']?.ready} onClick={()=>void advanceJourneyPhase('DA-00')}>{phaseReadiness['DA-00']?.ready ? 'Registrar abertura concluída' : 'Há pendência crítica na abertura'}</button>}
+              </div>}
+              {interviews.length === 0 && contractInterviewMeetings.length > 0 && <div className="skda-phase-next-action">
+                <b>{normalizeJourneyPhaseCode(selected.current_phase_code) === 'DA-00' ? '2' : '1'}</b>
+                <div><strong>Registrar os encontros já realizados</strong><span>Materialize os {contractInterviewMeetings.length} encontros síncronos da agenda contratual e marque-os como realizados.</span></div>
+                {canEditInterviews && <button type="button" disabled={saving} onClick={() => void materializeAndRatifyContractInterviews()}>Registrar {contractInterviewMeetings.length} entrevistas realizadas</button>}
+              </div>}
+              {assessmentCloseout.evaluated < assessmentCloseout.total && <div className="skda-phase-next-action">
+                <b>{normalizeJourneyPhaseCode(selected.current_phase_code) === 'DA-00' ? '3' : interviews.length === 0 ? '2' : '1'}</b>
+                <div><strong>Consolidar as respostas do DA</strong><span>Use a AA, as evidências e o que foi apurado nas entrevistas para registrar a conclusão das 70 questões. Não é uma nova entrevista; é a consolidação pós-entrevistas.</span></div>
+                <button type="button" onClick={() => { setAssessmentConsolidationMode(true); setConsolidationStatus('pending'); setConsolidationQuestionId(null) }}>Abrir consolidação das questões</button>
+              </div>}
+              {evidenceQuestionIntelligence.some((item)=>item.analysis_status === 'proposed') && <div className="skda-phase-next-action">
+                <b>{normalizeJourneyPhaseCode(selected.current_phase_code) === 'DA-00' ? '4' : '3'}</b>
+                <div><strong>Revisar as hipóteses propostas</strong><span>{evidenceQuestionIntelligence.filter((item)=>item.analysis_status === 'proposed').length} hipótese(s) ainda aguardam validação ou refutação humana. Isso não cria achado automaticamente.</span></div>
+              </div>}
+            </div>}
             {canManage && <div className="skda-phase-readiness-actions">
               <button type="button" className="skda-primary" disabled={saving || !phaseReadiness[activePhase.code].ready || selected.status === 'completed' || normalizeJourneyPhaseCode(selected.current_phase_code) !== activePhase.code} onClick={() => void advanceJourneyPhase(activePhase.code)}>
-                {normalizeJourneyPhaseCode(selected.current_phase_code) !== activePhase.code ? 'Fase disponível para consulta' : activePhase.code === 'DA-03' ? 'Concluir Jornada' : 'Concluir fase e avançar'}
+                {normalizeJourneyPhaseCode(selected.current_phase_code) !== activePhase.code ? (activePhase.code === 'DA-01' && normalizeJourneyPhaseCode(selected.current_phase_code) === 'DA-00' ? 'Registre a abertura concluída acima' : 'Fase disponível para consulta') : activePhase.code === 'DA-03' ? 'Concluir Jornada' : 'Concluir fase e avançar'}
               </button>
             </div>}
           </div>}
