@@ -725,6 +725,9 @@ export function SkdaWorkspace(props: Props) {
   const [interviewSessionNotes, setInterviewSessionNotes] = useState('')
   const [showEvidenceCreate, setShowEvidenceCreate] = useState(false)
   const [showFolderEvidenceScan, setShowFolderEvidenceScan] = useState(false)
+  const [evidenceIngestSource, setEvidenceIngestSource] = useState<'folder'|'sharepoint'>('folder')
+  const [externalFolderUrl, setExternalFolderUrl] = useState('')
+  const [externalFolderStatus, setExternalFolderStatus] = useState('')
   const [folderEvidenceCandidates, setFolderEvidenceCandidates] = useState<FolderEvidenceCandidate[]>([])
   const [folderScanLabel, setFolderScanLabel] = useState('')
   const [folderScanProgress, setFolderScanProgress] = useState({ current:0,total:0,label:'' })
@@ -3059,6 +3062,33 @@ export function SkdaWorkspace(props: Props) {
   }
 
 
+  const validateExternalFolderSource = () => {
+    const raw=externalFolderUrl.trim()
+    if (!raw) {
+      setExternalFolderStatus('')
+      setError('Informe a URL da pasta ou biblioteca do SharePoint/OneDrive.')
+      return
+    }
+    let parsed:URL
+    try {
+      parsed=new URL(raw)
+    } catch {
+      setExternalFolderStatus('')
+      setError('A URL informada não é válida.')
+      return
+    }
+    const host=parsed.hostname.toLowerCase()
+    const isMicrosoftSource=host.endsWith('.sharepoint.com') || host === 'sharepoint.com' || host === '1drv.ms' || host.endsWith('.onedrive.live.com') || host === 'graph.microsoft.com'
+    if (!isMicrosoftSource) {
+      setExternalFolderStatus('')
+      setError('Para varredura por URL, use uma origem SharePoint ou OneDrive autorizada.')
+      return
+    }
+    setError('')
+    setFolderScanLabel(raw)
+    setExternalFolderStatus('Origem reconhecida. A leitura recursiva da biblioteca privada depende do conector Microsoft Graph autenticado do ambiente; o contrato de ingestão já está preparado, mas as credenciais Graph ainda não estão configuradas neste HOMOL.')
+  }
+
   const prepareFolderEvidenceScan = async (files:FileList | null) => {
     if (!files || files.length === 0) return
     const incoming=Array.from(files)
@@ -4791,7 +4821,7 @@ export function SkdaWorkspace(props: Props) {
               <div><h4>Gestão das Evidências</h4><small>O Core organiza a fonte, sua integridade, confiabilidade, aderência às questões do catálogo e o que ainda precisa ser confirmado para transformar documento em evidência de prática e resultado.</small></div>
               <div className="skda-phase-workspace-actions">
                 <span>{evidenceAssets.length} ativo(s)</span>
-                {canRegisterEvidence && <button type="button" onClick={() => { setFolderEvidenceCandidates([]); setFolderScanLabel(''); setFolderScanProgress({current:0,total:0,label:''}); setShowFolderEvidenceScan(true) }}>Varrer pasta de evidências</button>}
+                {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceIngestSource('folder'); setExternalFolderUrl(''); setExternalFolderStatus(''); setFolderEvidenceCandidates([]); setFolderScanLabel(''); setFolderScanProgress({current:0,total:0,label:''}); setShowFolderEvidenceScan(true) }}>Ingerir evidências</button>}
                 {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceFile(null); setShowEvidenceCreate(true) }}>Adicionar e analisar evidência</button>}
               </div>
             </div>
@@ -5802,11 +5832,15 @@ export function SkdaWorkspace(props: Props) {
     {showFolderEvidenceScan && selected && <div className="skda-modal-backdrop">
       <section className="skda-modal skda-modal-wide skda-folder-scan-modal" role="dialog" aria-modal="true">
         <div className="skda-modal-head">
-          <div><p className="skda-eyebrow">Entrada inteligente de evidências</p><h2>Varrer pasta de evidências</h2></div>
+          <div><p className="skda-eyebrow">Entrada inteligente de evidências</p><h2>Ingerir evidências</h2></div>
           <button type="button" disabled={saving} onClick={() => setShowFolderEvidenceScan(false)}>×</button>
         </div>
-        <p>Selecione uma pasta da organização. O SK-DA percorre subpastas, elimina duplicidades por hash, classifica os documentos por domínio e sugere as questões mais aderentes. As associações entram como <strong>sugestões pendentes de validação humana</strong>, nunca como conclusão diagnóstica.</p>
-        <div className="skda-folder-scan-picker">
+        <p>Escolha a origem documental. O SK-DA preserva origem, caminho e rastreabilidade, elimina duplicidades por hash, classifica os documentos por domínio e sugere as questões mais aderentes. As associações entram como <strong>sugestões pendentes de validação humana</strong>, nunca como conclusão diagnóstica.</p>
+        <div className="skda-evidence-source-tabs">
+          <button type="button" className={evidenceIngestSource==='folder'?'is-active':''} onClick={()=>{setEvidenceIngestSource('folder');setExternalFolderStatus('');setFolderScanLabel('');setError('')}}>Pasta local / rede</button>
+          <button type="button" className={evidenceIngestSource==='sharepoint'?'is-active':''} onClick={()=>{setEvidenceIngestSource('sharepoint');setFolderEvidenceCandidates([]);setFolderScanProgress({current:0,total:0,label:''});setFolderScanLabel('');setError('')}}>SharePoint / OneDrive</button>
+        </div>
+        {evidenceIngestSource==='folder' && <div className="skda-folder-scan-picker">
           <label>
             <span>Pasta a analisar</span>
             <input
@@ -5816,10 +5850,19 @@ export function SkdaWorkspace(props: Props) {
               disabled={saving}
               onChange={(event) => void prepareFolderEvidenceScan(event.target.files)}
             />
-            <small>PDF, Word, Excel, PowerPoint, CSV, texto, imagens, áudio e vídeo · até 50 MB por arquivo · até 300 arquivos por lote.</small>
+            <small>Use o seletor do Windows para pasta local, OneDrive/SharePoint sincronizado ou unidade de rede mapeada. Por segurança, o navegador não abre um caminho como \\servidor\pasta digitado manualmente.</small>
           </label>
           {folderScanLabel && <div><span>Pasta selecionada</span><b>{folderScanLabel}</b></div>}
-        </div>
+        </div>}
+        {evidenceIngestSource==='sharepoint' && <div className="skda-external-folder-source">
+          <label>
+            <span>URL da pasta ou biblioteca</span>
+            <input type="url" value={externalFolderUrl} disabled={saving} onChange={(event)=>{setExternalFolderUrl(event.target.value);setExternalFolderStatus('')}} placeholder="https://...sharepoint.com/..."/>
+            <small>Informe a URL da biblioteca/pasta autorizada. A leitura recursiva de conteúdo privado é feita por conector autenticado Microsoft Graph, não pelo navegador.</small>
+          </label>
+          <button type="button" className="skda-primary" disabled={saving || !externalFolderUrl.trim()} onClick={validateExternalFolderSource}>Validar origem</button>
+          {externalFolderStatus && <div className="skda-external-folder-status"><strong>Origem reconhecida</strong><span>{externalFolderStatus}</span></div>}
+        </div>}
         {folderScanProgress.total > 0 && <div className="skda-folder-scan-progress">
           <div><strong>{folderScanProgress.current}/{folderScanProgress.total}</strong><span>{folderScanProgress.label}</span></div>
           <span><i style={{width:`${Math.max(0,Math.min(100,(folderScanProgress.current/folderScanProgress.total)*100))}%`}} /></span>
@@ -5876,9 +5919,11 @@ export function SkdaWorkspace(props: Props) {
         {error && <div className="skda-alert">{error}</div>}
         <div className="skda-modal-actions">
           <button type="button" disabled={saving} onClick={() => setShowFolderEvidenceScan(false)}>Fechar</button>
-          <button type="button" className="skda-primary" disabled={saving || folderEvidenceCandidates.filter((item)=>item.selected && item.status!=='imported').length===0} onClick={() => void importFolderEvidenceCandidates()}>
-            {saving ? 'Importando e associando...' : 'Importar selecionadas e analisar'}
-          </button>
+          {evidenceIngestSource==='folder'
+            ? <button type="button" className="skda-primary" disabled={saving || folderEvidenceCandidates.filter((item)=>item.selected && item.status!=='imported').length===0} onClick={() => void importFolderEvidenceCandidates()}>
+                {saving ? 'Importando e associando...' : 'Importar selecionadas e analisar'}
+              </button>
+            : <button type="button" className="skda-primary" disabled title="Requer Microsoft Graph autenticado no ambiente">Conector Graph necessário</button>}
         </div>
       </section>
     </div>}

@@ -304,7 +304,7 @@ A superfície `EvidenceManagementWorkspace` deve evoluir como capability transve
 
 ### ROADMAP_CHANGE_CANDIDATE — Ingestão inteligente de evidências por diretório/conector
 
-**STATUS: CANDIDATE / NÃO EXECUTAR NO BLOCO ATUAL**
+**STATUS: EM IMPLEMENTAÇÃO — varredura browser/local operacional; origem SharePoint/OneDrive modelada; leitura privada aguarda conector Microsoft Graph autenticado no runtime.**
 
 Outcome desejado: permitir que usuário autorizado indique uma origem documental — por exemplo, pasta SharePoint — e a Plataforma:
 

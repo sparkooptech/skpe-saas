@@ -81,6 +81,19 @@ test('DA interview cockpit is question-centered and supports guided navigation, 
   assert.match(workspaceCss, /\.skda-interview-practice-card/)
 })
 
+test('evidence intake distinguishes browser folders from authenticated SharePoint or OneDrive sources', () => {
+  assert.match(workspace, /Ingerir evidências/)
+  assert.match(workspace, /Pasta local \/ rede/)
+  assert.match(workspace, /SharePoint \/ OneDrive/)
+  assert.match(workspace, /webkitdirectory/)
+  assert.match(workspace, /validateExternalFolderSource/)
+  assert.match(workspace, /graph\.microsoft\.com/)
+  assert.match(workspace, /Conector Graph necessário/)
+  assert.match(workspace, /Por segurança, o navegador não abre um caminho como/)
+  assert.match(workspaceCss, /\.skda-evidence-source-tabs/)
+  assert.match(workspaceCss, /\.skda-external-folder-source/)
+})
+
 test('DA-01 reuses transversal evidence and stores only contextual correlation', () => {
   assert.match(workspace, /\.from\('sparks_evidence_assets'/)
   assert.match(workspace, /\.from\('skda_evidence_correlations'/)
