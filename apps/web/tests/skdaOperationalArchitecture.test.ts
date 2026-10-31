@@ -86,6 +86,13 @@ test('DA interview cockpit is question-centered and supports guided navigation, 
   assert.match(workspaceCss, /\.skda-interview-practice-card/)
 })
 
+test('SK-DA overview preserves responsive radar composition across viewport widths', () => {
+  assert.match(workspaceCss, /@media \(max-width: 1440px\)[\s\S]*?skda-detail:has\(\.skda-journey-progress-card\) > \.skda-executive-grid[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/)
+  assert.match(workspaceCss, /@media \(max-width: 900px\)[\s\S]*?\.skda-radar-wrap[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/)
+  assert.match(workspaceCss, /@media \(max-width: 760px\)[\s\S]*?\.skda-radar-table-row[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 44px 44px/)
+  assert.match(workspaceCss, /@media \(max-width: 520px\)[\s\S]*?\.skda-radar-index-pair > strong[\s\S]*?font-size: 1\.35rem/)
+})
+
 test('post-interview consolidation links only a proven interview source', () => {
   assert.match(workspace, /const tracedInterviewForQuestion/)
   assert.match(workspace, /interviewQuestionRecords[\s\S]*?question_id===question\.id/)

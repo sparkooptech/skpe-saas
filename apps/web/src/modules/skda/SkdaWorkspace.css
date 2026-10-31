@@ -5805,3 +5805,74 @@
 @media (max-width: 1080px) {
   .skda-evidence-readiness { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* SK-DA | contrato responsivo final da Visão Geral.
+   Mantido no fim do arquivo para não ser anulado por regras posteriores dos radares. */
+@media (max-width: 1440px) {
+  .skda-detail:has(.skda-journey-progress-card) > .skda-executive-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap .skda-radar-visual svg {
+    width: min(100%, 260px);
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-body {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .skda-detail {
+    padding: .8rem;
+    border-radius: 12px;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-head,
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-row {
+    grid-template-columns: minmax(0, 1fr) 44px 44px;
+    column-gap: .35rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-card-head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .55rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-index-pair {
+    grid-template-columns: repeat(2, minmax(0, 84px));
+    justify-content: start;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-aa-reference {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-head,
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-row {
+    grid-template-columns: minmax(0, 1fr) 38px 38px;
+    font-size: .68rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-index-pair > strong {
+    font-size: 1.35rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap {
+    gap: .7rem;
+  }
+}
