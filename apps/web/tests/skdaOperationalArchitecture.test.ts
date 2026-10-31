@@ -106,6 +106,15 @@ test('SK-DA compact navigation and longitudinal history follow the PE visual con
   assert.match(workspaceCss, /skda-history-chart/)
 })
 
+test('SK-DA interview, evidence and closeout remain usable on notebook and tablet widths', () => {
+  assert.match(workspaceCss, /\.skda-interview-question-picker select\s*\{[\s\S]*?font-weight:400/)
+  assert.match(workspaceCss, /@media \(max-width: 1180px\)[\s\S]*?\.skda-interview-question-nav-flexible[\s\S]*?grid-template-columns:auto minmax\(120px,\.7fr\) minmax\(150px,\.9fr\) auto/)
+  assert.match(workspaceCss, /@media \(max-width: 980px\)[\s\S]*?\.skda-interview-launchpad[\s\S]*?grid-template-columns:minmax\(0,1fr\)/)
+  assert.match(workspaceCss, /@media \(max-width: 980px\)[\s\S]*?\.skda-evidence-readiness[\s\S]*?grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/)
+  assert.match(workspaceCss, /@media \(max-width: 680px\)[\s\S]*?\.skda-closeout-filters[\s\S]*?grid-template-columns:minmax\(0,1fr\)/)
+  assert.match(workspaceCss, /\.skda-interview-alternatives small\s*\{[\s\S]*?white-space:normal/)
+})
+
 test('post-interview consolidation links only a proven interview source', () => {
   assert.match(workspace, /const tracedInterviewForQuestion/)
   assert.match(workspace, /interviewQuestionRecords[\s\S]*?question_id===question\.id/)

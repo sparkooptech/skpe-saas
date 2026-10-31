@@ -6194,3 +6194,112 @@
   .skda-history-chart { grid-template-columns:34px minmax(0,1fr); grid-template-rows:210px 22px; }
   .skda-history-chart > svg { height:210px; }
 }
+
+/* SK-DA | varredura de regressões responsivas além da Visão Geral. */
+.skda-interview-question-picker select {
+  font-weight:400;
+}
+
+.skda-interview-alternatives small {
+  white-space:normal;
+  text-align:right;
+}
+
+.skda-phase-readiness-items span,
+.skda-phase-next-action > div,
+.skda-folder-scan-select > div,
+.skda-folder-scan-relevance,
+.skda-closeout-filters label,
+.skda-interview-question-nav-flexible label {
+  min-width:0;
+}
+
+.skda-phase-readiness-items span,
+.skda-phase-next-action span,
+.skda-folder-scan-relevance > span,
+.skda-folder-scan-relevance > small {
+  overflow-wrap:anywhere;
+}
+
+@media (max-width: 1180px) {
+  .skda-interview-question-nav-flexible {
+    grid-template-columns:auto minmax(120px,.7fr) minmax(150px,.9fr) auto;
+  }
+
+  .skda-interview-question-picker {
+    grid-column:1 / -1;
+  }
+
+  .skda-interview-launchpad {
+    grid-template-columns:minmax(0,1fr) minmax(320px,.9fr);
+  }
+
+  .skda-folder-scan-summary,
+  .skda-evidence-readiness {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .skda-interview-launchpad {
+    grid-template-columns:minmax(0,1fr);
+    align-items:stretch;
+  }
+
+  .skda-interview-launchpad-actions {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .skda-interview-question-nav-flexible {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .skda-interview-question-nav-flexible > button {
+    width:100%;
+  }
+
+  .skda-interview-question-picker {
+    grid-column:1 / -1;
+  }
+
+  .skda-folder-scan-summary,
+  .skda-evidence-readiness {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .skda-closeout-filters {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .skda-interview-launchpad-actions,
+  .skda-interview-question-nav-flexible,
+  .skda-folder-scan-summary,
+  .skda-evidence-readiness,
+  .skda-closeout-filters {
+    grid-template-columns:minmax(0,1fr);
+  }
+
+  .skda-interview-question-picker {
+    grid-column:auto;
+  }
+
+  .skda-interview-alternatives > button {
+    grid-template-columns:1.7rem minmax(0,1fr);
+  }
+
+  .skda-interview-alternatives small {
+    grid-column:2;
+    text-align:left;
+  }
+
+  .skda-phase-readiness-head,
+  .skda-phase-workspace-head {
+    align-items:flex-start;
+  }
+
+  .skda-phase-workspace-actions {
+    justify-content:flex-start;
+  }
+}
