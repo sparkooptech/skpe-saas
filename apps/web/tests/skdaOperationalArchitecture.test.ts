@@ -29,6 +29,10 @@ const evidenceRegistrationMigration = readFileSync(
   new URL('../../../supabase/migrations/20261021153000_govern_transversal_evidence_registration.sql', import.meta.url),
   'utf8',
 )
+const scopedEvidenceIntelligenceMigration = readFileSync(
+  new URL('../../../supabase/migrations/20261031004500_scope_skda_evidence_intelligence_to_relevant_questions.sql', import.meta.url),
+  'utf8',
+)
 
 test('SK-DA is wired as an operational module without replacing SK-PE', () => {
   assert.match(app, /import \{ SkdaWorkspace \}/)
@@ -79,6 +83,26 @@ test('DA interview cockpit is question-centered and supports guided navigation, 
   assert.match(workspaceCss, /\.skda-interview-launchpad/)
   assert.match(workspaceCss, /\.skda-interview-answer-panel/)
   assert.match(workspaceCss, /\.skda-interview-practice-card/)
+})
+
+test('evidence intelligence is scoped to semantically relevant candidate questions instead of all catalog questions', () => {
+  assert.match(workspace, /return ranked\.slice\(0,5\)/)
+  assert.match(workspace, /Candidata a boa prática/)
+  assert.match(workspace, /Evidência de prática em execução/)
+  assert.match(workspace, /target_question_ids:intakeSuggestions\.map/)
+  assert.match(scopedEvidenceIntelligenceMigration, /q\.id=any\(target_question_ids\)/)
+  assert.match(scopedEvidenceIntelligenceMigration, /semantic_candidate_questions_only/)
+  assert.match(scopedEvidenceIntelligenceMigration, /analysis_status='queued'/)
+  assert.match(scopedEvidenceIntelligenceMigration, /legacy_all_question_queue_replaced_by_semantic_scope/)
+  assert.doesNotMatch(scopedEvidenceIntelligenceMigration, /delete from public\.skda_evidence_question_intelligence/)
+  assert.doesNotMatch(scopedEvidenceIntelligenceMigration, /join public\.skda_questions q\s+on q\.catalog_version_id=d\.catalog_version_id\s+left join/)
+})
+
+test('interview navigation persists both DA assessment and interview field draft before changing question', () => {
+  assert.match(workspace, /assessmentDraftHasContent/)
+  assert.match(workspace, /await saveAssessment\(activeInterviewQuestion,\{sourceInterviewId:activeInterviewSessionId \?\? undefined\}\)/)
+  assert.match(workspace, /return saveInterviewQuestionRecord\('in_progress',false\)/)
+  assert.match(workspace, /navigateInterviewQuestion/)
 })
 
 test('evidence intake distinguishes browser folders from authenticated SharePoint or OneDrive sources', () => {

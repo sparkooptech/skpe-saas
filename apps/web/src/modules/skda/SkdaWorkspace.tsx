@@ -81,7 +81,7 @@ type ActionPlanAllocation = { id: string; finding_id: string; initiative_id: str
 type ManagedInterviewEvent = { event_id: string; journey_item_code: string; journey_item_title: string; event_type: string; event_title: string; event_description: string | null; starts_at: string | null; ends_at: string | null; all_day: boolean; timezone_name: string; event_status: string; priority: string; location_text: string | null; meeting_reference: string | null; participant_count: number; accepted_count: number; attended_count: number }
 type EvidenceAsset = { id: string; title: string; evidence_type: string; validation_status: string; reliability_level: string; reference_date: string | null; current_version_id: string | null }
 type EvidenceVersionText = { id: string; evidence_asset_id: string; extracted_text: string | null }
-type FolderEvidenceCandidate = { id:string; file:File; relativePath:string; selected:boolean; status:'ready'|'importing'|'imported'|'error'; errorMessage:string|null; groupCode:string; groupTitle:string; groupHint:string; evidenceType:string; referenceDate:string; confidence:number; discoveryTags:string[]; suggestedQuestionIds:string[]; suggestedQuestionCodes:string[]; triageSummary:string; extractedPreview:string }
+type FolderEvidenceCandidate = { id:string; file:File; relativePath:string; selected:boolean; status:'ready'|'importing'|'imported'|'error'; errorMessage:string|null; groupCode:string; groupTitle:string; groupHint:string; evidenceType:string; referenceDate:string; confidence:number; discoveryTags:string[]; suggestedQuestionIds:string[]; suggestedQuestionCodes:string[]; triageSummary:string; extractedPreview:string; practiceSignal:'good_practice_candidate'|'practice_evidence'|'context_document'|'gap_signal'|'undetermined'; practiceSignalLabel:string }
 type ContractMeetingProposal = { date: string; start: string; durationHours: number; location: string | null }
 type ContractIntakeProposal = { assetId: string; sourceTitle: string; sourceText: string; startedOn: string; plannedEndOn: string; contractedHours: number; meetings: ContractMeetingProposal[]; scopeLabel: string | null }
 type EvidenceCorrelation = { id: string; evidence_asset_id: string; usage_type: string; validation_status: string; metadata: Record<string,unknown> }
@@ -411,6 +411,20 @@ const folderEvidenceGroup = (relativePath:string, extractedText:string) => {
   return { code:'complementar',title:'Outras evidências',hint:'Documentos não previstos no checklist inicial',tags:['descoberta'],confidence:55 }
 }
 
+const folderEvidencePracticeSignal = (relativePath:string, extractedText:string) => {
+  const text=normalizeSearchText(`${relativePath} ${extractedText}`)
+  const hasGap=/nao possui|nao existe|ausencia|inexistente|pendente|fragilidade|deficiencia|nao formaliz|sem evidencia|nao monitor/.test(text)
+  const hasExecution=/executa|realiza|aplica|implementa|adota|pratica|rotina|procedimento|processo|reuniao|acompanha|monitora/.test(text)
+  const hasRecurrence=/periodic|mensal|trimestral|anual|semanal|recorrente|frequencia|continuamente|regularmente/.test(text)
+  const hasResult=/resultado|indicador|meta|desempenho|evolucao|melhoria|reduziu|aumentou|alcancou|atingiu|impacto/.test(text)
+  const hasLearning=/aprendizado|licao|melhoria continua|revisao|ajuste|aperfeico|retroaliment/.test(text)
+  const hasNormative=/politica|regimento|norma|manual|procedimento|diretriz|estatuto/.test(text)
+  if (hasGap) return { code:'gap_signal' as const,label:'Sinal de lacuna / prática insuficiente' }
+  if (hasExecution && hasRecurrence && hasResult && (hasLearning || hasNormative)) return { code:'good_practice_candidate' as const,label:'Candidata a boa prática' }
+  if (hasExecution && (hasRecurrence || hasResult)) return { code:'practice_evidence' as const,label:'Evidência de prática em execução' }
+  if (hasNormative) return { code:'context_document' as const,label:'Documento de contexto / institucionalização' }
+  return { code:'undetermined' as const,label:'Papel da evidência ainda não determinado' }
+}
 const folderEvidenceQuestionSuggestions = (
   groupCode:string,
   relativePath:string,
@@ -418,19 +432,26 @@ const folderEvidenceQuestionSuggestions = (
   questions:Question[],
 ) => {
   const evidenceText=normalizeSearchText(relativePath+' '+extractedText.slice(0,12000))
-  const groupTerms:Record<string,string[]> = {
-    financeiro:['resultado','resultados','financeir','econom','indicador','desempenho','liquidez','solvencia','sobras','orcamento','margem'],
-    governanca:['governanca','cooperado','assembleia','conselho','fiscal','diretoria','comite','auditoria','quadro social'],
-    gestao:['lideranca','estrategia','planos','clientes','sociedade','informacoes','conhecimento','pessoas','processos','resultados'],
-    'planos-acao':['plano de acao','acao','melhoria','acompanhamento','responsavel','prazo'],
-    entrevistas:['entrevista','evidencia','pratica','execucao'],
-    autoavaliacao:['autoavaliacao','resposta','governanca','gestao'],
-    'historico-governanca':['governanca','resultado'],
-    'historico-gestao':['gestao','resultado'],
-  }
+  const stopwords=new Set(['sobre','entre','pelas','pelos','para','como','mais','menos','quando','onde','qual','quais','possui','forma','processo','gestao','governanca','organizacao','cooperativa','documento','evidencia','pratica'])
   const evidenceTokens=Array.from(new Set(
-    evidenceText.split(/\s+/).filter((token) => token.length >= 5).slice(0,500),
+    evidenceText.split(/\s+/)
+      .filter((token)=>token.length>=5 && !stopwords.has(token))
+      .slice(0,600),
   ))
+  const explicitCodes=new Set(
+    (evidenceText.match(/\b(?:gov|ges)[-_ ]?\d{1,2}\b/gi) ?? [])
+      .map((code)=>code.toUpperCase().replace(/[ _]/g,'-')),
+  )
+  const domainTerms:Record<string,string[]> = {
+    financeiro:['liquidez','solvencia','endividamento','capital de giro','fleuriet','dupont','margem','sobras','orcamento','financeir','econom'],
+    governanca:['cooperado','assembleia','conselho','fiscal','diretoria','comite','auditoria','quadro social','prestacao de contas'],
+    gestao:['lideranca','estrategia','clientes','sociedade','informacoes','conhecimento','pessoas','processos','resultados'],
+    'planos-acao':['plano de acao','melhoria','acompanhamento','responsavel','prazo','5w2h','pdca'],
+    entrevistas:['entrevista','transcricao','depoimento','relato'],
+    autoavaliacao:['autoavaliacao','avaliacoop'],
+    'historico-governanca':['governanca'],
+    'historico-gestao':['gestao'],
+  }
   const ranked=questions.map((question) => {
     const questionText=normalizeSearchText([
       question.code,
@@ -439,24 +460,24 @@ const folderEvidenceQuestionSuggestions = (
       question.question_text,
       question.guidance ?? '',
     ].join(' '))
-    let score=0
-    for (const term of groupTerms[groupCode] ?? []) {
-      const normalizedTerm=normalizeSearchText(term)
-      if (questionText.includes(normalizedTerm)) score+=5
-      if (evidenceText.includes(normalizedTerm)) score+=2
-    }
-    const overlap=evidenceTokens.filter((token) => questionText.includes(token)).slice(0,8).length
-    score+=overlap
-    if (groupCode === 'financeiro' && /resultado|indicador|desempenho|financeir|econom/.test(questionText)) score+=10
-    if (groupCode === 'historico-governanca' && question.code.startsWith('GOV-')) score+=4
-    if (groupCode === 'historico-gestao' && question.code.startsWith('GES-')) score+=4
-    if (groupCode === 'autoavaliacao') score+=2
-    return { question,score }
-  }).filter((item) => item.score >= (groupCode === 'financeiro' ? 10 : 7))
-    .sort((a,b) => b.score-a.score || a.question.display_order-b.question.display_order)
+    const overlapTokens=evidenceTokens.filter((token)=>questionText.includes(token))
+    const domainMatches=(domainTerms[groupCode] ?? []).filter((term)=>{
+      const normalized=normalizeSearchText(term)
+      return evidenceText.includes(normalized) && questionText.includes(normalized)
+    })
+    const explicit=explicitCodes.has(question.code.toUpperCase())
+    let score=(overlapTokens.length*4)+(domainMatches.length*6)+(explicit?30:0)
+    if (groupCode==='financeiro' && /liquidez|solvencia|margem|resultado|indicador|desempenho|financeir|econom/.test(questionText)) score+=6
+    if (groupCode==='historico-governanca' && question.code.startsWith('GOV-') && overlapTokens.length>=2) score+=4
+    if (groupCode==='historico-gestao' && question.code.startsWith('GES-') && overlapTokens.length>=2) score+=4
+    return { question,score,overlap:overlapTokens.length,domain:domainMatches.length,explicit }
+  }).filter((item)=>{
+    if (item.explicit) return true
+    if (groupCode==='autoavaliacao') return item.overlap>=3 && item.score>=14
+    return item.overlap>=2 && item.score>=12
+  }).sort((a,b)=>b.score-a.score || b.overlap-a.overlap || a.question.display_order-b.question.display_order)
 
-  const limit=groupCode === 'autoavaliacao' ? 12 : 8
-  return ranked.slice(0,limit).map((item) => item.question)
+  return ranked.slice(0,5).map((item)=>item.question)
 }
 
 const classifyFolderEvidenceCandidate = async (file:File, questions:Question[]):Promise<FolderEvidenceCandidate> => {
@@ -465,9 +486,10 @@ const classifyFolderEvidenceCandidate = async (file:File, questions:Question[]):
   const extractedPreview=await extractFolderEvidenceText(file)
   const group=folderEvidenceGroup(relativePath,extractedPreview)
   const suggested=folderEvidenceQuestionSuggestions(group.code,relativePath,extractedPreview,questions)
+  const practiceSignal=folderEvidencePracticeSignal(relativePath,extractedPreview)
   const triageSummary=suggested.length > 0
-    ? `Triagem automática: ${group.title}. Relevância sugerida para ${suggested.length} questão(ões) (${suggested.map((item)=>item.code).join(', ')}). Validar aderência e suficiência antes de concluir o diagnóstico.`
-    : `Triagem automática: ${group.title}. Nenhuma questão foi associada automaticamente com confiança suficiente; manter para revisão humana.`
+    ? `Triagem automática: ${group.title}. ${practiceSignal.label}. Relevância sugerida somente para ${suggested.length} questão(ões) semanticamente aderentes (${suggested.map((item)=>item.code).join(', ')}). Validar aderência e suficiência antes de concluir o diagnóstico.`
+    : `Triagem automática: ${group.title}. ${practiceSignal.label}. Nenhuma questão foi associada automaticamente com confiança suficiente; manter para revisão humana.`
   return {
     id:crypto.randomUUID(),
     file,
@@ -481,11 +503,13 @@ const classifyFolderEvidenceCandidate = async (file:File, questions:Question[]):
     evidenceType:inferred.evidenceType,
     referenceDate:inferred.referenceDate,
     confidence:group.confidence,
-    discoveryTags:group.tags,
+    discoveryTags:[...group.tags,practiceSignal.code],
     suggestedQuestionIds:suggested.map((item)=>item.id),
     suggestedQuestionCodes:suggested.map((item)=>item.code),
     triageSummary,
     extractedPreview:extractedPreview.slice(0,500),
+    practiceSignal:practiceSignal.code,
+    practiceSignalLabel:practiceSignal.label,
   }
 }
 
@@ -2804,12 +2828,19 @@ export function SkdaWorkspace(props: Props) {
     )
     if (transversalLinkError) { setSaving(false); setError(transversalLinkError.message); return }
 
+    const existingAssetSuggestions=folderEvidenceQuestionSuggestions(
+      folderEvidenceGroup(asset.title,'').code,
+      asset.title,
+      '',
+      questions,
+    )
     const { error: queueError } = await supabase.rpc(
       'queue_skda_evidence_question_intelligence' as never,
       {
         target_organization_id:props.organizationId,
         target_diagnosis_id:selected.id,
         target_evidence_asset_id:asset.id,
+        target_question_ids:existingAssetSuggestions.map((item)=>item.id),
       } as never,
     )
     if (!queueError) {
@@ -3011,12 +3042,17 @@ export function SkdaWorkspace(props: Props) {
       return
     }
 
+    const intakeText=evidenceFile ? await extractFolderEvidenceText(evidenceFile) : evidenceForm.description
+    const intakePath=evidenceFile?.name || evidenceForm.title || evidenceForm.externalUrl
+    const intakeGroup=folderEvidenceGroup(intakePath,intakeText)
+    const intakeSuggestions=folderEvidenceQuestionSuggestions(intakeGroup.code,intakePath,intakeText,questions)
     const { error: queueError } = await supabase.rpc(
       'queue_skda_evidence_question_intelligence' as never,
       {
         target_organization_id:props.organizationId,
         target_diagnosis_id:selected.id,
         target_evidence_asset_id:assetId,
+        target_question_ids:intakeSuggestions.map((item)=>item.id),
       } as never,
     )
 
@@ -3128,12 +3164,15 @@ export function SkdaWorkspace(props: Props) {
     setFolderEvidenceCandidates((current) => current.map((candidate) => {
       if (candidate.id !== candidateId) return candidate
       const suggested=folderEvidenceQuestionSuggestions(groupCode,candidate.relativePath,candidate.extractedPreview,questions)
+      const practiceSignal=folderEvidencePracticeSignal(candidate.relativePath,candidate.extractedPreview)
       return {
         ...candidate,
         groupCode,
         groupTitle:group.title,
         groupHint:group.hint,
-        discoveryTags:[groupCode],
+        discoveryTags:[groupCode,practiceSignal.code],
+        practiceSignal:practiceSignal.code,
+        practiceSignalLabel:practiceSignal.label,
         confidence:groupCode === 'complementar' ? 55 : 80,
         suggestedQuestionIds:suggested.map((item)=>item.id),
         suggestedQuestionCodes:suggested.map((item)=>item.code),
@@ -3777,7 +3816,23 @@ export function SkdaWorkspace(props: Props) {
     || interviewQuestionDraft.nextAction.trim()
   )
 
+  const assessmentDraftHasContent = (question:Question) => {
+    const draft=assessmentDrafts[question.id]
+    if (!draft) return false
+    const response=responses.find((item)=>item.question_id===question.id)
+    const persistedAlternative=response?.validated_alternative_id ?? response?.evidenced_alternative_id ?? response?.declared_alternative_id ?? ''
+    return draft.alternativeId !== persistedAlternative
+      || draft.classification !== (response?.classification ?? 'not_evaluated')
+      || draft.confidenceLevel !== (response?.confidence_level ?? 'not_assessed')
+      || draft.answerText.trim() !== (response?.answer_text ?? '').trim()
+      || draft.rationale.trim() !== (response?.rationale ?? '').trim()
+  }
+
   const preserveInterviewDraftBeforeNavigation = async () => {
+    if (activeInterviewQuestion && assessmentDraftHasContent(activeInterviewQuestion)) {
+      const savedAssessment=await saveAssessment(activeInterviewQuestion,{sourceInterviewId:activeInterviewSessionId ?? undefined})
+      if (!savedAssessment) return false
+    }
     if (!interviewDraftHasContent()) return true
     return saveInterviewQuestionRecord('in_progress',false)
   }
@@ -5905,6 +5960,7 @@ export function SkdaWorkspace(props: Props) {
                   </select>
                 </label>
                 <div className="skda-folder-scan-relevance">
+                  <span>Leitura da evidência <b>{candidate.practiceSignalLabel}</b></span>
                   <span>Confiança da triagem <b>{candidate.confidence}%</b></span>
                   <small>{candidate.suggestedQuestionCodes.length>0 ? `Questões sugeridas: ${candidate.suggestedQuestionCodes.join(', ')}` : 'Sem associação automática a questão; revisão humana necessária.'}</small>
                   {candidate.extractedPreview && <small className="skda-folder-scan-preview">{candidate.extractedPreview.slice(0,220)}{candidate.extractedPreview.length>220?'…':''}</small>}
