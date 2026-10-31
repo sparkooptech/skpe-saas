@@ -720,6 +720,28 @@ function CalendarIcon() {
   )
 }
 
+function DashboardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="4" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <rect x="14" y="4" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <rect x="4" y="14" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <rect x="14" y="14" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  )
+}
+
+function JourneyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="6" cy="6" r="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="18" cy="12" r="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="6" cy="18" r="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M8 6h4a4 4 0 014 4M16 14a4 4 0 01-4 4H8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function SkdaWorkspace(props: Props) {
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -1164,6 +1186,46 @@ export function SkdaWorkspace(props: Props) {
     const point=visible.at(-1)
     return point ? [{ ...series,point }] : []
   })
+
+  const historyOrganizationSeries = useMemo(() => (['GOVERNANCA','GESTAO'] as const).map((block) => {
+    const values=evolutionChartSeries.map((cycle,index) => {
+      const candidates=selfAssessmentMetrics.filter((item) => item.block_code === block
+        && item.reference_year === Number(cycle.label)
+        && item.comparator_code === 'COOPERATIVA'
+        && ['history','overall_index'].includes(item.metric_kind)
+        && Number.isFinite(Number(item.metric_value)))
+      const metric=[...candidates].sort((a,b) => {
+        const aDa=String(a.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED' ? 1 : 0
+        const bDa=String(b.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED' ? 1 : 0
+        return bDa-aDa
+      })[0]
+      const score=metric ? Number(metric.metric_value) : null
+      return { ...evolutionChartPoint(index,score),score,year:Number(cycle.label),source:metric ? (String(metric.metadata?.source_kind ?? '').toUpperCase() === 'DA_REPORTED' ? 'DA' : 'AA') : null }
+    })
+    const visible=values.filter((point)=>point.score!=null)
+    const first=visible[0]
+    const last=visible.at(-1)
+    return {
+      block,
+      values,
+      delta:first && last ? Number(last.score)-Number(first.score) : null,
+      first,
+      last,
+    }
+  }),[evolutionChartSeries,selfAssessmentMetrics])
+
+  const historyBenchmarkFamilies = useMemo(() => ([
+    { comparator:'RAMO_BRASIL',label:'BMK setorial · Ramo Brasil',color:'#b7791f' },
+    { comparator:'BRASIL',label:'BMK geral · Brasil',color:'#0f766e' },
+  ] as const).map((family) => {
+    const latestFor=(block:'GOVERNANCA'|'GESTAO') => selfAssessmentMetrics
+      .filter((metric) => metric.metric_kind === 'benchmark'
+        && metric.block_code === block
+        && metric.comparator_code.toUpperCase() === family.comparator
+        && Number.isFinite(Number(metric.metric_value)))
+      .sort((a,b)=>(b.reference_year ?? 0)-(a.reference_year ?? 0))[0] ?? null
+    return { ...family,governance:latestFor('GOVERNANCA'),management:latestFor('GESTAO') }
+  }).filter((family)=>family.governance || family.management),[selfAssessmentMetrics])
 
   const evidenceReadiness = useMemo(() => {
     const related = new Set(evidenceQuestionIntelligence.filter((item)=>item.analysis_status !== 'rejected').map((item)=>item.question_id))
@@ -4759,34 +4821,83 @@ export function SkdaWorkspace(props: Props) {
           <div><h4>Histórico e Evolução da Organização</h4><small>Memória longitudinal da Jornada: Autoavaliações, Diagnósticos Assistidos, execução dos Planos de Ação e sinais de evolução, estabilidade ou regressão entre ciclos.</small></div>
           <div className="skda-phase-workspace-actions"><span>{diagnoses.length} ciclo(s)</span><span>{actionFollowup.length} ação(ões) acompanhada(s)</span></div>
         </div>
-        <div className="skda-history-cycle-grid">
-          {diagnoses.slice().sort((a,b)=>Number(a.reference_year??0)-Number(b.reference_year??0)).map((diagnosis)=>{
-            const isCurrent=diagnosis.id===selectedId
-            return <article key={diagnosis.id} className={isCurrent?'is-current':''}>
-              <small>{diagnosis.reference_year ?? 'Ciclo'}</small>
-              <strong>{formatDiagnosisBusinessTitle(diagnosis)}</strong>
-              <span>{STATUS[diagnosis.status] ?? diagnosis.status} · {Number(diagnosis.progress).toFixed(0)}%</span>
-              <span>{diagnosis.started_on ? 'Início '+new Date(diagnosis.started_on+'T00:00:00').toLocaleDateString('pt-BR') : 'Início não informado'}</span>
-              <b>{isCurrent?'Ciclo atual':'Ciclo histórico'}</b>
-            </article>
-          })}
-        </div>
-        <div className="skda-history-reference-grid">
-          {(['GOVERNANCA','GESTAO'] as const).map((block)=>{
-            const reference=selfAssessmentReference[block]
-            const ordered=[...reference.history]
-            if (reference.current && !ordered.some((item)=>item.id===reference.current?.id)) ordered.push(reference.current)
-            ordered.sort((a,b)=>(a.reference_year??0)-(b.reference_year??0))
-            const first=ordered[0]
-            const last=ordered[ordered.length-1]
-            const delta=first&&last?Number(last.metric_value)-Number(first.metric_value):null
-            const trend=delta==null?'Histórico insuficiente':Math.abs(delta)<0.01?'Estável':delta>0?'Evolução':'Regressão'
-            return <article key={block}>
-              <div><small>{block==='GOVERNANCA'?'Governança':'Gestão'}</small><strong>{trend}</strong></div>
-              <b>{delta==null?'—':(delta>0?'+':'')+delta.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' p.p.'}</b>
-              <div className="skda-history-values">{ordered.map((item)=><span key={item.id}>{item.reference_year ?? '—'} <strong>{Number(item.metric_value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</strong></span>)}</div>
-            </article>
-          })}
+        <div className="skda-history-longitudinal-card">
+          <div className="skda-history-longitudinal-head">
+            <div>
+              <span className="skda-eyebrow">Evolução longitudinal</span>
+              <h3>Governança e Gestão ao longo dos ciclos</h3>
+              <small>Em cada ciclo, o DA validado é priorizado como leitura mais qualificada; quando não existe DA consolidado, permanece a AA declarada. Governança e Gestão nunca são agregadas artificialmente.</small>
+            </div>
+            <div className="skda-history-deltas">
+              {historyOrganizationSeries.map((series)=>{
+                const label=series.block==='GOVERNANCA'?'Governança':'Gestão'
+                const delta=series.delta
+                const trend=delta==null?'Histórico insuficiente':Math.abs(delta)<0.01?'Estável':delta>0?'Evolução':'Regressão'
+                return <article key={series.block} className={delta!=null && delta<0?'is-regression':delta!=null && delta>0?'is-evolution':''}>
+                  <span>{label}</span>
+                  <strong>{delta==null?'—':(delta>0?'+':'')+delta.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' p.p.'}</strong>
+                  <small>{trend}{series.first&&series.last ? ' · '+series.first.year+' → '+series.last.year : ''}</small>
+                </article>
+              })}
+            </div>
+          </div>
+
+          {evolutionChartSeries.length === 0 ? <p className="skda-phase-empty">A evolução será exibida assim que houver ciclos com índices históricos integrados.</p> : <>
+            <div className="skda-history-chart">
+              <div className="skda-history-axis">
+                {[100,80,60,40,20,0].map((tick)=><span key={tick} style={{position:'absolute',top:(92-tick*.78)+'%',right:0,transform:'translateY(-50%)'}}>{tick}%</span>)}
+              </div>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Evolução histórica de Governança e Gestão com benchmarks do Ramo Brasil e Brasil">
+                {[100,80,60,40,20,0].map((tick)=><line key={tick} x1="5" x2="95" y1={92-tick*.78} y2={92-tick*.78} className="skda-evolution-gridline" />)}
+                {historyBenchmarkFamilies.map((family)=>{
+                  const governanceY=family.governance ? evolutionChartPoint(0,Number(family.governance.metric_value)).y : null
+                  const managementY=family.management ? evolutionChartPoint(0,Number(family.management.metric_value)).y : null
+                  const fallbackY=governanceY ?? managementY
+                  if (fallbackY==null) return null
+                  const d=governanceY!=null && managementY!=null
+                    ? 'M 5 '+governanceY+' H 49 V '+managementY+' H 95'
+                    : 'M 5 '+fallbackY+' H 95'
+                  return <path key={family.comparator} d={d} fill="none" stroke={family.color} strokeOpacity=".62" strokeWidth=".32" strokeDasharray="2.4 2.4" vectorEffect="non-scaling-stroke">
+                    <title>{family.label}{family.governance?' · Governança '+Number(family.governance.metric_value).toFixed(2)+'%':''}{family.management?' · Gestão '+Number(family.management.metric_value).toFixed(2)+'%':''}</title>
+                  </path>
+                })}
+                {historyOrganizationSeries.map((series)=>{
+                  const color=series.block==='GOVERNANCA'?'#2563eb':'#9333ea'
+                  const visible=series.values.filter((point)=>point.score!=null)
+                  const points=visible.map((point)=>point.x+','+point.y).join(' ')
+                  return <g key={series.block}>
+                    {visible.length>1 && <polyline points={points} fill="none" stroke={color} strokeWidth=".7" vectorEffect="non-scaling-stroke" />}
+                    {visible.map((point)=><g key={series.block+'-'+point.year}>
+                      <circle cx={point.x} cy={point.y!} r="1.15" fill="#fff" stroke={color} strokeWidth=".58" vectorEffect="non-scaling-stroke" />
+                      <title>{(series.block==='GOVERNANCA'?'Governança':'Gestão')+' · '+point.year+' · '+(point.source ?? 'AA/DA')+' · '+point.score?.toFixed(2)+'%'}</title>
+                    </g>)}
+                  </g>
+                })}
+              </svg>
+              <div className="skda-history-year-labels">
+                {evolutionChartSeries.map((cycle,index)=><span key={cycle.diagnosisId} className={cycle.current?'is-current':''} style={{position:'absolute',left:evolutionChartPoint(index,null).x+'%',transform:'translateX(-50%)'}}>{cycle.label}</span>)}
+              </div>
+            </div>
+
+            <div className="skda-history-legend">
+              <span><i className="is-governance" />Governança</span>
+              <span><i className="is-management" />Gestão</span>
+              {historyBenchmarkFamilies.map((family)=><span key={family.comparator}><i className="is-benchmark" style={{borderTopColor:family.color}} />{family.label}
+                <b>{family.governance?'Gov. '+Number(family.governance.metric_value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':''}{family.governance&&family.management?' · ':''}{family.management?'Gest. '+Number(family.management.metric_value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':''}</b>
+              </span>)}
+            </div>
+
+            <div className="skda-history-cycle-strip">
+              {diagnoses.slice().sort((a,b)=>Number(a.reference_year??0)-Number(b.reference_year??0)).map((diagnosis)=>{
+                const isCurrent=diagnosis.id===selectedId
+                return <article key={diagnosis.id} className={isCurrent?'is-current':''}>
+                  <strong>{diagnosis.reference_year ?? 'Ciclo'}</strong>
+                  <span>{STATUS[diagnosis.status] ?? diagnosis.status} · {Number(diagnosis.progress).toFixed(0)}%</span>
+                  <small>{isCurrent?'Ciclo atual':formatDiagnosisBusinessTitle(diagnosis)}</small>
+                </article>
+              })}
+            </div>
+          </>}
         </div>
         <div className="skda-followup-summary">
           <div><span>Follow-up de Planos de Ação</span><h3>O que foi pactuado e o que efetivamente avançou</h3></div>
@@ -5760,9 +5871,19 @@ export function SkdaWorkspace(props: Props) {
     {
       id:'overview',
       label:'Visão Geral',
-      icon:<span aria-hidden="true">▦</span>,
-      active:activePhaseCode === 'OVERVIEW',
+      icon:<DashboardIcon />,
+      active:activePhaseCode === 'OVERVIEW' || isHistoryEvolution,
       onActivate:() => setActivePhaseCode('OVERVIEW'),
+      children:[
+        {
+          id:'history-evolution',
+          label:'Histórico e Evolução',
+          icon:<span aria-hidden="true">↗</span>,
+          active:isHistoryEvolution,
+          disabled:!selected,
+          onActivate:() => setActivePhaseCode('HISTORY'),
+        },
+      ],
     },
     {
       id:'evidence-management',
@@ -5773,17 +5894,9 @@ export function SkdaWorkspace(props: Props) {
       onActivate:() => setActivePhaseCode('EVIDENCE'),
     },
     {
-      id:'history-evolution',
-      label:'Histórico e Evolução',
-      icon:<span aria-hidden="true">↗</span>,
-      active:isHistoryEvolution,
-      disabled:!selected,
-      onActivate:() => setActivePhaseCode('HISTORY'),
-    },
-    {
       id:'journey',
       label:'Jornada DA',
-      icon:<span aria-hidden="true">⌁</span>,
+      icon:<JourneyIcon />,
       active:PHASES.some((phase) => phase.code === activePhaseCode) && activePhaseCode !== 'DA-03' || isAgenda,
       disabled:!selected,
       onActivate:() => {

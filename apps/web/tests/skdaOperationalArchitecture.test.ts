@@ -87,10 +87,23 @@ test('DA interview cockpit is question-centered and supports guided navigation, 
 })
 
 test('SK-DA overview preserves responsive radar composition across viewport widths', () => {
-  assert.match(workspaceCss, /@media \(max-width: 1440px\)[\s\S]*?skda-detail:has\(\.skda-journey-progress-card\) > \.skda-executive-grid[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/)
-  assert.match(workspaceCss, /@media \(max-width: 900px\)[\s\S]*?\.skda-radar-wrap[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/)
-  assert.match(workspaceCss, /@media \(max-width: 760px\)[\s\S]*?\.skda-radar-table-row[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 44px 44px/)
-  assert.match(workspaceCss, /@media \(max-width: 520px\)[\s\S]*?\.skda-radar-index-pair > strong[\s\S]*?font-size: 1\.35rem/)
+  assert.match(workspaceCss, /@media \(max-width: 1440px\)[\s\S]*?skda-detail:has\(\.skda-journey-progress-card\) > \.skda-executive-grid[\s\S]*?grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/)
+  assert.match(workspaceCss, /@media \(max-width: 1440px\)[\s\S]*?\.skda-radar-wrap[\s\S]*?grid-template-columns:minmax\(145px,\.72fr\) minmax\(0,1\.28fr\)/)
+  assert.match(workspaceCss, /@media \(max-width: 900px\)[\s\S]*?skda-detail:has\(\.skda-journey-progress-card\) > \.skda-executive-grid[\s\S]*?grid-template-columns:minmax\(0,1fr\)/)
+  assert.match(workspaceCss, /@media \(max-width: 640px\)[\s\S]*?\.skda-radar-wrap[\s\S]*?grid-template-columns:minmax\(0,1fr\)/)
+})
+
+test('SK-DA compact navigation and longitudinal history follow the PE visual contract', () => {
+  assert.match(workspace, /function DashboardIcon\(\)/)
+  assert.match(workspace, /function JourneyIcon\(\)/)
+  assert.match(workspace, /label:'Visão Geral'[\s\S]*?icon:<DashboardIcon \/>[\s\S]*?children:\[[\s\S]*?label:'Histórico e Evolução'/)
+  assert.match(workspace, /label:'Jornada DA'[\s\S]*?icon:<JourneyIcon \/>/)
+  assert.match(workspace, /skda-history-longitudinal-card/)
+  assert.match(workspace, /BMK setorial · Ramo Brasil/)
+  assert.match(workspace, /BMK geral · Brasil/)
+  assert.match(workspace, /historyOrganizationSeries/)
+  assert.match(workspaceCss, /@media \(max-width: 1180px\)[\s\S]*?application-shell-navigation-label[\s\S]*?display:none !important/)
+  assert.match(workspaceCss, /skda-history-chart/)
 })
 
 test('post-interview consolidation links only a proven interview source', () => {

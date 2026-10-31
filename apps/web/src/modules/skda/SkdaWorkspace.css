@@ -5876,3 +5876,321 @@
     gap: .7rem;
   }
 }
+
+/* SK-DA | navegação compacta automática em notebook/tablet.
+   O menu horizontal preserva todos os destinos por ícone e evita extrapolação textual. */
+@media (max-width: 1180px) {
+  body:has(.skda-workspace) .application-shell-sidebar-brand,
+  body:has(.skda-workspace) .application-shell-context,
+  body:has(.skda-workspace) .application-shell-sidebar-footer {
+    display:none !important;
+  }
+
+  body:has(.skda-workspace) .application-shell-collapse-button {
+    display:none !important;
+  }
+
+  body:has(.skda-workspace) .application-shell-navigation {
+    width:100% !important;
+    padding:.25rem .45rem !important;
+    gap:.18rem !important;
+  }
+
+  body:has(.skda-workspace) .application-shell-navigation-item,
+  body:has(.skda-workspace) .application-shell-collapsed .application-shell-navigation-item {
+    width:40px !important;
+    min-width:40px !important;
+    height:36px !important;
+    min-height:36px !important;
+    padding:0 !important;
+    grid-template-columns:1fr !important;
+    justify-items:center !important;
+  }
+
+  body:has(.skda-workspace) .application-shell-navigation-label,
+  body:has(.skda-workspace) .application-shell-navigation-group-chevron {
+    display:none !important;
+  }
+
+  body:has(.skda-workspace) .application-shell-navigation-group {
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:.12rem;
+    margin:0 !important;
+  }
+
+  body:has(.skda-workspace) .application-shell-navigation-submenu {
+    display:flex;
+    align-items:center;
+    gap:.12rem;
+    margin:0 !important;
+    padding:0 !important;
+    border-left:0 !important;
+  }
+
+  body:has(.skda-workspace) .application-shell-navigation-subitem {
+    width:34px !important;
+    min-width:34px !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 !important;
+    justify-content:center !important;
+    overflow:hidden;
+  }
+
+  body:has(.skda-workspace) .application-shell-navigation-icon svg {
+    width:18px;
+    height:18px;
+  }
+
+  body:has(.skda-workspace) .skda-shell-user > div:last-child span {
+    display:none;
+  }
+}
+
+/* SK-DA | densidade executiva para notebook de 14" e tablets em landscape. */
+@media (max-width: 1440px) {
+  .skda-detail:has(.skda-journey-progress-card) > .skda-executive-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-card {
+    grid-column:auto;
+    padding:.78rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap {
+    grid-template-columns:minmax(145px,.72fr) minmax(0,1.28fr);
+    gap:.55rem;
+    min-height:0;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap .skda-radar-visual svg {
+    width:min(100%,190px);
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-body {
+    grid-auto-rows:minmax(28px,1fr);
+    min-height:224px;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-head,
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-row {
+    grid-template-columns:minmax(0,1fr) 46px 46px;
+    column-gap:.35rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-row {
+    font-size:.69rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-table-row b {
+    font-size:.72rem;
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-metrics article {
+    min-height:88px;
+  }
+}
+
+@media (max-width: 900px) {
+  .skda-detail:has(.skda-journey-progress-card) > .skda-executive-grid {
+    grid-template-columns:minmax(0,1fr);
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap {
+    grid-template-columns:minmax(170px,.65fr) minmax(0,1.35fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap {
+    grid-template-columns:minmax(0,1fr);
+  }
+
+  .skda-detail:has(.skda-journey-progress-card) .skda-radar-wrap .skda-radar-visual svg {
+    width:min(100%,230px);
+  }
+}
+
+/* Histórico e Evolução | síntese longitudinal gráfica. */
+.skda-history-longitudinal-card {
+  display:grid;
+  gap:.9rem;
+  padding:1rem;
+  border:1px solid var(--skda-border);
+  border-radius:12px;
+  background:var(--skda-surface);
+  min-width:0;
+}
+
+.skda-history-longitudinal-head {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:1rem;
+  align-items:start;
+}
+
+.skda-history-longitudinal-head > div:first-child {
+  display:grid;
+  gap:.18rem;
+  min-width:0;
+}
+
+.skda-history-longitudinal-head h3 {
+  margin:0;
+  color:var(--skda-text);
+  font-size:1.05rem;
+}
+
+.skda-history-longitudinal-head small {
+  color:var(--skda-muted);
+  font-size:.72rem;
+  line-height:1.45;
+  max-width:860px;
+}
+
+.skda-history-deltas {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(140px,1fr));
+  gap:.5rem;
+}
+
+.skda-history-deltas article {
+  display:grid;
+  gap:.12rem;
+  min-width:0;
+  padding:.58rem .7rem;
+  border:1px solid var(--skda-border);
+  border-radius:9px;
+  background:#f7faf9;
+}
+
+.skda-history-deltas article.is-evolution {
+  border-left:3px solid var(--skda-primary);
+}
+
+.skda-history-deltas article.is-regression {
+  border-left:3px solid #b45309;
+}
+
+.skda-history-deltas span,
+.skda-history-deltas small {
+  color:var(--skda-muted);
+  font-size:.64rem;
+}
+
+.skda-history-deltas strong {
+  color:var(--skda-text);
+  font-size:1.05rem;
+}
+
+.skda-history-chart {
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr);
+  grid-template-rows:250px 24px;
+  min-width:0;
+}
+
+.skda-history-axis {
+  grid-column:1;
+  grid-row:1;
+  position:relative;
+  color:var(--skda-muted);
+  font-size:.65rem;
+}
+
+.skda-history-chart > svg {
+  grid-column:2;
+  grid-row:1;
+  width:100%;
+  height:250px;
+  overflow:visible;
+}
+
+.skda-history-year-labels {
+  grid-column:2;
+  grid-row:2;
+  position:relative;
+  height:24px;
+  color:var(--skda-muted);
+  font-size:.68rem;
+}
+
+.skda-history-year-labels span.is-current {
+  color:var(--skda-primary);
+  font-weight:800;
+}
+
+.skda-history-legend {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.45rem .9rem;
+  align-items:center;
+  padding-top:.65rem;
+  border-top:1px solid var(--skda-border);
+}
+
+.skda-history-legend > span {
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+  color:var(--skda-muted);
+  font-size:.68rem;
+}
+
+.skda-history-legend b {
+  color:var(--skda-text);
+  font-size:.67rem;
+}
+
+.skda-history-legend i {
+  width:22px;
+  border-top:2px solid currentColor;
+}
+
+.skda-history-legend i.is-governance { color:#2563eb; }
+.skda-history-legend i.is-management { color:#9333ea; }
+.skda-history-legend i.is-benchmark { border-top-style:dashed; }
+
+.skda-history-cycle-strip {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:.45rem;
+}
+
+.skda-history-cycle-strip article {
+  display:grid;
+  gap:.12rem;
+  padding:.55rem .65rem;
+  border:1px solid var(--skda-border);
+  border-radius:8px;
+  background:#f7faf9;
+}
+
+.skda-history-cycle-strip article.is-current {
+  border-color:var(--skda-primary);
+  background:color-mix(in srgb,var(--skda-primary) 5%,white);
+}
+
+.skda-history-cycle-strip strong { color:var(--skda-text); }
+.skda-history-cycle-strip span,
+.skda-history-cycle-strip small { color:var(--skda-muted); font-size:.64rem; }
+
+@media (max-width: 980px) {
+  .skda-history-longitudinal-head {
+    grid-template-columns:minmax(0,1fr);
+  }
+
+  .skda-history-deltas {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .skda-history-longitudinal-card { padding:.72rem; }
+  .skda-history-deltas { grid-template-columns:minmax(0,1fr); }
+  .skda-history-chart { grid-template-columns:34px minmax(0,1fr); grid-template-rows:210px 22px; }
+  .skda-history-chart > svg { height:210px; }
+}
