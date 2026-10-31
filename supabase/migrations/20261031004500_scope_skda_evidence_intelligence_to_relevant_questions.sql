@@ -82,8 +82,6 @@ set analysis_status='rejected',
       'superseded_reason','legacy_all_question_queue_replaced_by_semantic_scope'
     )
 where i.analysis_status='queued'
-  and i.correlation_id is null
-  and coalesce(i.metadata->>'purpose','')='evidence_question_intelligence'
   and coalesce(i.metadata->>'scope','')<> 'semantic_candidate_questions_only';
 
 notify pgrst, 'reload schema';
