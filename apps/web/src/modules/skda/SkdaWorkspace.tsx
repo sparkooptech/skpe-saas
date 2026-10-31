@@ -3698,6 +3698,10 @@ export function SkdaWorkspace(props: Props) {
 
   const startInterviewSession = async (interview:Interview) => {
     if (!canEditInterviews) return
+    if (activeInterviewSessionId && activeInterviewQuestionId && activeInterviewSessionId !== interview.id) {
+      const preserved=await preserveInterviewDraftBeforeNavigation()
+      if (!preserved) return
+    }
     setSaving(true)
     setError('')
     const { data, error: startError } = await supabase.rpc(
@@ -3722,7 +3726,11 @@ export function SkdaWorkspace(props: Props) {
     setShowInterviewCapture(false)
   }
 
-  const openInterviewSession = (interview:Interview) => {
+  const openInterviewSession = async (interview:Interview):Promise<boolean> => {
+    if (activeInterviewSessionId && activeInterviewQuestionId) {
+      const preserved=await preserveInterviewDraftBeforeNavigation()
+      if (!preserved) return false
+    }
     setActiveInterviewSessionId(interview.id)
     setInterviewSessionNotes('')
     setShowInterviewCapture(false)
@@ -3734,6 +3742,7 @@ export function SkdaWorkspace(props: Props) {
     setActiveInterviewBlock(block)
     setActiveInterviewAxis(touchedQuestion?.axis_name?.trim() ?? '')
     setActiveInterviewQuestionId(touchedQuestion?.id ?? null)
+    return true
   }
 
   const openGuidedInterview = async (block:'GOVERNANCA'|'GESTAO', questionId?:string) => {
@@ -3748,7 +3757,8 @@ export function SkdaWorkspace(props: Props) {
     if (interview.status === 'planned') {
       await startInterviewSession(interview)
     } else {
-      openInterviewSession(interview)
+      const opened=await openInterviewSession(interview)
+      if (!opened) return
     }
     setActiveInterviewBlock(block)
     setActiveInterviewAxis('')
@@ -5023,8 +5033,8 @@ export function SkdaWorkspace(props: Props) {
                   <b>{interview.status === 'planned' ? 'Planejada' : interview.status === 'in_progress' ? 'Em andamento' : interview.status === 'completed' ? 'Realizada' : interview.status}</b>
                   {interview.event_id && <button type="button" onClick={() => void openInterviewParticipants(interview)}>Participantes</button>}
                   {canEditInterviews && interview.status === 'planned' && <button type="button" className="skda-primary" disabled={saving} onClick={() => void startInterviewSession(interview)}>Iniciar entrevista</button>}
-                  {canEditInterviews && interview.status === 'in_progress' && <button type="button" className="skda-primary" onClick={() => openInterviewSession(interview)}>Abrir sessão</button>}
-                  {canEditInterviews && interview.status === 'completed' && <button type="button" onClick={() => openInterviewSession(interview)}>Revisar registros</button>}
+                  {canEditInterviews && interview.status === 'in_progress' && <button type="button" className="skda-primary" onClick={() => void openInterviewSession(interview)}>Abrir sessão</button>}
+                  {canEditInterviews && interview.status === 'completed' && <button type="button" onClick={() => void openInterviewSession(interview)}>Revisar registros</button>}
                   {canEditInterviews && <button type="button" onClick={() => {
                     setRealizationInterviewId(interview.id)
                     setRealizationForm((current) => ({
