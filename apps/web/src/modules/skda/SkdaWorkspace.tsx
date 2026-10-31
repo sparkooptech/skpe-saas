@@ -91,6 +91,9 @@ type SelfAssessmentMetric = { id:string; block_code:'GOVERNANCA'|'GESTAO'; metri
 type CatalogVersion = { id: string; code: string; version_code: string; name: string; framework_code: string }
 type Question = { id: string; code: string; axis_name: string | null; criterion_name: string | null; question_text: string; guidance: string | null; expected_evidence: unknown[] | null; display_order: number }
 type Response = { id: string; question_id: string; classification: string; response_status: string; answer_text: string | null; rationale: string | null; confidence_level: string; maturity_level: string | null; score: number | null; declared_alternative_id: string | null; evidenced_alternative_id: string | null; validated_alternative_id: string | null; evaluated_at: string | null; validated_at: string | null; metadata: Record<string,unknown> }
+type HistoricalResponse = Response & { diagnosis_id:string }
+type HistoricalQuestion = { id:string; code:string; question_text:string; criterion_name:string|null; axis_name:string|null }
+type QuestionHistoryLink = { source_question_id:string; target_question_id:string; relation_type:string; comparability_score:number|null; rationale:string|null }
 type QuestionAlternative = { id:string; question_id:string; code:string; alternative_text:string; progression_order:number; score_value:number|null }
 type QuestionEvidenceExpectation = { expectation_id:string; question_id:string; evidence_key:string; title:string; description:string|null; answer_level:'A'|'B'|'C'|'D'; purpose:'support_declared_answer'|'evolution_to_d'|'both'; necessity:'required'|'recommended'|'alternative'; evidence_dimension:string; evidence_kind:string; branch_code:string|null; activity_scope:string|null; source_authority:string; source_reference:string|null; confidence:string; display_order:number; metadata:Record<string,unknown> }
 type InterviewQuestionPrompt = { prompt_id:string; question_id:string; prompt_type:'central'|'deepening'|'evidence_request'|'systemic_connection'|'result_probe'|'delta_probe'; prompt_text:string; branch_code:string|null; activity_scope:string|null; source_authority:string; source_reference:string|null; display_order:number; metadata:Record<string,unknown> }
@@ -797,6 +800,9 @@ export function SkdaWorkspace(props: Props) {
   const [organizationUsers, setOrganizationUsers] = useState<OrganizationUser[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [responses, setResponses] = useState<Response[]>([])
+  const [historicalResponses, setHistoricalResponses] = useState<HistoricalResponse[]>([])
+  const [historicalQuestions, setHistoricalQuestions] = useState<HistoricalQuestion[]>([])
+  const [questionHistoryLinks, setQuestionHistoryLinks] = useState<QuestionHistoryLink[]>([])
   const [assessmentDrafts, setAssessmentDrafts] = useState<Record<string,AssessmentDraft>>({})
   const [assessmentConsolidationMode, setAssessmentConsolidationMode] = useState(false)
   const [consolidationBlock, setConsolidationBlock] = useState<'ALL'|'GOVERNANCA'|'GESTAO'>('ALL')
@@ -1158,6 +1164,19 @@ export function SkdaWorkspace(props: Props) {
     const point=visible.at(-1)
     return point ? [{ ...series,point }] : []
   })
+
+  const evidenceReadiness = useMemo(() => {
+    const related = new Set(evidenceQuestionIntelligence.filter((item)=>item.analysis_status !== 'rejected').map((item)=>item.question_id))
+    const validated = new Set(evidenceQuestionIntelligence.filter((item)=>item.analysis_status === 'validated').map((item)=>item.question_id))
+    const underAnalysis = new Set(evidenceQuestionIntelligence.filter((item)=>['queued','processing','pending','proposed'].includes(item.analysis_status)).map((item)=>item.question_id))
+    return {
+      total:questions.length,
+      related:related.size,
+      validated:validated.size,
+      underAnalysis:underAnalysis.size,
+      withoutEvidence:Math.max(0,questions.length-related.size),
+    }
+  },[evidenceQuestionIntelligence,questions.length])
 
   const actionFollowupSummary = useMemo(() => {
     const counts = {
@@ -1539,6 +1558,48 @@ export function SkdaWorkspace(props: Props) {
     }
     void run()
   }, [selected?.id, selected?.catalog_version_id])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selected || questions.length === 0) {
+        setHistoricalResponses([])
+        setHistoricalQuestions([])
+        setQuestionHistoryLinks([])
+        return
+      }
+      const previousDiagnosisIds=diagnoses.filter((item)=>item.id!==selected.id).map((item)=>item.id)
+      if (previousDiagnosisIds.length === 0) {
+        setHistoricalResponses([])
+        setHistoricalQuestions([])
+        setQuestionHistoryLinks([])
+        return
+      }
+      const { data: responseData } = await supabase
+        .from('skda_responses' as never)
+        .select('id,diagnosis_id,question_id,classification,response_status,answer_text,rationale,confidence_level,maturity_level,score,declared_alternative_id,evidenced_alternative_id,validated_alternative_id,evaluated_at,validated_at,metadata' as never)
+        .eq('organization_id', props.organizationId)
+        .in('diagnosis_id', previousDiagnosisIds)
+      const loadedHistoricalResponses=(responseData ?? []) as unknown as HistoricalResponse[]
+      setHistoricalResponses(loadedHistoricalResponses)
+      const historicalQuestionIds=[...new Set(loadedHistoricalResponses.map((item)=>item.question_id))]
+      if (historicalQuestionIds.length > 0) {
+        const { data: historicalQuestionData } = await supabase
+          .from('skda_questions' as never)
+          .select('id,code,question_text,criterion_name,axis_name' as never)
+          .in('id', historicalQuestionIds)
+        setHistoricalQuestions((historicalQuestionData ?? []) as unknown as HistoricalQuestion[])
+      } else {
+        setHistoricalQuestions([])
+      }
+      const currentQuestionIds=questions.map((item)=>item.id)
+      const { data: linkData } = await supabase
+        .from('skda_question_history_links' as never)
+        .select('source_question_id,target_question_id,relation_type,comparability_score,rationale' as never)
+        .in('target_question_id', currentQuestionIds)
+      setQuestionHistoryLinks((linkData ?? []) as unknown as QuestionHistoryLink[])
+    }
+    void run()
+  }, [selected?.id, questions, diagnoses, props.organizationId])
 
   useEffect(() => {
     setActivePhaseCode('OVERVIEW')
@@ -4135,9 +4196,26 @@ export function SkdaWorkspace(props: Props) {
     </div>
   )
 
-  const activePhase = PHASES.find((phase) => phase.code === activePhaseCode) ?? null
+  const activePhase = PHASES.find((phase) => phase.code === activePhaseCode)
+    ?? (activePhaseCode === 'EVIDENCE' ? { code:'EVIDENCE', title:'Gestão de Evidências', description:'Organiza intake, análise, validação, correlação, confiabilidade, vigência e rastreabilidade das evidências antes de sua utilização nas entrevistas.', statusKey:'preparation' } : null)
   const isOverview = activePhaseCode === 'OVERVIEW'
   const isAgenda = activePhaseCode === 'AGENDA'
+  const isEvidenceManagement = activePhaseCode === 'EVIDENCE'
+  const isHistoryEvolution = activePhaseCode === 'HISTORY'
+  const historicalTrajectoryForQuestion = (question:Question) => {
+    const linkedSourceIds=questionHistoryLinks.filter((item)=>item.target_question_id===question.id).map((item)=>item.source_question_id)
+    const sameCodeIds=historicalQuestions.filter((item)=>item.code===question.code).map((item)=>item.id)
+    const relevantQuestionIds=new Set([...linkedSourceIds,...sameCodeIds])
+    return historicalResponses
+      .filter((item)=>relevantQuestionIds.has(item.question_id))
+      .map((response)=>{
+        const diagnosis=diagnoses.find((item)=>item.id===response.diagnosis_id)
+        const historicalQuestion=historicalQuestions.find((item)=>item.id===response.question_id)
+        const link=questionHistoryLinks.find((item)=>item.target_question_id===question.id && item.source_question_id===response.question_id)
+        return { response,diagnosis,historicalQuestion,link }
+      })
+      .sort((a,b)=>Number(a.diagnosis?.reference_year??0)-Number(b.diagnosis?.reference_year??0))
+  }
   const selectedCatalog = catalogs.find((catalog) => catalog.id === selected?.catalog_version_id) ?? null
   const contractIntakeProposal = useMemo(() => {
     for (const asset of evidenceAssets) {
@@ -4680,13 +4758,67 @@ export function SkdaWorkspace(props: Props) {
         </>}
       </section>}
 
+      {isHistoryEvolution && <section className="skda-history-evolution-page">
+        <div className="skda-phase-workspace-head">
+          <div><h4>Histórico e Evolução da Organização</h4><small>Memória longitudinal da Jornada: Autoavaliações, Diagnósticos Assistidos, execução dos Planos de Ação e sinais de evolução, estabilidade ou regressão entre ciclos.</small></div>
+          <div className="skda-phase-workspace-actions"><span>{diagnoses.length} ciclo(s)</span><span>{actionFollowup.length} ação(ões) acompanhada(s)</span></div>
+        </div>
+        <div className="skda-history-cycle-grid">
+          {diagnoses.slice().sort((a,b)=>Number(a.reference_year??0)-Number(b.reference_year??0)).map((diagnosis)=>{
+            const isCurrent=diagnosis.id===selectedId
+            return <article key={diagnosis.id} className={isCurrent?'is-current':''}>
+              <small>{diagnosis.reference_year ?? 'Ciclo'}</small>
+              <strong>{formatDiagnosisBusinessTitle(diagnosis)}</strong>
+              <span>{STATUS[diagnosis.status] ?? diagnosis.status} · {Number(diagnosis.progress).toFixed(0)}%</span>
+              <span>{diagnosis.started_on ? 'Início '+new Date(diagnosis.started_on+'T00:00:00').toLocaleDateString('pt-BR') : 'Início não informado'}</span>
+              <b>{isCurrent?'Ciclo atual':'Ciclo histórico'}</b>
+            </article>
+          })}
+        </div>
+        <div className="skda-history-reference-grid">
+          {(['GOVERNANCA','GESTAO'] as const).map((block)=>{
+            const reference=selfAssessmentReference[block]
+            const ordered=[...reference.history]
+            if (reference.current && !ordered.some((item)=>item.id===reference.current?.id)) ordered.push(reference.current)
+            ordered.sort((a,b)=>(a.reference_year??0)-(b.reference_year??0))
+            const first=ordered[0]
+            const last=ordered[ordered.length-1]
+            const delta=first&&last?Number(last.metric_value)-Number(first.metric_value):null
+            const trend=delta==null?'Histórico insuficiente':Math.abs(delta)<0.01?'Estável':delta>0?'Evolução':'Regressão'
+            return <article key={block}>
+              <div><small>{block==='GOVERNANCA'?'Governança':'Gestão'}</small><strong>{trend}</strong></div>
+              <b>{delta==null?'—':(delta>0?'+':'')+delta.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' p.p.'}</b>
+              <div className="skda-history-values">{ordered.map((item)=><span key={item.id}>{item.reference_year ?? '—'} <strong>{Number(item.metric_value).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</strong></span>)}</div>
+            </article>
+          })}
+        </div>
+        <div className="skda-followup-summary">
+          <div><span>Follow-up de Planos de Ação</span><h3>O que foi pactuado e o que efetivamente avançou</h3></div>
+          {actionFollowupSummary.total===0 ? <p className="skda-phase-empty">Ainda não há ações históricas vinculadas para acompanhamento longitudinal.</p> : <>
+            <div className="skda-followup-grid">
+              <div><span>Concluídas</span><strong>{actionFollowupSummary.completed}</strong></div>
+              <div><span>Em andamento</span><strong>{actionFollowupSummary.inProgress}</strong></div>
+              <div><span>Vencidas</span><strong>{actionFollowupSummary.overdue}</strong></div>
+              <div><span>Não iniciadas</span><strong>{actionFollowupSummary.notStarted}</strong></div>
+              <div><span>Bloqueadas</span><strong>{actionFollowupSummary.blocked}</strong></div>
+              <div><span>Aguardando conversão</span><strong>{actionFollowupSummary.awaitingConversion}</strong></div>
+            </div>
+            <div className="skda-followup-list">
+              {actionFollowup.slice(0,12).map((item)=><article key={item.finding_id+'-'+String(item.initiative_id)}>
+                <div><small>Ciclo {item.cycle_number ?? '-'} · {item.reference_year ?? '—'}</small><strong>{item.finding_title}</strong><span>{item.initiative_name || 'Ação sem iniciativa transversal vinculada'}</span></div>
+                <div className="skda-followup-progress"><b>{Math.round(Number(item.initiative_progress ?? 0))}%</b><span><i style={{width:`${Math.max(0,Math.min(100,Number(item.initiative_progress ?? 0)))}%`}} /></span></div>
+              </article>)}
+            </div>
+          </>}
+        </div>
+      </section>}
       {isAgenda && <section className="skda-agenda-host">
         <AgendaSection organizationId={props.organizationId} moduleCode="SK-DA" moduleLabel="SK-DA" />
       </section>}
 
-      {activePhase && <div className="skda-journey">
-        <div className="skda-journey-head"><div><span>Jornada metodológica</span><h3>Preparação → Entrevistas e avaliação → Devolutiva → Plano de Ação</h3></div><b>{Number(selected.progress).toFixed(0)}%</b></div>
-        <div className="skda-phase-nav" role="tablist" aria-label="Fases do Diagnóstico Assistido">
+      {activePhase && <div className={activePhase.code === 'EVIDENCE' ? 'skda-journey skda-standalone-capability' : 'skda-journey'}>
+        {activePhase.code !== 'EVIDENCE' && <div className="skda-journey-head"><div><span>Jornada metodológica</span><h3>Preparação → Entrevistas e avaliação → Devolutiva → Plano de Ação</h3></div><b>{Number(selected.progress).toFixed(0)}%</b></div>}
+        {activePhase.code !== 'EVIDENCE' && <div className="skda-phase-nav" role="tablist" aria-label="Fases do Diagnóstico Assistido">
           {PHASES.map((phase) => (
             <button
               key={phase.code}
@@ -4699,10 +4831,10 @@ export function SkdaWorkspace(props: Props) {
               <span>{phase.title}</span>
             </button>
           ))}
-        </div>
+        </div>}
         <section className="skda-phase-panel" role="tabpanel">
-          <div><span>Fase da Jornada</span><h3>{activePhase.title}</h3></div>
-          <p>{activePhase.description}</p>
+          {activePhase.code !== 'EVIDENCE' && <><div><span>Fase da Jornada</span><h3>{activePhase.title}</h3></div>
+          <p>{activePhase.description}</p></>}
           {activePhase.code === 'DA-00' && <div className="skda-phase-substeps" aria-label="Etapas internas da Preparação e abertura">
             <span>1. Leitura da AA</span>
             <span>2. Histórico e benchmarks</span>
@@ -4881,14 +5013,21 @@ export function SkdaWorkspace(props: Props) {
             </div>
             {canManage && <div className="skda-opening-actions"><button type="button" className="skda-primary" disabled={saving} onClick={()=>void saveOpeningConfiguration()}>{saving?'Salvando...':'Salvar abertura da jornada'}</button></div>}
           </div>}
-          {activePhase.code === 'DA-00' && <div className="skda-phase-workspace">
+          {isEvidenceManagement && <div className="skda-phase-workspace">
             <div className="skda-phase-workspace-head">
-              <div><h4>Gestão das Evidências</h4><small>O Core organiza a fonte, sua integridade, confiabilidade, aderência às questões do catálogo e o que ainda precisa ser confirmado para transformar documento em evidência de prática e resultado.</small></div>
+              <div><h4>Gestão de Evidências</h4><small>Área transversal da Jornada para intake, análise, validação, correlação, confiabilidade, vigência e rastreabilidade das evidências antes de sua utilização nas entrevistas.</small></div>
               <div className="skda-phase-workspace-actions">
                 <span>{evidenceAssets.length} ativo(s)</span>
                 {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceIngestSource('folder'); setExternalFolderUrl(''); setExternalFolderStatus(''); setFolderEvidenceCandidates([]); setFolderScanLabel(''); setFolderScanProgress({current:0,total:0,label:''}); setShowFolderEvidenceScan(true) }}>Ingerir evidências</button>}
                 {canRegisterEvidence && <button type="button" className="skda-primary" onClick={() => { setEvidenceFile(null); setShowEvidenceCreate(true) }}>Adicionar e analisar evidência</button>}
               </div>
+            </div>
+            <div className="skda-evidence-readiness">
+              <div><span>Questões do instrumento</span><strong>{evidenceReadiness.total}</strong><small>Governança + Gestão</small></div>
+              <div><span>Com evidência relacionada</span><strong>{evidenceReadiness.related}</strong><small>aderência já identificada</small></div>
+              <div><span>Com evidência validada</span><strong>{evidenceReadiness.validated}</strong><small>pronta para consumo no DA</small></div>
+              <div><span>Em análise</span><strong>{evidenceReadiness.underAnalysis}</strong><small>requer tratamento antes da entrevista</small></div>
+              <div><span>Sem evidência relacionada</span><strong>{evidenceReadiness.withoutEvidence}</strong><small>prioridade de investigação</small></div>
             </div>
             <div className="skda-evidence-checklist">
               <h4>Checklist documental da Jornada</h4>
@@ -4941,6 +5080,42 @@ export function SkdaWorkspace(props: Props) {
                     }}>Importar evidência</button>}
                   </article>
                 })}
+              </div>
+            </div>
+            <div className="skda-evidence-intelligence-board">
+              <div className="skda-phase-workspace-head">
+                <div><h4>Inteligência e validação das evidências</h4><small>Analise aqui a aderência, cobertura, hipótese, lacuna, confiança e vínculo de cada evidência com as questões. Esta inteligência deve estar preparada antes da entrevista.</small></div>
+                <div className="skda-phase-workspace-actions">
+                  <span>{evidenceQuestionIntelligence.filter((item)=>['queued','processing','pending'].includes(item.analysis_status)).length} em análise</span>
+                  <span>{evidenceQuestionIntelligence.filter((item)=>item.analysis_status==='proposed').length} proposta(s)</span>
+                  <span>{evidenceQuestionIntelligence.filter((item)=>item.analysis_status==='validated').length} validada(s)</span>
+                </div>
+              </div>
+              <div className="skda-evidence-intelligence-list">
+                {evidenceQuestionIntelligence.filter((item)=>item.analysis_status!=='rejected').slice(0,120).map((item)=>{
+                  const asset=evidenceAssets.find((row)=>row.id===item.evidence_asset_id)
+                  const question=questions.find((row)=>row.id===item.question_id)
+                  return <article key={item.id}>
+                    <div>
+                      <small>{question?.code || 'Questão'} · {item.analysis_status === 'validated' ? 'Validada' : item.analysis_status === 'proposed' ? 'Proposta' : 'Em análise'}</small>
+                      <strong>{asset?.title || 'Evidência vinculada'}</strong>
+                      <span>{question?.question_text || 'Questão associada'} </span>
+                      {item.diagnostic_hypothesis && <span><b>Hipótese:</b> {item.diagnostic_hypothesis}</span>}
+                      {item.gap_description && <span><b>Lacuna:</b> {item.gap_description}</span>}
+                    </div>
+                    <div className="skda-evidence-intelligence-actions">
+                      {item.confidence_score != null && <b>{Number(item.confidence_score).toFixed(0)}%</b>}
+                      {canEditAssessment && item.analysis_status !== 'validated' && <button type="button" disabled={saving} onClick={()=>openIntelligenceEditor(item)}>Analisar</button>}
+                      {canValidateAssessment && item.analysis_status === 'proposed' && (intelligenceReviewId === item.id ? <div className="skda-intelligence-review">
+                        <textarea rows={2} value={intelligenceReviewNote} onChange={(e)=>setIntelligenceReviewNote(e.target.value)} placeholder="Justifique a validação ou refutação desta hipótese." />
+                        <div><button type="button" disabled={saving} onClick={()=>void reviewIntelligence(item,'validated')}>Validar hipótese</button><button type="button" disabled={saving} onClick={()=>void reviewIntelligence(item,'rejected')}>Refutar</button><button type="button" onClick={()=>{setIntelligenceReviewId(null);setIntelligenceReviewNote('')}}>Cancelar</button></div>
+                      </div> : <button type="button" disabled={saving} onClick={()=>{setIntelligenceReviewId(item.id);setIntelligenceReviewNote('Validação técnica da hipótese a partir das evidências disponíveis e do contexto da questão.')}}>Revisar</button>)}
+                      {canEditFindings && item.analysis_status === 'validated' && typeof item.metadata?.finding_id !== 'string' && <button type="button" className="skda-primary" disabled={saving} onClick={()=>void convertIntelligenceToFinding(item)}>Converter em achado</button>}
+                      {typeof item.metadata?.finding_id === 'string' && <span>Incorporada ao achado</span>}
+                    </div>
+                  </article>
+                })}
+                {evidenceQuestionIntelligence.filter((item)=>item.analysis_status!=='rejected').length === 0 && <p className="skda-phase-empty">Nenhuma inteligência de evidência ativa para revisão.</p>}
               </div>
             </div>
             {evidenceAssets.length === 0 && <p className="skda-phase-empty">Nenhuma evidência transversal disponível para esta organização.</p>}
@@ -5091,6 +5266,7 @@ export function SkdaWorkspace(props: Props) {
               ? expectations.filter((item) => (ANSWER_LEVEL_RANK[item.answer_level] ?? 0) > answerRank && ['evolution_to_d','both'].includes(item.purpose))
               : []
             const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.question_id === activeInterviewQuestion.id && item.analysis_status !== 'rejected')
+            const historicalTrajectory = historicalTrajectoryForQuestion(activeInterviewQuestion)
             const governedPrompts = interviewQuestionPrompts.filter((item) => item.question_id === activeInterviewQuestion.id)
             const prompts = intelligentInterviewAgenda.rows.filter((row) => row.questionIds.has(activeInterviewQuestion.id))
             const currentRow = activeInterviewSessionRows.find((row) => row.question.id === activeInterviewQuestion.id)
@@ -5162,8 +5338,12 @@ export function SkdaWorkspace(props: Props) {
                     <span>{aaAnswer ? `${aaAnswer.declared_code ?? '-'} · ${aaAnswer.declared_text ?? 'Sem texto descritivo importado.'}` : 'Resposta da Autoavaliação não localizada.'}</span>
                     {aaAnswer?.rationale && <small>{aaAnswer.rationale}</small>}
                   </div>
+                  {historicalTrajectory.length > 0 && <div className="skda-interview-context-card skda-question-history">
+                    <strong>Histórico desta questão</strong>
+                    {historicalTrajectory.map(({response,diagnosis,historicalQuestion,link})=><span key={response.id}><b>{diagnosis?.reference_year ?? 'Ciclo anterior'} · {historicalQuestion?.code ?? activeInterviewQuestion.code}:</b> {CLASSIFICATION[response.classification] ?? response.classification}{response.answer_text ? ' · '+response.answer_text : ''}{link?.comparability_score != null ? ' · '+Number(link.comparability_score).toFixed(0)+'% comparável' : ''}</span>)}
+                  </div>}
                   <div className="skda-interview-context-card">
-                    <strong>Evidências já localizadas / inteligência disponível</strong>
+                    <strong>Evidências desta questão</strong>
                     {intelligenceRows.length === 0
                       ? <small>Nenhuma inteligência documental validável foi associada a esta questão.</small>
                       : intelligenceRows.slice(0,8).map((item) => {
@@ -5378,7 +5558,6 @@ export function SkdaWorkspace(props: Props) {
                 const response = responses.find((item) => item.question_id === question.id)
                 const intelligenceRows = evidenceQuestionIntelligence.filter((item) => item.question_id === question.id)
                 const reviewedRows = intelligenceRows.filter((item) => ['proposed','validated','rejected'].includes(item.analysis_status))
-                const queuedRows = intelligenceRows.filter((item) => item.analysis_status === 'queued' || item.analysis_status === 'processing' || item.analysis_status === 'pending')
                 const draft = assessmentDrafts[question.id] ?? { classification:'not_evaluated', answerText:'', rationale:'', confidenceLevel:'not_assessed', alternativeId:'' }
                 const alternatives = questionAlternatives.filter((item) => item.question_id === question.id)
                 const aaAnswer = selfAssessmentAnswers.find((item) => item.question_id === question.id)
@@ -5390,9 +5569,19 @@ export function SkdaWorkspace(props: Props) {
                 const evolutionExpectations = currentAnswerRank < 4
                   ? expectationRows.filter((item) => (ANSWER_LEVEL_RANK[item.answer_level] ?? 0) > currentAnswerRank && ['evolution_to_d','both'].includes(item.purpose))
                   : []
+                const historicalTrajectory=historicalTrajectoryForQuestion(question)
                 return <article id={'skda-question-'+question.id} key={question.id} className="skda-assessment-card">
                   <div className="skda-question-copy"><small>{question.code}{question.axis_name ? ' · '+question.axis_name : ''}</small><strong>{question.question_text}</strong>{question.criterion_name && <span>{question.criterion_name}</span>}</div>
                   {aaAnswer && <div className="skda-aa-guidance"><strong>Autoavaliação importada · {aaAnswer.declared_code ?? 'sem alternativa'}</strong><span>{aaAnswer.declared_text ?? 'Resposta declarada importada sem texto descritivo.'}</span></div>}
+                  {historicalTrajectory.length > 0 && <div className="skda-question-history">
+                    <div className="skda-question-history-head"><strong>Trajetória desta questão</strong><span>Como esta prática foi avaliada nos ciclos anteriores e qual a comparabilidade com a questão atual.</span></div>
+                    <div className="skda-question-history-list">
+                      {historicalTrajectory.map(({response,diagnosis,historicalQuestion,link})=><article key={response.id}>
+                        <div><small>{diagnosis?.reference_year ?? 'Ciclo anterior'} · {historicalQuestion?.code ?? question.code}{link ? ' · '+link.relation_type : ''}</small><strong>{RESPONSE_STATUS[response.response_status] ?? response.response_status} · {CLASSIFICATION[response.classification] ?? response.classification}</strong>{response.answer_text && <span>{response.answer_text}</span>}</div>
+                        <div>{link?.comparability_score != null && <b>{Number(link.comparability_score).toFixed(0)}% comparável</b>}{response.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleDateString('pt-BR')}</small>}</div>
+                      </article>)}
+                    </div>
+                  </div>}
                   {assistedSelfAssessmentActive && question.guidance && <div className="skda-aa-guidance"><strong>Orientação metodológica da questão</strong><span>{question.guidance}</span></div>}
                   <div className="skda-expected-evidence-panel">
                     <div className="skda-expected-evidence-head"><strong>Matriz de evidências esperadas</strong><span>{expectationRows.length > 0 ? 'Curadoria aplicável ao ramo/atividade' : 'Curadoria ainda não cadastrada para esta questão'}</span></div>
@@ -5407,47 +5596,18 @@ export function SkdaWorkspace(props: Props) {
                       </section>}
                     </>}
                   </div>
-                  <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{typeof response?.metadata?.last_interview_code === 'string' && <small>Encontro: {response.metadata.last_interview_code}</small>}{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>
-                  {intelligenceRows.length > 0 && <div className="skda-question-intelligence">
-                    <div className="skda-question-intelligence-head">
-                      <strong>Inteligência de evidências</strong>
-                      <span>{intelligenceRows.length} evidência(s) · {queuedRows.length} em análise · {reviewedRows.filter((item)=>item.analysis_status==='proposed').length} proposta(s) · {reviewedRows.filter((item)=>item.analysis_status==='validated').length} validada(s) · {reviewedRows.filter((item)=>item.analysis_status==='rejected').length} refutada(s)</span>
+                  <div className="skda-assessment-status"><span>Estado</span><b>{RESPONSE_STATUS[response?.response_status ?? 'draft'] ?? response?.response_status}</b>{typeof response?.metadata?.last_interview_code === 'string' && <small>Encontro: {response.metadata.last_interview_code}</small>}{response?.validated_at && <small>Validada em {new Date(response.validated_at).toLocaleString('pt-BR')}</small>}</div>                  {reviewedRows.filter((item)=>item.analysis_status!=='rejected').length > 0 && <div className="skda-question-evidence-context">
+                    <div className="skda-question-evidence-context-head">
+                      <strong>Evidências desta questão</strong>
+                      <span>Somente evidências previamente relacionadas a esta questão pela Gestão de Evidências.</span>
                     </div>
-                    {queuedRows.length > 0 && canEditAssessment && <div className="skda-intelligence-queue">
-                      {queuedRows.map((item) => {
-                        const asset=evidenceAssets.find((row)=>row.id===item.evidence_asset_id)
-                        return <span key={item.id}><b>{asset?.title || 'Evidência vinculada'}</b><button type="button" disabled={saving} onClick={()=>openIntelligenceEditor(item)}>Analisar</button></span>
-                      })}
-                    </div>}
-                    {reviewedRows.length === 0 ? <p>As evidências vinculadas ainda não possuem hipótese proposta para esta questão.</p> : reviewedRows.map((item) => <article key={item.id}>
-                      <div className="skda-question-intelligence-state">
-                        <b>{item.evidence_coverage_status === 'covers' ? 'Contempla' : item.evidence_coverage_status === 'partially_covers' ? 'Contempla parcialmente' : item.evidence_coverage_status === 'does_not_cover' ? 'Não contempla' : item.evidence_coverage_status === 'needs_complement' ? 'Necessita complemento' : 'Em análise'}</b>
-                        {item.confidence_score != null && <span>Confiança {Number(item.confidence_score).toFixed(0)}%</span>}
-                      </div>
-                      <p><strong>Estado da prática:</strong> {PRACTICE_STATE_LABELS[item.practice_state] ?? item.practice_state}{(() => {
-                        const index=PRACTICE_STATE_ORDER.indexOf(item.practice_state as typeof PRACTICE_STATE_ORDER[number])
-                        const next=index >= 0 && index < PRACTICE_STATE_ORDER.length - 1 ? PRACTICE_STATE_ORDER[index + 1] : null
-                        return next ? <> · <strong>Próximo nível:</strong> {PRACTICE_STATE_LABELS[next]}</> : null
-                      })()}</p>
-                      {item.diagnostic_hypothesis && <p><strong>Hipótese:</strong> {item.diagnostic_hypothesis}</p>}
-                      {item.gap_description && <p><strong>Lacuna:</strong> {item.gap_description}</p>}
-                      {item.complement_needed && <p><strong>Complemento necessário:</strong> {item.complement_needed}</p>}
-                      {item.improvement_suggestion && <p><strong>Melhoria sugerida:</strong> {item.improvement_suggestion}</p>}
-                      {assistedSelfAssessmentActive && item.self_assessment_guidance && <p><strong>Orientação para AA:</strong> {item.self_assessment_guidance}</p>}
-                      {item.interview_question_suggestion && <p><strong>Pergunta sugerida para entrevista:</strong> {item.interview_question_suggestion}</p>}
-                      <div className="skda-intelligence-actions">
-                        {item.analysis_status === 'proposed' && canEditAssessment && <button type="button" disabled={saving} onClick={()=>openIntelligenceEditor(item)}>Editar análise</button>}
-                        {item.analysis_status === 'proposed' && canValidateAssessment && <>
-                          {intelligenceReviewId === item.id ? <div className="skda-intelligence-review">
-                            <textarea rows={2} value={intelligenceReviewNote} onChange={(e)=>setIntelligenceReviewNote(e.target.value)} placeholder="Justifique a validação ou refutação desta hipótese." />
-                            <div><button type="button" disabled={saving} onClick={() => void reviewIntelligence(item,'validated')}>Validar hipótese</button><button type="button" disabled={saving} onClick={() => void reviewIntelligence(item,'rejected')}>Refutar</button><button type="button" onClick={() => {setIntelligenceReviewId(null);setIntelligenceReviewNote('')}}>Cancelar</button></div>
-                          </div> : <button type="button" onClick={() => {setIntelligenceReviewId(item.id);setIntelligenceReviewNote('Validação técnica da hipótese a partir das evidências disponíveis e do contexto da questão.')}}>Revisar hipótese</button>}
-                        </>}
-                        {item.analysis_status === 'validated' && typeof item.metadata?.finding_id !== 'string' && canEditFindings && <button type="button" className="skda-primary" disabled={saving} onClick={() => void convertIntelligenceToFinding(item)}>Converter em achado</button>}
-                        {typeof item.metadata?.finding_id === 'string' && <span>Incorporada ao achado</span>}
-                        {item.analysis_status === 'rejected' && <span>Hipótese refutada</span>}
-                      </div>
-                    </article>)}
+                    {reviewedRows.filter((item)=>item.analysis_status!=='rejected').slice(0,6).map((item)=>{
+                      const asset=evidenceAssets.find((row)=>row.id===item.evidence_asset_id)
+                      return <article key={item.id}>
+                        <div><b>{asset?.title || 'Evidência relacionada'}</b><span>{item.evidence_coverage_status === 'covers' ? 'Contempla' : item.evidence_coverage_status === 'partially_covers' ? 'Contempla parcialmente' : item.evidence_coverage_status === 'needs_complement' ? 'Necessita complemento' : 'Em análise'}</span></div>
+                        {item.confidence_score != null && <small>Confiança {Number(item.confidence_score).toFixed(0)}%</small>}
+                      </article>
+                    })}
                   </div>}
                   <div className="skda-assessment-fields">
                     <label className="wide"><span>Constatação / resposta</span><textarea rows={3} value={draft.answerText} disabled={!canEditAssessment || saving} onChange={(e)=>updateAssessmentDraft(question.id,{answerText:e.target.value})}/></label>
@@ -5609,6 +5769,22 @@ export function SkdaWorkspace(props: Props) {
       onActivate:() => setActivePhaseCode('OVERVIEW'),
     },
     {
+      id:'evidence-management',
+      label:'Gestão de Evidências',
+      icon:<span aria-hidden="true">▤</span>,
+      active:isEvidenceManagement,
+      disabled:!selected,
+      onActivate:() => setActivePhaseCode('EVIDENCE'),
+    },
+    {
+      id:'history-evolution',
+      label:'Histórico e Evolução',
+      icon:<span aria-hidden="true">↗</span>,
+      active:isHistoryEvolution,
+      disabled:!selected,
+      onActivate:() => setActivePhaseCode('HISTORY'),
+    },
+    {
       id:'journey',
       label:'Jornada DA',
       icon:<span aria-hidden="true">⌁</span>,
@@ -5664,11 +5840,15 @@ export function SkdaWorkspace(props: Props) {
 
   const shellPageTitle = isOverview
     ? 'Visão Geral'
-    : isAgenda
-      ? 'Agenda'
-      : activePhase
-        ? activePhase.title
-        : 'Diagnóstico Assistido'
+    : isEvidenceManagement
+      ? 'Gestão de Evidências'
+      : isHistoryEvolution
+        ? 'Histórico e Evolução'
+        : isAgenda
+          ? 'Agenda'
+          : activePhase
+            ? activePhase.title
+            : 'Diagnóstico Assistido'
 
   return <>
     <ApplicationShell

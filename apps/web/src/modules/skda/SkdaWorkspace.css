@@ -5596,3 +5596,212 @@
 @media (max-width:760px) {
   .skda-closeout-phase-sync { grid-template-columns:1fr; }
 }
+
+.skda-history-evolution-page {
+  display:grid;
+  gap:1rem;
+}
+
+.skda-history-cycle-grid,
+.skda-history-reference-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:.75rem;
+}
+
+.skda-history-cycle-grid > article,
+.skda-history-reference-grid > article {
+  display:grid;
+  gap:.35rem;
+  padding:.85rem;
+  border:1px solid var(--skda-border);
+  border-radius:10px;
+  background:var(--skda-surface);
+}
+
+.skda-history-cycle-grid > article.is-current {
+  border-color:var(--skda-primary);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--skda-primary) 20%,transparent);
+}
+
+.skda-history-cycle-grid small,
+.skda-history-reference-grid small,
+.skda-history-values span {
+  color:var(--skda-muted);
+  font-size:.68rem;
+}
+
+.skda-history-cycle-grid strong,
+.skda-history-reference-grid strong {
+  color:var(--skda-text);
+}
+
+.skda-history-values {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.45rem;
+}
+
+.skda-history-values span {
+  padding:.28rem .45rem;
+  border:1px solid var(--skda-border);
+  border-radius:7px;
+  background:color-mix(in srgb,var(--skda-surface) 88%,var(--skda-primary) 12%);
+}
+
+.skda-question-history {
+  display:grid;
+  gap:.45rem;
+  border-left:3px solid color-mix(in srgb,var(--skda-primary) 70%,var(--skda-border));
+}
+
+.skda-question-history-head {
+  display:grid;
+  gap:.14rem;
+}
+
+.skda-question-history-head > strong,
+.skda-question-history > strong {
+  color:var(--skda-text);
+  font-size:.75rem;
+}
+
+.skda-question-history-head > span {
+  color:var(--skda-muted);
+  font-size:.65rem;
+  line-height:1.4;
+}
+
+.skda-question-history-list {
+  display:grid;
+  gap:.35rem;
+}
+
+.skda-question-history-list > article {
+  display:flex;
+  justify-content:space-between;
+  gap:.75rem;
+  padding:.5rem .55rem;
+  border:1px solid var(--skda-border);
+  border-radius:8px;
+  background:color-mix(in srgb,var(--skda-surface) 94%,var(--skda-primary) 6%);
+}
+
+.skda-question-history-list > article > div {
+  display:grid;
+  gap:.12rem;
+}
+
+.skda-question-history-list small,
+.skda-question-history-list span {
+  color:var(--skda-muted);
+  font-size:.66rem;
+  line-height:1.4;
+}
+
+.skda-evidence-intelligence-board,
+.skda-question-evidence-context {
+  display:grid;
+  gap:.65rem;
+  margin-top:.85rem;
+}
+
+.skda-evidence-intelligence-list {
+  display:grid;
+  gap:.45rem;
+}
+
+.skda-evidence-intelligence-list > article,
+.skda-question-evidence-context > article {
+  display:flex;
+  justify-content:space-between;
+  gap:.75rem;
+  align-items:flex-start;
+  padding:.65rem .7rem;
+  border:1px solid var(--skda-border);
+  border-radius:9px;
+  background:var(--skda-surface);
+}
+
+.skda-evidence-intelligence-list > article > div:first-child,
+.skda-question-evidence-context > article > div:first-child {
+  display:grid;
+  gap:.15rem;
+  min-width:0;
+}
+
+.skda-evidence-intelligence-list small,
+.skda-evidence-intelligence-list span,
+.skda-question-evidence-context span,
+.skda-question-evidence-context small {
+  color:var(--skda-muted);
+  font-size:.66rem;
+  line-height:1.4;
+}
+
+.skda-evidence-intelligence-actions {
+  display:flex;
+  gap:.4rem;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.skda-question-evidence-context-head {
+  display:grid;
+  gap:.14rem;
+}
+
+.skda-question-evidence-context-head strong {
+  color:var(--skda-text);
+  font-size:.75rem;
+}
+
+.skda-question-evidence-context-head span {
+  color:var(--skda-muted);
+  font-size:.65rem;
+}
+
+@media (max-width: 900px) {
+  .skda-question-history-list > article,
+  .skda-evidence-intelligence-list > article,
+  .skda-question-evidence-context > article {
+    display:grid;
+  }
+}
+
+.skda-evidence-readiness {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:.55rem;
+  margin:.8rem 0;
+}
+
+.skda-evidence-readiness > div {
+  display:grid;
+  gap:.16rem;
+  padding:.65rem .7rem;
+  border:1px solid var(--skda-border);
+  border-radius:9px;
+  background:var(--skda-surface);
+}
+
+.skda-evidence-readiness span,
+.skda-evidence-readiness small {
+  color:var(--skda-muted);
+  font-size:.64rem;
+  line-height:1.35;
+}
+
+.skda-evidence-readiness strong {
+  color:var(--skda-text);
+  font-size:1.05rem;
+}
+
+.skda-standalone-capability > .skda-phase-panel {
+  margin-top:0;
+}
+
+@media (max-width: 1080px) {
+  .skda-evidence-readiness { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}

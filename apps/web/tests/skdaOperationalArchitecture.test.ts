@@ -75,7 +75,8 @@ test('DA interview cockpit is question-centered and supports guided navigation, 
   assert.match(workspace, /Salvar resposta do DA/)
   assert.match(workspace, /Prática da Organização/)
   assert.match(workspace, /Leitura assistida a confrontar na entrevista/)
-  assert.match(workspace, /Evidências já localizadas \/ inteligência disponível/)
+  assert.match(workspace, /Evidências desta questão/)
+  assert.match(workspace, /Histórico desta questão/)
   assert.match(workspace, /Evidências para sustentar a resposta/)
   assert.match(workspace, /Aprofundamento:/)
   assert.match(workspace, /← Anterior/)
@@ -83,6 +84,20 @@ test('DA interview cockpit is question-centered and supports guided navigation, 
   assert.match(workspaceCss, /\.skda-interview-launchpad/)
   assert.match(workspaceCss, /\.skda-interview-answer-panel/)
   assert.match(workspaceCss, /\.skda-interview-practice-card/)
+})
+
+test('evidence management and longitudinal history are first-class SK-DA workspaces', () => {
+  assert.match(workspace, /label:'Gestão de Evidências'/)
+  assert.match(workspace, /label:'Histórico e Evolução'/)
+  assert.match(workspace, /Inteligência e validação das evidências/)
+  assert.match(workspace, /Histórico e Evolução da Organização/)
+  assert.match(workspace, /Follow-up de Planos de Ação/)
+  assert.match(workspace, /skda_question_history_links/)
+  assert.match(workspace, /historicalTrajectoryForQuestion/)
+  assert.match(workspace, /Histórico desta questão/)
+  assert.doesNotMatch(workspace, /Evidências já localizadas \/ inteligência disponível/)
+  assert.match(workspaceCss, /\.skda-history-evolution-page/)
+  assert.match(workspaceCss, /\.skda-evidence-intelligence-board/)
 })
 
 test('evidence intelligence is scoped to semantically relevant candidate questions instead of all catalog questions', () => {
