@@ -41,8 +41,12 @@
 }
 
 .sparks-transversal-workspace--split .sparks-transversal-workspace__body {
-  grid-template-columns: minmax(0, 1fr) 4.25rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
+}
+
+.sparks-transversal-workspace--split.sparks-transversal-workspace--with-actions .sparks-transversal-workspace__body {
+  grid-template-columns: minmax(0, 1fr) 4.25rem minmax(0, 1fr);
 }
 
 .sparks-transversal-workspace__pane {
@@ -216,7 +220,12 @@
   }
 
   /* Componente proporcional: telas médias mantêm dois painéis. */
-  .sparks-transversal-workspace--split .sparks-transversal-workspace__body,
+  .sparks-transversal-workspace--split .sparks-transversal-workspace__body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 0.55rem !important;
+  }
+
+  .sparks-transversal-workspace--split.sparks-transversal-workspace--with-actions .sparks-transversal-workspace__body,
   .sparks-measure-dual-selector__layout {
     grid-template-columns: minmax(0, 1fr) 4rem minmax(0, 1fr) !important;
     gap: 0.55rem !important;
@@ -225,7 +234,14 @@
 
 @media (max-width: 900px) {
   /* Em telas realmente estreitas, os dois painéis dividem a altura útil. */
-  .sparks-transversal-workspace--split .sparks-transversal-workspace__body,
+  .sparks-transversal-workspace--split .sparks-transversal-workspace__body {
+    height: calc(100dvh - 210px) !important;
+    min-height: 500px !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+
+  .sparks-transversal-workspace--split.sparks-transversal-workspace--with-actions .sparks-transversal-workspace__body,
   .sparks-measure-dual-selector__layout {
     height: calc(100dvh - 210px) !important;
     min-height: 500px !important;

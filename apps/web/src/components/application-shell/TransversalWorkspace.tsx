@@ -24,6 +24,7 @@ export function TransversalWorkspace({
       className={[
         'sparks-transversal-workspace',
         secondary ? 'sparks-transversal-workspace--split' : '',
+        secondary && actions ? 'sparks-transversal-workspace--with-actions' : '',
         className ?? '',
       ]
         .filter(Boolean)

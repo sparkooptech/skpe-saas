@@ -59,6 +59,34 @@ validate_public_domain() {
   return 0
 }
 
+validate_business_rest_route() {
+  local anonymous_status
+  local publishable_status
+
+  anonymous_status="$(curl \
+    --insecure \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    --resolve "${SPARKS_PUBLIC_HOST}:443:127.0.0.1" \
+    "https://${SPARKS_PUBLIC_HOST}/rest/v1/" || true)"
+
+  [ "${anonymous_status}" = "401" ] || return 1
+
+  [ -n "${VITE_SUPABASE_PUBLISHABLE_KEY:-}" ] || return 1
+
+  publishable_status="$(curl \
+    --insecure \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    --header "apikey: ${VITE_SUPABASE_PUBLISHABLE_KEY}" \
+    --resolve "${SPARKS_PUBLIC_HOST}:443:127.0.0.1" \
+    "https://${SPARKS_PUBLIC_HOST}/rest/v1/" || true)"
+
+  [ "${publishable_status}" = "200" ]
+}
+
 wait_for_public_domain() {
   local max_attempts="${1:-24}"
   local sleep_seconds="${2:-5}"
@@ -219,6 +247,9 @@ run_preflight() {
   require_command grep
   require_command find
 
+  docker network inspect sparks-homol-backend-net >/dev/null 2>&1 || \
+    fail "Required backend network sparks-homol-backend-net does not exist"
+
   docker inspect "${PUBLIC_CONTAINER}" >/dev/null 2>&1 || fail "Current public container does not exist"
 
   CURRENT_RUNNING="$(docker inspect --format '{{.State.Running}}' "${PUBLIC_CONTAINER}" 2>/dev/null || true)"
@@ -269,12 +300,23 @@ build_preview_release() {
     exit 1
   fi
 
+  PREVIEW_REST_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' "http://${PREVIEW_BIND%:*}/rest/v1/" || true)"
+  if [ "${PREVIEW_REST_STATUS}" != "401" ]; then
+    log "PREVIEW FAIL: preview /rest/v1/ returned ${PREVIEW_REST_STATUS}, expected 401"
+    cleanup_failed_release
+    exit 1
+  fi
+
   log "PREVIEW PASS"
 }
 
 cutover_release() {
   BACKUP_CONTAINER="${PUBLIC_CONTAINER}-old-${DEPLOY_TIMESTAMP}"
   write_cleanup_metadata
+
+  # O preview já validou a imagem e o proxy /rest/v1. Removê-lo antes do
+  # cutover libera seu IPv4 na rede backend restrita para o container público.
+  remove_preview_container
 
   if docker ps -a --format '{{.Names}}' | grep -qx "${PUBLIC_CONTAINER}"; then
     log "CUTOVER START"
@@ -306,6 +348,17 @@ cutover_release() {
 
   if ! wait_for_public_domain 24 5; then
     log "CUTOVER FAIL: public domain validation failed"
+    if perform_rollback; then
+      cleanup_failed_release
+      exit "${ROLLBACK_AFTER_DEPLOY_EXIT_CODE}"
+    fi
+
+    cleanup_failed_release
+    exit "${ROLLBACK_FAILURE_EXIT_CODE}"
+  fi
+
+  if ! validate_business_rest_route; then
+    log "CUTOVER FAIL: public /rest/v1 route did not reach the Hostinger gateway"
     if perform_rollback; then
       cleanup_failed_release
       exit "${ROLLBACK_AFTER_DEPLOY_EXIT_CODE}"

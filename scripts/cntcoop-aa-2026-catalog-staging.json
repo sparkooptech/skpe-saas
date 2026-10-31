@@ -1,0 +1,1973 @@
+{
+  "organization_id": "bd58a170-b5ef-4150-9b69-026afa138661",
+  "diagnosis_id": "79f8b0dc-371e-4483-bfad-542cdbb37724",
+  "reference_year": 2026,
+  "source_file": "CNTCOOP_Megafase_2_Entrevistas_Validacao_Inteligencia_Evidencias.xlsx",
+  "source_sha256": "047b48d89f0df91d27235f91a8299f078da8b05937c197f64d0dc2b5c4055527",
+  "items": [
+    {
+      "code": "GOV-Q01",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "A cooperativa prospecta novos cooperados e possui práticas para manter ou adequar o quadro social ativo conforme sua estratégia de atuação?",
+      "alternatives": [
+        "A cooperativa não prospecta novos cooperados ou não possui práticas para manter e adequar o quadro social ativo.",
+        "A cooperativa prospecta novos cooperados e possui práticas para manter e adequar o quadro social ativo.",
+        "A cooperativa prospecta novos cooperados e possui práticas padronizadas para manter e adequar o quadro social ativo, mas sem relação com suas estratégias de atuação.",
+        "A cooperativa prospecta novos cooperados, possui práticas padronizadas, com padrões documentados para manter e adequar o quadro social ativo com relação direta com suas estratégias de atuação."
+      ],
+      "declared": "C",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Demonstre os públicos alcançados, registros de interação, tratamento/retorno, abrangência e análise de temas recorrentes. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q02",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "A cooperativa possui processos de admissão e integração de novos cooperados?",
+      "alternatives": [
+        "A cooperativa não possui processos de admissão e de integração de novos cooperados.",
+        "A cooperativa possui processos para a admissão e integração de novos cooperados, mas não estão padronizados.",
+        "A cooperativa possui processo padronizado para a admissão de novos cooperados, que considera a análise de conflitos de interesse entre as atividades do cooperado e as atividades exercidas pela cooperativa, mas a integração do cooperado é realizada informalmente ou de maneira não padronizada.",
+        "A cooperativa possui processos padronizados para a admissão e integração de novos cooperados, com padrões documentados, que consideram a análise de conflitos de interesse entre as atividades do cooperado e as atividades exercidas pela cooperativa."
+      ],
+      "declared": "D",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q03",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "O processo de desligamento de cooperados é feito segundo padrão definido, que inclui mecanismos para minimizar eventuais desgastes na demissão, eliminação ou exclusão de cooperados?",
+      "alternatives": [
+        "O processo de desligamento de cooperados não é feito segundo padrão definido.",
+        "O processo de desligamento de cooperados é feito segundo padrão definido, mas não está documentado.",
+        "O processo de desligamento de cooperados é feito segundo padrão definido e documentado, mas não inclui mecanismos para minimizar eventuais desgastes na demissão, eliminação ou exclusão de cooperados.",
+        "O processo de desligamento de cooperados é feito segundo padrão definido e documentado e inclui mecanismos para minimizar eventuais desgastes na demissão, eliminação ou exclusão de cooperados."
+      ],
+      "declared": "C",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q04",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "A cooperativa possui mecanismos de governança para relacionamento com os cooperados?",
+      "alternatives": [
+        "A cooperativa não possui mecanismos de governança para relacionamento com os cooperados.",
+        "A cooperativa possui mecanismos informais de governança para relacionamento com os cooperados.",
+        "A cooperativa possui mecanismos formais de governança para relacionamento com os cooperados visando à divulgação de serviços e de informações que podem impactar sua atividade e o negócio da cooperativa.",
+        "A cooperativa possui mecanismos formais de governança para relacionamento com os cooperados visando à divulgação de serviços e de informações que podem impactar sua atividade e o negócio da cooperativa e ao conhecimento de suas necessidades ou expectativas."
+      ],
+      "declared": "D",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Demonstre os públicos alcançados, registros de interação, tratamento/retorno, abrangência e análise de temas recorrentes. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q05",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "Há canais para recebimento de manifestações dos cooperados, tais como reclamações, elogios ou sugestões, e as manifestações recebidas são tratadas?",
+      "alternatives": [
+        "Não há canais para recebimento de reclamações, elogios ou sugestões dos cooperados e as manifestações recebidas não são tratadas.",
+        "Há canais para recebimento de reclamações, elogios ou sugestões dos cooperados e as manifestações recebidas são tratadas informalmente.",
+        "Há canais para recebimento de reclamações, elogios ou sugestões dos cooperados e as manifestações recebidas são tratadas formalmente.",
+        "Há canais para recebimento de reclamações, elogios ou sugestões dos cooperados, as manifestações recebidas são tratadas formalmente e o cooperado é informado sobre o tratamento dado à sua manifestação."
+      ],
+      "declared": "B",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Demonstre os públicos alcançados, registros de interação, tratamento/retorno, abrangência e análise de temas recorrentes. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q06",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "Há práticas para a organização do quadro social da cooperativa?",
+      "alternatives": [
+        "Não há práticas para a organização do quadro social da cooperativa.",
+        "Há práticas para a organização do quadro social da cooperativa, mas não são padronizadas.",
+        "Há práticas padronizadas para a organização do quadro social da cooperativa, mas os padrões não estão documentados.",
+        "Há práticas padronizadas, com padrões documentados, para a organização do quadro social da cooperativa, com diretrizes para organização ou atuação dos grupos definidos e são monitoradas por um responsável."
+      ],
+      "declared": "D",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q07",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "A educação cooperativista é promovida para o quadro social?",
+      "alternatives": [
+        "A educação cooperativista não é promovida.",
+        "A educação cooperativista é promovida apenas na admissão do cooperado.",
+        "A educação cooperativista é promovida para o quadro social, regularmente.",
+        "A educação cooperativista é promovida para o quadro social, regularmente, de forma planejada e abrangente, e seus resultados são controlados."
+      ],
+      "declared": "D",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Vincule plano/trilha a público-alvo, conteúdo, convocações, listas/certificados, avaliação de aprendizagem e aplicação posterior. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q08",
+      "axis": "Governança",
+      "criterion": "Cooperados",
+      "question": "A satisfação dos cooperados com os processos de governança é avaliada?",
+      "alternatives": [
+        "A satisfação dos cooperados com os processos de governança não é avaliada.",
+        "A satisfação dos cooperados com os processos de governança é avaliada eventualmente e sem método formal.",
+        "A satisfação dos cooperados com os processos de governança é avaliada regularmente, por meio de método formal e os resultados são controlados.",
+        "A satisfação dos cooperados com os processos de governança é avaliada regularmente, por meio de método formal, os resultados são controlados e são utilizados na melhoria do relacionamento com os cooperados."
+      ],
+      "declared": "C",
+      "weight": 3.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: POL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).\nPOL-XXX - Política de Gestão do Quadro Social.docx (localizada na pasta CNTCOOP; arquivo atualizado em 08/10/2026; vigência e aprovação a confirmar).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; versões de 30/09 e 02/10/2026; confirmar versão vigente e relação com filiadas).\nModelo POP Gestão do quadro social.docx (localizado em 07/10/2026; é modelo, não prova de execução).",
+      "evidence": "Política de gestão do quadro social e de relacionamento com filiadas; fluxo/POP de prospecção, admissão, integração e desligamento; cadastro e evolução do quadro; registros de escuta, canais e retorno; calendário e listas de educação cooperativista; pesquisa de satisfação, indicadores, análises e melhorias. Inclua instrumento, universo e período da pesquisa, base de respostas, método de consolidação, análise dos resultados e plano de resposta aos achados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q09",
+      "axis": "Governança",
+      "criterion": "Assembleia Geral",
+      "question": "O processo assemblear possui práticas proativas para promover a participação consciente e efetiva dos cooperados no processo decisório?",
+      "alternatives": [
+        "O processo assemblear não possui práticas proativas para promover a participação consciente e efetiva dos cooperados no processo decisório.",
+        "O processo assemblear possui práticas proativas para promover a participação consciente e efetiva dos cooperados no processo decisório, que incluem convocação com prazo de antecedência superior ao mínimo exigido por lei e publicação do edital em meios que abrangem todos os cooperados.",
+        "O processo assemblear possui práticas proativas para promover a participação consciente e efetiva dos cooperados no processo decisório, que incluem convocação com prazo de antecedência superior ao mínimo exigido por lei, publicação do edital em meios que abrangem todos os cooperados, disponibilização prévia de informações aos cooperados e existência de canais pré-assembleares para recebimento de sugestões.",
+        "O processo assemblear possui práticas proativas para promover a participação consciente e efetiva dos cooperados no processo decisório, que incluem convocação com prazo de antecedência superior ao mínimo exigido por lei, publicação do edital em meios que abrangem todos os cooperados, disponibilização prévia de informações aos cooperados, existência de canais pré-assembleares para recebimento de sugestões e a realização de reuniões preparatórias para as assembleias."
+      ],
+      "declared": "D",
+      "weight": 7.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e dispositivos aplicáveis).\nCNTCOOP-Regimento-Eleitoral-VF.docx (localizado; versão final indicada no nome, arquivo atualizado em 17/10/2025).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e dispositivos aplicáveis).\nCNTCOOP-Regimento-Eleitoral-VF.docx (localizado; versão final indicada no nome, arquivo atualizado em 17/10/2025).",
+      "evidence": "Estatuto e regimento eleitoral vigentes; calendário e procedimento assemblear; editais e comprovação de divulgação; material preparatório; atas, listas de presença, registros de votação e manifestações; avaliação de participação e providências posteriores. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q10",
+      "axis": "Governança",
+      "criterion": "Assembleia Geral",
+      "question": "O processo eleitoral está regulamentado, divulgado aos cooperados e inclui práticas para apresentação das propostas dos candidatos aos cooperados?",
+      "alternatives": [
+        "O processo eleitoral não está regulamentado.",
+        "O processo eleitoral está regulamentado no estatuto social, mas não inclui práticas para apresentação das propostas dos candidatos aos cooperados.",
+        "O processo eleitoral está regulamentado no estatuto social e inclui práticas para apresentação das propostas dos candidatos aos cooperados.",
+        "O processo eleitoral está regulamentado no estatuto social e em documento adicional de regulamentação divulgado aos cooperados, e inclui práticas para apresentação das propostas dos candidatos aos cooperados."
+      ],
+      "declared": "D",
+      "weight": 7.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e dispositivos aplicáveis).\nCNTCOOP-Regimento-Eleitoral-VF.docx (localizado; versão final indicada no nome, arquivo atualizado em 17/10/2025).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e dispositivos aplicáveis).\nCNTCOOP-Regimento-Eleitoral-VF.docx (localizado; versão final indicada no nome, arquivo atualizado em 17/10/2025).",
+      "evidence": "Estatuto e regimento eleitoral vigentes; calendário e procedimento assemblear; editais e comprovação de divulgação; material preparatório; atas, listas de presença, registros de votação e manifestações; avaliação de participação e providências posteriores. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q11",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "Há diretrizes definidas para a atuação do Conselho de Administração e/ou Diretoria eleitos, que complementam as atribuições descritas no estatuto social?",
+      "alternatives": [
+        "Não há diretrizes definidas para a atuação do Conselho de Administração e/ou Diretoria eleitos.",
+        "Há diretrizes definidas para a atuação do Conselho de Administração e/ou Diretoria eleitos, mas não documentadas.",
+        "Há diretrizes documentadas para a atuação Conselho de Administração e/ou Diretoria eleitos, que contemplam as qualificações desejadas para seus membros, a política de remuneração dos conselheiros e/ou diretores, a confidencialidade das deliberações estratégicas e a existência de um orçamento próprio.",
+        "Há diretrizes documentadas para a atuação do Conselho de Administração e/ou Diretoria eleitos, que contemplam as qualificações desejadas para seus membros, a política de remuneração dos conselheiros e/ou diretores, as formas de integração de novos conselheiros e/ou diretores, os meios utilizados para mitigar eventuais conflitos entre a propriedade e a gestão, a confidencialidade das deliberações estratégicas e a existência de um orçamento próprio."
+      ],
+      "declared": "B",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q12",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "O Conselho de Administração e/ou Diretoria eleitos definem diretrizes estratégicas de curto e longo prazo, visando resguardar os interesses dos cooperados e promover a inovação e a sustentabilidade?",
+      "alternatives": [
+        "O Conselho de Administração e/ou Diretoria eleitos não definem diretrizes estratégicas visando resguardar os interesses dos cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos definem informalmente diretrizes estratégicas visando resguardar os interesses dos cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos definem diretrizes estratégicas de curto prazo, por meio de processo formalizado, visando resguardar os interesses dos cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos definem diretrizes estratégicas de curto e longo prazo, por meio de processo formalizado, visando resguardar os interesses dos cooperados e promover a inovação e a sustentabilidade da cooperativa."
+      ],
+      "declared": "D",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q13",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "A cooperativa possui política de sustentabilidade?",
+      "alternatives": [
+        "A cooperativa não possui política de sustentabilidade.",
+        "A cooperativa não possui política de sustentabilidade formalmente definida, mas existem ações pontuais sendo realizadas.",
+        "A cooperativa possui política de sustentabilidade formalmente definida e aprovada pelo Conselho de Administração e/ou Diretoria eleitos.",
+        "A cooperativa possui política de sustentabilidade formalmente definida, alinhada aos objetivos do Pacto Global, aprovada pelo Conselho de Administração e/ou Diretoria eleitos e comunicada aos cooperados e colaboradores."
+      ],
+      "declared": "D",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Mostre a ligação entre análise de contexto, decisão aprovada, desdobramento em responsável/meta, revisões e resultados acompanhados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q14",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "A cooperativa busca assegurar uma atuação ética?",
+      "alternatives": [
+        "A cooperativa não busca assegurar uma atuação ética.",
+        "A cooperativa busca informalmente assegurar uma atuação ética.",
+        "A cooperativa busca formalmente assegurar uma atuação ética por meio de diretrizes e padrões de conduta e ética documentados, aprovados pelo Conselho de Administração e/ou Diretoria eleitos e divulgados para os cooperados e colaboradores, e pela existência de mecanismos permanentes para orientações quanto à ética.",
+        "A cooperativa busca formalmente assegurar uma atuação ética por meio de diretrizes e padrões de conduta e ética documentados, aprovados pelo Conselho de Administração e/ou Diretoria eleitos e divulgados para as os cooperados e colaboradores, pela existência de mecanismos permanentes para orientações quanto à ética e pela instalação ou existência de um comitê ou comissão de ética para o tratamento de eventuais desvios."
+      ],
+      "declared": "C",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q15",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "Há práticas para garantir a conformidade da cooperativa com leis e regulamentos, internos e externos?",
+      "alternatives": [
+        "Não há práticas para garantir a conformidade da cooperativa com leis e regulamentos, internos e externos.",
+        "Há práticas padronizadas para garantir a conformidade da cooperativa com leis e regulamentos, internos e externos, mas os padrões não estão documentados.",
+        "Há práticas padronizadas, com padrões documentados, para garantir a conformidade da cooperativa com leis e regulamentos, internos e externos.",
+        "Há práticas padronizadas, com padrões documentados, para garantir a conformidade da cooperativa com leis e regulamentos, internos e externos, e elas incluem medidas anticorrupção."
+      ],
+      "declared": "B",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q16",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "Há práticas para desenvolver novas lideranças visando o processo de sucessão para o Conselho de Administração e/ou Diretoria eleitos e Conselho Fiscal da cooperativa?",
+      "alternatives": [
+        "Não há práticas para desenvolver novas lideranças.",
+        "Há práticas para desenvolver novas lideranças, mas não são padronizadas.",
+        "Há práticas padronizadas, realizadas regularmente, para desenvolver novas lideranças, mas os potenciais novos líderes são identificados sem critérios definidos.",
+        "Há práticas padronizadas, realizadas regularmente, para desenvolver novas lideranças e os potenciais novos líderes são identificados com base nas competências de liderança desejadas pela cooperativa."
+      ],
+      "declared": "C",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q17",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "O Conselho de Administração e/ou Diretoria eleitos avaliam o desempenho da cooperativa no que diz respeito ao atendimento dos interesses dos cooperados?",
+      "alternatives": [
+        "O Conselho de Administração e/ou Diretoria eleitos não avaliam o desempenho da cooperativa no que diz respeito ao atendimento dos interesses dos cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos avaliam eventualmente o desempenho da cooperativa no que diz respeito ao atendimento dos interesses dos cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos avaliam regularmente o desempenho da cooperativa no que diz respeito ao atendimento dos interesses dos cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos avaliam regularmente o desempenho da cooperativa no que diz respeito ao atendimento dos interesses dos cooperados por meio do acompanhamento dos resultados de indicadores estabelecidos para esse fim."
+      ],
+      "declared": "D",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q18",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "O Conselho de Administração e/ou Diretoria eleitos prestam contas de sua atuação para os cooperados?",
+      "alternatives": [
+        "O Conselho de Administração e/ou Diretoria eleitos não prestam contas de sua atuação para os cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos prestam contas de sua atuação nas assembleias gerais.",
+        "O Conselho de Administração e/ou Diretoria eleitos prestam contas de sua atuação nas assembleias gerais e quando solicitado pelo Conselho Fiscal ou cooperados.",
+        "O Conselho de Administração e/ou Diretoria eleitos prestam contas de sua atuação nas assembleias gerais e, proativamente, há práticas regulares complementares às assembleias gerais para a prestação de contas aos cooperados ou ao Conselho Fiscal."
+      ],
+      "declared": "D",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q19",
+      "axis": "Governança",
+      "criterion": "Conselho de Administração/ Diretoria",
+      "question": "O Conselho de Administração e/ou Diretoria eleitos interagem com dirigentes de outras cooperativas buscando oportunidades de intercooperação e existem parcerias estratégicas com outras cooperativas",
+      "alternatives": [
+        "O Conselho de Administração e/ou Diretoria eleitos da cooperativa não interagem com dirigentes de outras cooperativas.",
+        "O Conselho de Administração e/ou Diretoria eleitos da cooperativa interagem eventualmente com dirigentes de outras cooperativas.",
+        "O Conselho de Administração e/ou Diretoria eleitos da cooperativa interagem regularmente com dirigentes de outras cooperativas buscando oportunidades de intercooperação.",
+        "O Conselho de Administração e/ou Diretoria eleitos da cooperativa interagem regularmente com dirigentes de outras cooperativas buscando oportunidades de intercooperação e existem parcerias e/ou alianças estratégicas com outras cooperativas cujos resultados são monitorados."
+      ],
+      "declared": "D",
+      "weight": 3.4,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf (localizado; confirmar vigência e alçadas).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar versão vigente e desdobramento).\nRelatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; material de ciclo anterior, não valida prática atual).",
+      "evidence": "Estatuto e regimentos; atas e pautas de deliberação; planejamento estratégico e desdobramentos; declarações e tratamento de conflitos; diretrizes de ética e conformidade; registros de prestação de contas, desenvolvimento de lideranças e acompanhamento de resultados. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q20",
+      "axis": "Governança",
+      "criterion": "Conselho Fiscal",
+      "question": "Há diretrizes definidas para a atuação do Conselho Fiscal, que complementam as atribuições descritas no estatuto social?",
+      "alternatives": [
+        "Não há diretrizes definidas para a atuação do Conselho Fiscal.",
+        "Há diretrizes definidas para a atuação do Conselho Fiscal, mas não estão documentadas.",
+        "Há diretrizes documentadas para a atuação do Conselho Fiscal que contemplam a elaboração de plano de trabalho e as formas de divulgação dos resultados de sua atuação.",
+        "Há diretrizes documentadas para a atuação do Conselho Fiscal, que contemplam as qualificações desejadas para seus membros, a política de remuneração dos conselheiros, a elaboração de plano de trabalho, as formas de divulgação dos resultados de sua atuação e os meios definidos para assegurar a atuação com independência e imparcialidade."
+      ],
+      "declared": "D",
+      "weight": 6,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf e Relatório - Governança - CNTCoop.pdf (localizados; pareceres, atas e execução ainda a identificar).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf e Relatório - Governança - CNTCoop.pdf (localizados; pareceres, atas e execução ainda a identificar).",
+      "evidence": "Estatuto/regimento e plano anual de trabalho; atas e pareceres; relatórios de análise; recomendações emitidas; respostas da gestão; plano de providências, prazos e comprovação de encerramento. Relacione competência estatutária/regimental a pauta, ata/parecer, participantes, deliberação, responsável pelo encaminhamento e acompanhamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q21",
+      "axis": "Governança",
+      "criterion": "Gestão Executiva",
+      "question": "Há diretrizes definidas para a atuação da gestão executiva contratada?",
+      "alternatives": [
+        "Não há diretrizes definidas para a atuação da gestão executiva contratada.",
+        "Há diretrizes definidas para a atuação da gestão executiva contratada, mas não estão documentadas.",
+        "Há diretrizes documentadas para a atuação da gestão executiva que contemplam as qualificações, a política de remuneração, as atribuições dos executivos e as formas de interação com o Conselho de Administração/Diretoria.",
+        "Há diretrizes documentadas para a atuação da gestão executiva contratada que contemplam as qualificações, a política de remuneração, as atribuições dos executivos, incluindo a elaboração de plano estratégico, a implementação de sistemas de controle e as formas de interação com o Conselho de Administração e/ou Diretoria eleitos."
+      ],
+      "declared": "D",
+      "weight": 6,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar atribuições atuais e evidências de execução).\nCNTCOOP-ATA-AGO-E-AGE-ESTATUTO-SOCIAL-2026-REGISTRADA.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar atribuições atuais e evidências de execução).",
+      "evidence": "Atribuições e delegações aprovadas; organograma e matriz de responsabilidades; metas e relatórios de gestão; registros de reuniões entre governança e gestão; avaliação de desempenho, providências e acompanhamento. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q22",
+      "axis": "Governança",
+      "criterion": "Comitês e Auditorias",
+      "question": "As demonstrações financeiras são auditadas por auditoria externa independente?",
+      "alternatives": [
+        "As demonstrações financeiras não são auditadas por auditoria externa independente.",
+        "As demonstrações financeiras são auditadas por auditoria externa independente, mas a empresa contratada não é credenciada nos órgãos competentes.",
+        "As demonstrações financeiras são auditadas eventualmente por auditoria externa independente e a empresa contratada é credenciada nos órgãos competentes.",
+        "As demonstrações financeiras são auditadas regularmente por auditoria externa independente, a empresa contratada é credenciada nos órgãos competentes, há mecanismos para evitar conflitos de interesse e assegurar a independência da auditoria externa."
+      ],
+      "declared": "A",
+      "weight": 4.4,
+      "evidence": "Atos de criação e composição; regimentos e planos de trabalho; atas; relatórios de auditoria/avaliação; registro de achados, responsáveis, prazos, respostas e encerramentos; evidências de independência e acompanhamento. Demonstre o critério de identificação, responsável, periodicidade, registro de verificação, tratamento de ocorrências e comprovação de fechamento. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q23",
+      "axis": "Governança",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à educação cooperativista dos cooperados?",
+      "alternatives": [
+        "Não existem resultados relativos à educação cooperativista dos cooperados.",
+        "Existem resultados relativos à educação cooperativista dos cooperados, mas não há informações referentes aos três últimos anos.",
+        "Existem resultados relativos à educação cooperativista, há informações referentes aos três últimos anos, mas não estão melhorando ao longo do período.",
+        "Existem resultados relativos à educação cooperativista, há informações referentes aos três últimos anos e estão melhorando ao longo do período."
+      ],
+      "declared": "B",
+      "weight": 5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Relatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GOV-Q24",
+      "axis": "Governança",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à satisfação dos cooperados com relação aos processos de governança?",
+      "alternatives": [
+        "Não existem resultados relativos à satisfação dos cooperados com a governança.",
+        "Existem resultados relativos à satisfação dos cooperados com a governança, mas não há informações referentes a três ciclos de avaliação anuais ou bienais.",
+        "Existem resultados relativos à satisfação dos cooperados com a governança, há informações referentes aos três últimos ciclos de avaliação anuais ou bienais, mas não estão melhorando ao longo do período ou em um nível aceitável estabelecido pela cooperativa.",
+        "Existem resultados relativos à satisfação dos cooperados com a governança, há informações referentes aos três últimos ciclos de avaliação anuais ou bienais e estão melhorando ao longo do período ou em um nível aceitável estabelecido pela cooperativa."
+      ],
+      "declared": "B",
+      "weight": 5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Relatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Inclua instrumento, universo e período da pesquisa, base de respostas, método de consolidação, análise dos resultados e plano de resposta aos achados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q01",
+      "axis": "Gestão",
+      "criterion": "Liderança",
+      "question": "A identidade organizacional está definida?",
+      "alternatives": [
+        "A identidade organizacional não está definida. ",
+        "A identidade organizacional está definida informalmente. ",
+        "A identidade organizacional está definida formalmente. ",
+        "A identidade organizacional está definida formalmente e é revisada pelos dirigentes, sempre que necessário."
+      ],
+      "declared": "D",
+      "weight": 2.2,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Plano Estratégico 2025 - 2030\nPrática de PE\nPrática de Acompanhamento e Evolução Contínua\nO propósito, missão, visão e valores foram revisados em 2025, sendo parte integrante do Plano Estratégico 2025 - 2030.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).",
+      "evidence": "Diretrizes de liderança e responsabilidades; atas e decisões; comunicação da estratégia e valores; trilhas de desenvolvimento e sucessão; avaliações e feedback; indicadores e evidências de aplicação nas áreas. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q02",
+      "axis": "Gestão",
+      "criterion": "Liderança",
+      "question": "A identidade organizacional e outros temas relativos ao engajamento das pessoas são comunicados aos \ncooperados e colaboradores",
+      "alternatives": [
+        "A identidade organizacional e outros temas relativos ao engajamento das pessoas não são comunicados. ",
+        "A identidade organizacional e outros temas relativos ao engajamento das pessoas são comunicados eventualmente \napenas aos colaboradores. ",
+        "A identidade organizacional e outros temas relativos ao engajamento das pessoas são comunicados regularmente \napenas aos colaboradores. ",
+        "A identidade organizacional e outros temas relativos ao engajamento das pessoas são comunicados regularmente \naos cooperados e colaboradores."
+      ],
+      "declared": "D",
+      "weight": 2.3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Nas peças do Plano Estratégico 2025 - 2030, no site e nas redes sociais \na Identidade Organizacional são comunicadas aos cooperados e colaboradores.\n\nA comunicação é feita também através das redes sociais e WhatsApp, bem como nas reuniões bimestrais online/presenciais.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).",
+      "evidence": "Diretrizes de liderança e responsabilidades; atas e decisões; comunicação da estratégia e valores; trilhas de desenvolvimento e sucessão; avaliações e feedback; indicadores e evidências de aplicação nas áreas. Demonstre os públicos alcançados, registros de interação, tratamento/retorno, abrangência e análise de temas recorrentes. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q03",
+      "axis": "Gestão",
+      "criterion": "Liderança",
+      "question": "Os padrões para os processos gerenciais são estabelecidos e o cumprimento dos padrões é verificado?",
+      "alternatives": [
+        "Não são estabelecidos padrões para os processos gerenciais nem é verificado o seu cumprimento.",
+        "São estabelecidos padrões para alguns processos gerenciais e o cumprimento dos padrões definidos é verificado eventualmente.",
+        "São estabelecidos padrões para a maioria dos processos gerenciais e o cumprimento dos padrões definidos é verificado regularmente.",
+        "São estabelecidos padrões para todos os processos gerenciais e o cumprimento dos padrões definidos é verificado regularmente por meio de métodos formais."
+      ],
+      "declared": "D",
+      "weight": 2.3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Há processos ainda identificados informalmente e nem há padrões\n estabelecidos para a sua execução.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).",
+      "evidence": "Diretrizes de liderança e responsabilidades; atas e decisões; comunicação da estratégia e valores; trilhas de desenvolvimento e sucessão; avaliações e feedback; indicadores e evidências de aplicação nas áreas. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q04",
+      "axis": "Gestão",
+      "criterion": "Liderança",
+      "question": "É promovida a melhoria dos processos gerenciais da cooperativa?",
+      "alternatives": [
+        "Não é promovida a melhoria nos processos gerenciais da cooperativa.",
+        "As melhorias nos processos gerenciais da cooperativa são promovidas em decorrência apenas da solução de problemas ocorridos.",
+        "As melhorias nos processos gerenciais da cooperativa são promovidas regularmente a partir da solução de problemas ocorridos e contribuições de dirigentes, cooperados e colaboradores.",
+        "As melhorias nos processos gerenciais da cooperativa são promovidas regularmente a partir da solução de problemas ocorridos, de contribuições de dirigentes, cooperados e colaboradores, e de informações obtidas externamente, a partir de boas práticas de outras organizações."
+      ],
+      "declared": "D",
+      "weight": 2.3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há prática estabelecida que garanta a promoção da melhoria contínua \ndos processos gerenciais.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).",
+      "evidence": "Diretrizes de liderança e responsabilidades; atas e decisões; comunicação da estratégia e valores; trilhas de desenvolvimento e sucessão; avaliações e feedback; indicadores e evidências de aplicação nas áreas. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q05",
+      "axis": "Gestão",
+      "criterion": "Liderança",
+      "question": "A inovação é incentivada e são alocados recursos para a sua promoção?",
+      "alternatives": [
+        "A inovação não é incentivada nem há alocação de recursos para a sua promoção.",
+        "A inovação é incentivada informalmente e não há alocação de recursos para a sua promoção.",
+        "A inovação é incentivada formalmente e há alocação de recursos humanos, financeiros ou de infraestrutura para a sua promoção.",
+        "A inovação é incentivada formalmente e há alocação de recursos humanos, financeiros ou de infraestrutura para a sua promoção, coerentes com os objetivos e estratégias da cooperativa."
+      ],
+      "declared": "D",
+      "weight": 2.3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidenciada a alocação de recursos destinados à Inovação.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).",
+      "evidence": "Diretrizes de liderança e responsabilidades; atas e decisões; comunicação da estratégia e valores; trilhas de desenvolvimento e sucessão; avaliações e feedback; indicadores e evidências de aplicação nas áreas. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q06",
+      "axis": "Gestão",
+      "criterion": "Liderança",
+      "question": "Os dirigentes interagem com os colaboradores visando assegurar que os princípios organizacionais, padrões de conduta ética, estratégias e outras diretrizes organizacionais sejam efetivamente implementados na cooperativa?",
+      "alternatives": [
+        "Os dirigentes não interagem com os colaboradores.",
+        "Os dirigentes interagem eventualmente com os colaboradores.",
+        "Os dirigentes interagem regularmente com os colaboradores.",
+        "Os dirigentes interagem regularmente com os colaboradores por meio de práticas padronizadas."
+      ],
+      "declared": "D",
+      "weight": 2.3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\n\nNão há interação com COLABORADORES, por não existirem colaboradores. \nMas, caso tivesse, os mesmos seriam incluídos no programa bimestral de reuniões/encontros.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).",
+      "evidence": "Diretrizes de liderança e responsabilidades; atas e decisões; comunicação da estratégia e valores; trilhas de desenvolvimento e sucessão; avaliações e feedback; indicadores e evidências de aplicação nas áreas. Mostre a ligação entre análise de contexto, decisão aprovada, desdobramento em responsável/meta, revisões e resultados acompanhados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q07",
+      "axis": "Gestão",
+      "criterion": "Liderança",
+      "question": "Os dirigentes analisam o desempenho econômico-financeiro, social e ambiental da cooperativa?",
+      "alternatives": [
+        "Os dirigentes não analisam o desempenho da cooperativa.",
+        "Os dirigentes analisam o desempenho da cooperativa eventualmente considerando apenas os resultados econômico-financeiros.",
+        "Os dirigentes analisam o desempenho da cooperativa regularmente considerando resultados econômico-financeiros, sociais e ambientais.",
+        "Os dirigentes analisam o desempenho da cooperativa regularmente, de forma padronizada, considerando resultados econômico-financeiros, sociais e ambientais e utilizam referenciais comparativos nessa análise."
+      ],
+      "declared": "D",
+      "weight": 2.3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: CNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf e Relatório - Gestão - CNTCoop.pdf (localizados; confirmar vigência e evidências de comunicação/desdobramento).",
+      "evidence": "Diretrizes de liderança e responsabilidades; atas e decisões; comunicação da estratégia e valores; trilhas de desenvolvimento e sucessão; avaliações e feedback; indicadores e evidências de aplicação nas áreas. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q08",
+      "axis": "Gestão",
+      "criterion": "Estratégias e Planos",
+      "question": "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa são analisadas?",
+      "alternatives": [
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa não são analisadas.",
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa são analisadas informalmente e são utilizadas eventualmente para subsidiar a definição de estratégias.",
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa são analisadas informalmente e são utilizadas regularmente para subsidiar a definição de estratégias.",
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa são analisadas por meio de métodos formais e são utilizadas regularmente para subsidiar a definição de estratégias."
+      ],
+      "declared": "D",
+      "weight": 1.8,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: No processo de Planejamento Estratégico, a análise de ambiente interno e externo foi observada no desenvolvimento \ndo Plano Estratégico da Cooeprativa, utilizando as Matrizes SWOT e TOWS, inclusive, para a priorização de ações mitigadoras dos riscos estratégicos.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).",
+      "evidence": "Análises de contexto e partes interessadas; plano estratégico vigente e aprovação; mapa/objetivos, metas e responsáveis; desdobramento em planos de ação; indicadores, atas de revisão, mudanças justificadas e acompanhamento. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q09",
+      "axis": "Gestão",
+      "criterion": "Estratégias e Planos",
+      "question": "As estratégias que permitem alcançar os objetivos da cooperativa estão definidas e há prática para sua comunicação?",
+      "alternatives": [
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa não são analisadas.",
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa são analisadas informalmente e são utilizadas eventualmente para subsidiar a definição de estratégias.",
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa são analisadas informalmente e são utilizadas regularmente para subsidiar a definição de estratégias.",
+        "As forças impulsoras e restritivas do ambiente interno e externo que afetam a cooperativa são analisadas por meio de métodos formais e são utilizadas regularmente para subsidiar a definição de estratégias."
+      ],
+      "declared": "D",
+      "weight": 1.8,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: No porcesso de Planejamento Estratégico, foi eveidenciada o desdobramento alinhado das estartégias, objetivos, resultados-chaves e inciativas da Cooperativa, no último ciclo de planejamento estratégico.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).",
+      "evidence": "Análises de contexto e partes interessadas; plano estratégico vigente e aprovação; mapa/objetivos, metas e responsáveis; desdobramento em planos de ação; indicadores, atas de revisão, mudanças justificadas e acompanhamento. Mostre a ligação entre análise de contexto, decisão aprovada, desdobramento em responsável/meta, revisões e resultados acompanhados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q10",
+      "axis": "Gestão",
+      "criterion": "Estratégias e Planos",
+      "question": "Os indicadores e as metas relacionados às estratégias estão estabelecidos e há práticas para sua comunicação?",
+      "alternatives": [
+        "Os indicadores e as metas relacionados às estratégias não estão estabelecidos.",
+        "Os indicadores estão estabelecidos para algumas estratégias, mas não existem metas relacionadas a esses indicadores.",
+        "Os indicadores e suas respectivas metas estão estabelecidos para algumas estratégias.",
+        "Os indicadores e suas respectivas metas estão estabelecidos para todas as estratégias e há práticas para sua comunicação aos colaboradores."
+      ],
+      "declared": "C",
+      "weight": 1.8,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Plano Estratégico 2025 - 2030\nPrática de PE\nPrática de Acompanhamento e Evolução Contínua\n\nFoi evidenciado os indicadores relacionados aos Obejtivos Estratégcios do \nPlano Estratégico 2025 - 2030, contudo, ainda não foram definidas as mestas de todos os indicadores estabelecidos.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).",
+      "evidence": "Análises de contexto e partes interessadas; plano estratégico vigente e aprovação; mapa/objetivos, metas e responsáveis; desdobramento em planos de ação; indicadores, atas de revisão, mudanças justificadas e acompanhamento. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q11",
+      "axis": "Gestão",
+      "criterion": "Estratégias e Planos",
+      "question": "Os planos de ação, visando alcançar as metas relacionadas às estratégias, são definidos?",
+      "alternatives": [
+        "Os planos de ação não são definidos.",
+        "São definidas ações informalmente para o alcance de algumas metas da cooperativa relacionadas às estratégias.",
+        "São definidos formalmente planos de ação para o alcance de algumas das metas da cooperativa relacionadas às estratégias.",
+        "São definidos formalmente planos de ação para o alcance de todas as metas da cooperativa relacionadas às estratégias e são alocados recursos para a sua implementação."
+      ],
+      "declared": "C",
+      "weight": 1.8,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Plano Estratégico 2025 - 2030\nPrática de PE\nPrática de Acompanhamento e Evolução Contínua\n\nFoi evidenciado os indicadores relacionados aos Obejtivos Estratégcios do \nPlano Estratégico 2025 - 2030, contudo, ainda não foram definidas as mestas de todos os indicadores estabelecidos.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).",
+      "evidence": "Análises de contexto e partes interessadas; plano estratégico vigente e aprovação; mapa/objetivos, metas e responsáveis; desdobramento em planos de ação; indicadores, atas de revisão, mudanças justificadas e acompanhamento. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q12",
+      "axis": "Gestão",
+      "criterion": "Estratégias e Planos",
+      "question": "A implementação dos planos de ação é acompanhada?",
+      "alternatives": [
+        "A implementação dos planos de ação não é acompanhada.",
+        "A implementação dos planos de ação é acompanhada eventualmente ou informalmente.",
+        "A implementação dos planos de ação é acompanhada regularmente por meio de método formal e há responsáveis por seu acompanhamento.",
+        "A implementação dos planos de ação é acompanhada regularmente por meio de método formal, há responsáveis por seu acompanhamento e, quando necessário, são estabelecidas ações de correção."
+      ],
+      "declared": "D",
+      "weight": 1.8,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Plano Estratégico 2025 - 2030\nPrática de PE\nPrática de Acompanhamento e Evolução Contínua\n\nHá Plano de Ação para o perído, mas ainda não está sendo acompanhado e controlado coforme os padrões estabelecidos nas práticas definidas.\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).\nCNTCOOP-Planejamento-Estratégico-2025-2027.pdf (localizado; confirmar aprovação, vigência e resultados do desdobramento).",
+      "evidence": "Análises de contexto e partes interessadas; plano estratégico vigente e aprovação; mapa/objetivos, metas e responsáveis; desdobramento em planos de ação; indicadores, atas de revisão, mudanças justificadas e acompanhamento. Mostre a ligação entre análise de contexto, decisão aprovada, desdobramento em responsável/meta, revisões e resultados acompanhados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q13",
+      "axis": "Gestão",
+      "criterion": "Clientes",
+      "question": "O mercado é conhecido e os clientes são agrupados?",
+      "alternatives": [
+        "O mercado não é conhecido e os clientes não são agrupados.",
+        "O mercado é conhecido, mas os clientes não são agrupados.",
+        "O mercado é conhecido e os clientes são agrupados informalmente.",
+        "O mercado é conhecido e os clientes são agrupados formalmente de acordo com critérios definidos."
+      ],
+      "declared": "D",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foram evidenciados critérios definidos para segmentação / extratificação dos clientes.\n\nO mercado é conhecido e os clientes são agrupados FORMALMENTE, apenas está ausente a documentação/formalização dos critérios (que estão ainda informal).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).",
+      "evidence": "Segmentação de cooperativas filiadas e demais públicos; política/canais de relacionamento; registros de demandas, reclamações e retorno; pesquisas e bases de resposta; análise de satisfação/necessidades; planos e evidências de melhoria. Demonstre os públicos alcançados, registros de interação, tratamento/retorno, abrangência e análise de temas recorrentes. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q14",
+      "axis": "Gestão",
+      "criterion": "Clientes",
+      "question": "As necessidades, expectativas, comportamentos e tendências dos clientes são identificados e utilizados para definir e melhorar produtos, serviços, processos e/ou instalações da cooperativa?",
+      "alternatives": [
+        "As necessidades e expectativas dos clientes não são identificadas.",
+        "As necessidades e expectativas dos clientes são identificadas informalmente.",
+        "As necessidades e expectativas dos clientes são identificadas formalmente por meio de informações obtidas dos clientes.",
+        "As necessidades, expectativas, comportamentos e tendências dos clientes são identificados formalmente por meio de informações obtidas dos clientes e são utilizados na definição e melhoria dos produtos, serviços, processos e/ou instalações da cooperativa."
+      ],
+      "declared": "D",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidenciada práticas documentadas e formalizadas  para a identificação das  necessidades, expectativas, comportamentos e tendências.\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).",
+      "evidence": "Segmentação de cooperativas filiadas e demais públicos; política/canais de relacionamento; registros de demandas, reclamações e retorno; pesquisas e bases de resposta; análise de satisfação/necessidades; planos e evidências de melhoria. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q15",
+      "axis": "Gestão",
+      "criterion": "Clientes",
+      "question": "Os produtos e serviços são divulgados aos clientes?",
+      "alternatives": [
+        "Os produtos e serviços não são divulgados aos clientes.",
+        "Os produtos e serviços são divulgados para alguns clientes.",
+        "Os produtos e serviços são divulgados para a maioria dos clientes.",
+        "Os produtos e serviços são divulgados para todos os clientes considerando os diferentes grupos de clientes e utilizando meios adequados para a comunicação."
+      ],
+      "declared": "D",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Site, Redes de Relacionamento\n\nNão foi evidenciada prática estruturada para divulgação dos produtos.\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).",
+      "evidence": "Segmentação de cooperativas filiadas e demais públicos; política/canais de relacionamento; registros de demandas, reclamações e retorno; pesquisas e bases de resposta; análise de satisfação/necessidades; planos e evidências de melhoria. Demonstre os públicos alcançados, registros de interação, tratamento/retorno, abrangência e análise de temas recorrentes. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q16",
+      "axis": "Gestão",
+      "criterion": "Clientes",
+      "question": "A marca da cooperativa e, quando pertinente, as marcas de seus produtos e/ou serviços são registradas e há práticas para seu monitoramento?",
+      "alternatives": [
+        "A marca da cooperativa e, quando pertinente, as marcas de seus produtos e/ou serviços não são registradas. ",
+        "A marca da cooperativa e, quando pertinente, as marcas de seus produtos e/ou serviços não são registradas e seu \nmonitoramento é realizado eventualmente.  ",
+        "A marca da cooperativa e, quando pertinente, as marcas de seus produtos e/ou serviços são registradas e seu \nmonitoramento é realizado eventualmente. ",
+        "A marca da cooperativa e, quando pertinente, as marcas de seus produtos e/ou serviços são registradas e seu \nmonitoramento é realizado regularmente."
+      ],
+      "declared": "B",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidencida prática para o acompanhamento sistemático das marcas e produtos .\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).",
+      "evidence": "Segmentação de cooperativas filiadas e demais públicos; política/canais de relacionamento; registros de demandas, reclamações e retorno; pesquisas e bases de resposta; análise de satisfação/necessidades; planos e evidências de melhoria. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q17",
+      "axis": "Gestão",
+      "criterion": "Clientes",
+      "question": "Há canais para recebimento de solicitações, reclamações ou sugestões dos clientes e as manifestações recebidas são tratadas?",
+      "alternatives": [
+        "Não há canais para recebimento de solicitações, reclamações ou sugestões dos clientes e as manifestações recebidas não são tratadas.",
+        "Há canais para recebimento de solicitações, reclamações ou sugestões dos clientes e todas as manifestações recebidas são tratadas informalmente.",
+        "Há canais para recebimento de solicitações, reclamações ou sugestões dos clientes, todas as manifestações recebidas são tratadas formalmente e os resultados são controlados.",
+        "Há canais para recebimento de solicitações, reclamações ou sugestões dos clientes, todas as manifestações recebidas são tratadas formalmente, os resultados são controlados e o cliente é informado sobre o tratamento dado à sua manifestação."
+      ],
+      "declared": "B",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidenciada para prática de tratamento das manifestações dos Clientes.\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).",
+      "evidence": "Segmentação de cooperativas filiadas e demais públicos; política/canais de relacionamento; registros de demandas, reclamações e retorno; pesquisas e bases de resposta; análise de satisfação/necessidades; planos e evidências de melhoria. Demonstre os públicos alcançados, registros de interação, tratamento/retorno, abrangência e análise de temas recorrentes. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q18",
+      "axis": "Gestão",
+      "criterion": "Clientes",
+      "question": "A satisfação dos clientes é avaliada e os resultados obtidos são utilizados?",
+      "alternatives": [
+        "A satisfação dos clientes não é avaliada.",
+        "A satisfação dos clientes é avaliada informalmente.",
+        "A satisfação dos clientes é avaliada formalmente e regularmente e os resultados são controlados.",
+        "A satisfação dos clientes é avaliada formalmente e regularmente, os resultados são controlados, considera todos os grupos ou segmentos de clientes e os resultados obtidos são utilizados na melhoria dos produtos, serviços e/ou no relacionamento com os clientes."
+      ],
+      "declared": "B",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Foram apresentadas avaliações de satisfação de serviços preatdos.\nMas, não foi evidenciado a utilização dos resultados destas para retroalimentação dos processos e melhoria dos serviços.\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).\nPOL-XXX - Política Gestão de Relacionamento.docx/.pdf (localizada; vigência, aprovação e execução a confirmar).\nCNTCOOP-ENCONTRO-TÉCNICO-1/2/3.pdf e roteiros de facilitação OQS (localizados; evidenciam atividades de projeto, não necessariamente rotina institucional).",
+      "evidence": "Segmentação de cooperativas filiadas e demais públicos; política/canais de relacionamento; registros de demandas, reclamações e retorno; pesquisas e bases de resposta; análise de satisfação/necessidades; planos e evidências de melhoria. Inclua instrumento, universo e período da pesquisa, base de respostas, método de consolidação, análise dos resultados e plano de resposta aos achados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q19",
+      "axis": "Gestão",
+      "criterion": "Sociedade",
+      "question": "Os aspectos dos produtos e serviços, processos e instalações da cooperativa que podem interagir com o meio ambiente são identificados e os impactos ambientais adversos decorrentes são tratados?",
+      "alternatives": [
+        "Os aspectos dos produtos e serviços, processos e instalações da cooperativa que podem interagir com o meio ambiente não são identificados e os impactos ambientais adversos decorrentes não são tratados.",
+        "Alguns aspectos dos produtos e serviços, processos e instalações da cooperativa que podem interagir com o meio ambiente são identificados informalmente e alguns impactos ambientais adversos decorrentes são tratados.",
+        "Alguns aspectos dos produtos e serviços, processos e instalações da cooperativa que podem interagir com o meio ambiente são identificados informalmente e a maioria dos impactos ambientais adversos decorrentes é tratada.",
+        "Alguns aspectos dos produtos e serviços, processos e instalações da cooperativa que podem interagir com o meio ambiente são identificados formalmente e a maioria dos impactos ambientais adversos decorrentes é tratada."
+      ],
+      "declared": "D",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidenciada prática para tratamento dos aspectos inerentes aos produtos e serviços.\nCNTCOOP Política de Sustentabilidade final.docx e CNTCOOP Indicadores de Sustentabilidade final.docx (localizados; confirmar vigência e resultados).\nCNTCOOP Política de Sustentabilidade final.docx e CNTCOOP Indicadores de Sustentabilidade final.docx (localizados; confirmar vigência e resultados).",
+      "evidence": "Política, matriz de impactos e obrigações aplicáveis; planos e programas socioambientais; parcerias e públicos alcançados; indicadores/séries, registros de execução, relatórios de resultados, deliberações e ações de melhoria. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q20",
+      "axis": "Gestão",
+      "criterion": "Sociedade",
+      "question": "A cooperativa promove, de forma voluntária, ações para o desenvolvimento sustentável do planeta?",
+      "alternatives": [
+        "A cooperativa não promove, de forma voluntária, ações para o desenvolvimento sustentável do planeta.",
+        "A cooperativa promove eventualmente, de forma voluntária, ações para o desenvolvimento sustentável do planeta.",
+        "A cooperativa promove regularmente, de forma voluntária, ações para o desenvolvimento sustentável do planeta.",
+        "A cooperativa promove regularmente, de forma voluntária, ações para o desenvolvimento sustentável do planeta, escolhidas de acordo com critérios definidos e os resultados são controlados."
+      ],
+      "declared": "B",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidenciada ação voluntária para o desenvolvimento sustentável do planeta.\nCNTCOOP Política de Sustentabilidade final.docx e CNTCOOP Indicadores de Sustentabilidade final.docx (localizados; confirmar vigência e resultados).\nCNTCOOP Política de Sustentabilidade final.docx e CNTCOOP Indicadores de Sustentabilidade final.docx (localizados; confirmar vigência e resultados).",
+      "evidence": "Política, matriz de impactos e obrigações aplicáveis; planos e programas socioambientais; parcerias e públicos alcançados; indicadores/séries, registros de execução, relatórios de resultados, deliberações e ações de melhoria. Vincule plano/trilha a público-alvo, conteúdo, convocações, listas/certificados, avaliação de aprendizagem e aplicação posterior. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q21",
+      "axis": "Gestão",
+      "criterion": "Sociedade",
+      "question": "A cooperativa apoia ou realiza ações ou projetos sociais?",
+      "alternatives": [
+        "A cooperativa não apoia nem realiza ações ou projetos sociais.",
+        "A cooperativa apoia ações ou projetos sociais promovidos por terceiros.",
+        "A cooperativa realiza ações sociais próprias.",
+        "A cooperativa realiza projetos sociais próprios e controla os resultados alcançados."
+      ],
+      "declared": "B",
+      "weight": 1.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Atualmente, se restringe ao apoio a ações de terceiros.\nCNTCOOP Política de Sustentabilidade final.docx e CNTCOOP Indicadores de Sustentabilidade final.docx (localizados; confirmar vigência e resultados).\nCNTCOOP Política de Sustentabilidade final.docx e CNTCOOP Indicadores de Sustentabilidade final.docx (localizados; confirmar vigência e resultados).",
+      "evidence": "Política, matriz de impactos e obrigações aplicáveis; planos e programas socioambientais; parcerias e públicos alcançados; indicadores/séries, registros de execução, relatórios de resultados, deliberações e ações de melhoria. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q22",
+      "axis": "Gestão",
+      "criterion": "Informações e Conhecimento",
+      "question": "A cooperativa identifica as informações necessárias para sua operação, tomada de decisão e crescimento e elas são utilizadas visando à geração de valor ao negócio?",
+      "alternatives": [
+        "As informações necessárias para operacionalização e gerenciamento da cooperativa não são identificadas nem são utilizadas.",
+        "A cooperativa identifica as informações necessárias para sua operação, tomada de decisão e crescimento informalmente.",
+        "A cooperativa identifica as informações necessárias para sua operação, tomada de decisão e crescimento por meio de métodos formais e elas são utilizadas eventualmente para o desenvolvimento e/ou melhoria dos sistemas de informação.",
+        "A cooperativa identifica as informações necessárias para sua operação, tomada de decisão e crescimento por meio de métodos formais, elas são utilizadas regularmente para o desenvolvimento e/ou melhoria dos sistemas de informação visando à geração de valor ao negócio."
+      ],
+      "declared": "B",
+      "weight": 2,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há prática formalizada para identificação das informações necessárias às operações, toamda de decisões.\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx e CNTCOOP 01.05 SPARKOOP - ANEXO B – GESTÃO POR PROCESSOS.docx (localizados como entregáveis de projeto; adoção institucional a confirmar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx e CNTCOOP 01.05 SPARKOOP - ANEXO B – GESTÃO POR PROCESSOS.docx (localizados como entregáveis de projeto; adoção institucional a confirmar).",
+      "evidence": "Política/fluxo de gestão documental e conhecimento; inventário e classificação; controles de acesso, segurança, backup e logs; registros de compartilhamento/aprendizado; indicadores, incidentes, análises e melhorias. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q23",
+      "axis": "Gestão",
+      "criterion": "Informações e Conhecimento",
+      "question": "A segurança das informações é mantida?",
+      "alternatives": [
+        "A segurança das informações não é mantida.",
+        "A segurança das informações é parcialmente mantida, sendo realizadas algumas ações para proteção das informações em meio eletrônico.",
+        "A segurança das informações é mantida por meio de práticas padronizadas que contemplam as informações em meio eletrônico e minimizam alguns dos riscos à segurança.",
+        "A segurança das informações é mantida por meio de práticas padronizadas, com padrões documentados, que contemplam as informações em meio eletrônico e meio físico e minimizam a maioria dos riscos à segurança e há ações sistemáticas para a melhoria da segurança das informações."
+      ],
+      "declared": "B",
+      "weight": 2,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foram evidenciadas práticas padronizadas que contemplam a \nsegurança das informações em meio eletrônico e minimizam riscos à segurança.\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx e CNTCOOP 01.05 SPARKOOP - ANEXO B – GESTÃO POR PROCESSOS.docx (localizados como entregáveis de projeto; adoção institucional a confirmar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx e CNTCOOP 01.05 SPARKOOP - ANEXO B – GESTÃO POR PROCESSOS.docx (localizados como entregáveis de projeto; adoção institucional a confirmar).",
+      "evidence": "Política/fluxo de gestão documental e conhecimento; inventário e classificação; controles de acesso, segurança, backup e logs; registros de compartilhamento/aprendizado; indicadores, incidentes, análises e melhorias. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q24",
+      "axis": "Gestão",
+      "criterion": "Informações e Conhecimento",
+      "question": "A cooperativa identifica e difunde os seus conhecimentos mais importantes?",
+      "alternatives": [
+        "A cooperativa não identifica os seus conhecimentos mais importantes.",
+        "A cooperativa identifica informalmente os seus conhecimentos mais importantes e eles são eventualmente difundidos para os colaboradores.",
+        "A cooperativa identifica informalmente os seus conhecimentos mais importantes e eles são regularmente difundidos para os colaboradores.",
+        "A cooperativa identifica formalmente os seus conhecimentos mais importantes e eles são regularmente difundidos por meio de práticas padronizadas para os colaboradores."
+      ],
+      "declared": "D",
+      "weight": 2,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx e CNTCOOP 01.05 SPARKOOP - ANEXO B – GESTÃO POR PROCESSOS.docx (localizados como entregáveis de projeto; adoção institucional a confirmar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx e CNTCOOP 01.05 SPARKOOP - ANEXO B – GESTÃO POR PROCESSOS.docx (localizados como entregáveis de projeto; adoção institucional a confirmar).",
+      "evidence": "Política/fluxo de gestão documental e conhecimento; inventário e classificação; controles de acesso, segurança, backup e logs; registros de compartilhamento/aprendizado; indicadores, incidentes, análises e melhorias. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q25",
+      "axis": "Gestão",
+      "criterion": "Pessoas",
+      "question": "As funções e responsabilidades das pessoas que trabalham na cooperativa estão definidas e são conhecidas?",
+      "alternatives": [
+        "As funções e responsabilidades não estão definidas.",
+        "As funções e responsabilidades estão definidas informalmente.",
+        "As funções e responsabilidades estão definidas formalmente.",
+        "As funções e responsabilidades estão definidas formalmente, documentadas e os colaboradores as conhecem."
+      ],
+      "declared": "D",
+      "weight": 1.7,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidencida as definições das funções de todas as pessoas que\n trabalham na Cooperativa, fora as registradas em Estatutos e Regimentos.\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).",
+      "evidence": "Estrutura e perfis de competência; processos de seleção, integração e desenvolvimento; plano/trilhas e listas de presença; registros de saúde e segurança e avaliações aplicáveis; pesquisas, indicadores, análises e ações. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q26",
+      "axis": "Gestão",
+      "criterion": "Pessoas",
+      "question": "O processo de seleção de colaboradores é feito segundo padrões definidos e considera os requisitos e responsabilidades da função?",
+      "alternatives": [
+        "O processo de seleção é feito sem padrão definido.",
+        "O processo de seleção é feito com padrão definido para algumas funções.",
+        "O processo de seleção é feito com padrão definido para todas as funções.",
+        "O processo de seleção é feito com padrão definido para todas as funções, considerando os requisitos e responsabilidades definidas para a função e possui mecanismos para evitar qualquer tipo de discriminação."
+      ],
+      "declared": "B",
+      "weight": 2,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).",
+      "evidence": "Estrutura e perfis de competência; processos de seleção, integração e desenvolvimento; plano/trilhas e listas de presença; registros de saúde e segurança e avaliações aplicáveis; pesquisas, indicadores, análises e ações. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q27",
+      "axis": "Gestão",
+      "criterion": "Pessoas",
+      "question": "As necessidades de capacitação e desenvolvimento dos colaboradores e dos dirigentes são identificadas e atendidas?",
+      "alternatives": [
+        "As necessidades de capacitação e desenvolvimento dos colaboradores ou dos dirigentes não são identificadas nem atendidas.",
+        "As necessidades de capacitação e desenvolvimento dos colaboradores ou dos dirigentes são identificadas ou atendidas apenas eventualmente.",
+        "As necessidades de capacitação e desenvolvimento dos colaboradores e dos dirigentes são identificadas e atendidas regularmente e de forma planejada.",
+        "As necessidades de capacitação e desenvolvimento dos colaboradores e dos dirigentes, inclusive para promover a inovação, são identificadas e atendidas regularmente e de forma planejada, por meio de práticas padronizadas."
+      ],
+      "declared": "C",
+      "weight": 1.7,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores e nem dirigentes contratados na cooperativa.\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).",
+      "evidence": "Estrutura e perfis de competência; processos de seleção, integração e desenvolvimento; plano/trilhas e listas de presença; registros de saúde e segurança e avaliações aplicáveis; pesquisas, indicadores, análises e ações. Vincule plano/trilha a público-alvo, conteúdo, convocações, listas/certificados, avaliação de aprendizagem e aplicação posterior. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q28",
+      "axis": "Gestão",
+      "criterion": "Pessoas",
+      "question": "A educação cooperativista dos colaboradores da cooperativa é promovida?",
+      "alternatives": [
+        "A educação cooperativista não é promovida.",
+        "A educação cooperativista é promovida somente na admissão dos colaboradores.",
+        "A educação cooperativista é promovida na admissão dos colaboradores e regularmente por meio de outras ações.",
+        "A educação cooperativista é promovida na admissão dos colaboradores e regularmente por meio de outras ações realizadas de forma planejada."
+      ],
+      "declared": "D",
+      "weight": 1.7,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).",
+      "evidence": "Estrutura e perfis de competência; processos de seleção, integração e desenvolvimento; plano/trilhas e listas de presença; registros de saúde e segurança e avaliações aplicáveis; pesquisas, indicadores, análises e ações. Vincule plano/trilha a público-alvo, conteúdo, convocações, listas/certificados, avaliação de aprendizagem e aplicação posterior. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q29",
+      "axis": "Gestão",
+      "criterion": "Pessoas",
+      "question": "Os requisitos relativos à saúde e segurança no trabalho aplicáveis à cooperativa são identificados e atendidos?",
+      "alternatives": [
+        "Os requisitos legais relativos à saúde e segurança no trabalho aplicáveis à cooperativa não são identificados e não são atendidos.",
+        "Os requisitos legais relativos à saúde e segurança no trabalho aplicáveis à cooperativa são identificados e atendidos, mas não existem ações complementares àquelas exigidas pela legislação para promoção da saúde e segurança dos colaboradores.",
+        "Os requisitos legais relativos à saúde e segurança no trabalho aplicáveis à cooperativa são identificados e atendidos, existem ações complementares àquelas exigidas pela legislação para promoção da saúde e segurança dos colaboradores e os resultados são controlados.",
+        "Os requisitos legais relativos à saúde e segurança no trabalho aplicáveis à cooperativa são identificados e atendidos, existem ações complementares àquelas exigidas pela legislação para promoção da saúde e segurança dos colaboradores, estão definidas políticas e metas específicas sobre o tema, e os resultados são controlados."
+      ],
+      "declared": "B",
+      "weight": 1.7,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).",
+      "evidence": "Estrutura e perfis de competência; processos de seleção, integração e desenvolvimento; plano/trilhas e listas de presença; registros de saúde e segurança e avaliações aplicáveis; pesquisas, indicadores, análises e ações. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q30",
+      "axis": "Gestão",
+      "criterion": "Pessoas",
+      "question": "A satisfação dos colaboradores é avaliada?",
+      "alternatives": [
+        "A satisfação dos colaboradores não é avaliada.",
+        "A satisfação dos colaboradores é avaliada eventualmente e sem método formal.",
+        "A satisfação dos colaboradores é avaliada regularmente por meio de método formal e os resultados são controlados.",
+        "A satisfação dos colaboradores é avaliada regularmente por meio de método formal, os resultados são controlados e as informações obtidas são tratadas e utilizadas para melhoria das políticas e programas de gestão de pessoas."
+      ],
+      "declared": "A",
+      "weight": 1.7,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).\nCNTCOOP Indicadores de Sustentabilidade final.docx e Relatório - Gestão - CNTCoop.pdf (localizados; evidências específicas de pessoas, período e execução a confirmar).",
+      "evidence": "Estrutura e perfis de competência; processos de seleção, integração e desenvolvimento; plano/trilhas e listas de presença; registros de saúde e segurança e avaliações aplicáveis; pesquisas, indicadores, análises e ações. Inclua instrumento, universo e período da pesquisa, base de respostas, método de consolidação, análise dos resultados e plano de resposta aos achados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q31",
+      "axis": "Gestão",
+      "criterion": "Processos",
+      "question": "Os processos de negócio da cooperativa estão identificados e são executados de forma padronizada?",
+      "alternatives": [
+        "Os processos de negócio da cooperativa não estão identificados e não são executados de forma padronizada.",
+        "Os processos de negócio da cooperativa estão identificados informalmente e não são executados de forma padronizada.",
+        "Os processos de negócio da cooperativa estão identificados formalmente e alguns são executados de forma padronizada, com padrões documentados.",
+        "Os processos de negócio da cooperativa estão identificados formalmente e a maioria é executada de forma padronizada, com padrões documentados."
+      ],
+      "declared": "D",
+      "weight": 2.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Há processos ainda identificados informalmente e nem há padrões\n estabelecidos para a sua execução.\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).",
+      "evidence": "Cadeia de valor, mapas/fluxogramas, POPs e matriz de responsabilidades; riscos e controles; registros operacionais e de fornecedores; auditorias e não conformidades; indicadores, reuniões de análise e melhorias implantadas. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q32",
+      "axis": "Gestão",
+      "criterion": "Processos",
+      "question": "Os requisitos aplicáveis aos processos de negócio da cooperativa são definidos e seu atendimento é assegurado?",
+      "alternatives": [
+        "Os requisitos aplicáveis aos processos de negócio da cooperativa não são definidos e seu atendimento não é assegurado.",
+        "Os requisitos aplicáveis aos processos de negócio da cooperativa são definidos informalmente e seu atendimento é assegurado eventualmente.",
+        "Os requisitos aplicáveis aos processos de negócio da cooperativa são definidos formalmente e seu atendimento é assegurado eventualmente.",
+        "Os requisitos aplicáveis aos processos de negócio da cooperativa são definidos formalmente a partir da tradução das necessidades dos cooperados e clientes e seu atendimento é assegurado regularmente por meio do controle de indicadores de desempenho."
+      ],
+      "declared": "D",
+      "weight": 2.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidenciada a formalização dos requisitos aplicáveis aos processos\n de negócios.\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).",
+      "evidence": "Cadeia de valor, mapas/fluxogramas, POPs e matriz de responsabilidades; riscos e controles; registros operacionais e de fornecedores; auditorias e não conformidades; indicadores, reuniões de análise e melhorias implantadas. Vincule documento vigente a amostras datadas de execução, responsáveis, abrangência, controle de versão e evidência de revisão. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q33",
+      "axis": "Gestão",
+      "criterion": "Processos",
+      "question": "A cooperativa promove o desenvolvimento dos seus cooperados?",
+      "alternatives": [
+        "Não são realizadas ações para promover o desenvolvimento dos cooperados.",
+        "São realizadas ações eventualmente para promover o desenvolvimento dos cooperados.",
+        "São realizadas ações regularmente para promover o desenvolvimento dos cooperados.",
+        "São realizadas ações regularmente para promover o desenvolvimento dos cooperados e os resultados são acompanhados"
+      ],
+      "declared": "D",
+      "weight": 2.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foram evidenciadas ações e/ou planos de desenvolvimento dos cooperados alinhados  à Estratégia.\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).",
+      "evidence": "Cadeia de valor, mapas/fluxogramas, POPs e matriz de responsabilidades; riscos e controles; registros operacionais e de fornecedores; auditorias e não conformidades; indicadores, reuniões de análise e melhorias implantadas. Vincule plano/trilha a público-alvo, conteúdo, convocações, listas/certificados, avaliação de aprendizagem e aplicação posterior. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q34",
+      "axis": "Gestão",
+      "criterion": "Processos",
+      "question": "Os fornecedores externos da cooperativa são selecionados segundo critérios definidos?",
+      "alternatives": [
+        "Os fornecedores externos não são selecionados segundo critérios definidos.",
+        "Os fornecedores externos são selecionados com base em critérios definidos informalmente.",
+        "Os fornecedores externos são selecionados com base em critérios definidos formalmente.",
+        "Os fornecedores externos são selecionados com base em critérios definidos formalmente, que incluem aspectos sociais, e é verificado se há cooperativas que possam oferecer o produto ou serviço."
+      ],
+      "declared": "D",
+      "weight": 2.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foram evidenciados os critérios para seleçaõ dos fornecedores.\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).",
+      "evidence": "Cadeia de valor, mapas/fluxogramas, POPs e matriz de responsabilidades; riscos e controles; registros operacionais e de fornecedores; auditorias e não conformidades; indicadores, reuniões de análise e melhorias implantadas. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q35",
+      "axis": "Gestão",
+      "criterion": "Processos",
+      "question": "O desempenho dos fornecedores externos da cooperativa é avaliado?",
+      "alternatives": [
+        "O desempenho dos fornecedores externos não é avaliado.",
+        "O desempenho dos fornecedores externos é avaliado eventualmente.",
+        "O desempenho dos fornecedores externos é avaliado regularmente com base em critérios definidos.",
+        "O desempenho dos fornecedores externos é avaliado regularmente, com base em critérios definidos, e são estabelecidas ações para melhoria do fornecimento a partir dos resultados obtidos."
+      ],
+      "declared": "D",
+      "weight": 2.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Avaliação de Satisfação de Fornecedores\n\nO desempenho dos fornecedores é avaliado regularmente, mas não foi evidenciado os critérios definidos para a Avaliação.\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).",
+      "evidence": "Cadeia de valor, mapas/fluxogramas, POPs e matriz de responsabilidades; riscos e controles; registros operacionais e de fornecedores; auditorias e não conformidades; indicadores, reuniões de análise e melhorias implantadas. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q36",
+      "axis": "Gestão",
+      "criterion": "Processos",
+      "question": "As finanças da cooperativa são controladas?",
+      "alternatives": [
+        "As finanças da cooperativa não são controladas.",
+        "As finanças da cooperativa são controladas informalmente.",
+        "As finanças da cooperativa são controladas formalmente por meio da utilização de fluxo de caixa.",
+        "As finanças da cooperativa são controladas formalmente por meio da utilização de fluxo de caixa e da elaboração de um orçamento com projeção para pelo menos um ano."
+      ],
+      "declared": "D",
+      "weight": 2.5,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Fluxo de Caixa\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).\nCNTCOOP 01.04 SPARKOOP - ANEXO A – ARQUITETURA ORGANIZACIONAL.docx, ANEXO B – GESTÃO POR PROCESSOS.docx e ANEXO C – PROCEDIMENTOS OPERACIONAIS PADRÃO.docx (localizados; implantação e execução a validar).\nCNTCOOP 01.07 SPARKOOP - ANEXO D – INDICADORES E MONITORAMENTO.docx (localizado; uso e resultados a confirmar).",
+      "evidence": "Cadeia de valor, mapas/fluxogramas, POPs e matriz de responsabilidades; riscos e controles; registros operacionais e de fornecedores; auditorias e não conformidades; indicadores, reuniões de análise e melhorias implantadas. Mostre que a prática foi executada, por quem, em que período e abrangência, como foi analisada e que decisão/melhoria resultou. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q37",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos ao percentual de sobras?",
+      "alternatives": [
+        "Não existem resultados relativos ao percentual de sobras.",
+        "Existem resultados relativos ao percentual de sobras, mas não há um nível aceitável estabelecido pela cooperativa para o resultado.",
+        "Existem resultados relativos ao percentual de sobras, há informações referentes aos três últimos anos, mas não estão dentro do nível aceitável estabelecido pela cooperativa para o período.",
+        "Existem resultados relativos ao percentual de sobras, há informações referentes aos três últimos anos e estão dentro do nível aceitável estabelecido pela cooperativa para o período."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi  evidenciado o esatbelecimento do nível aceitável pela Cooperativa.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q38",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à solvência?",
+      "alternatives": [
+        "Não existem resultados relativos à solvência.",
+        "Existem resultados relativos à solvência, mas não há um nível aceitável estabelecido pela cooperativa para os resultados.",
+        "Existem resultados relativos à solvência, há informações referentes aos três últimos anos, mas não estão dentro do nível aceitável estabelecido pela cooperativa para o período.",
+        "Existem resultados relativos à solvência, há informações referentes aos três últimos anos e estão dentro do nível aceitável estabelecido pela cooperativa para o período."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi apresentado o nível aceitável estabelecido pela Cooperativa\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q39",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à participação dos atos não cooperativos?",
+      "alternatives": [
+        "Não existem resultados relativos à participação dos atos não cooperativos.",
+        "Existem resultados relativos à participação dos atos não cooperativos, mas não há um nível aceitável estabelecido pela cooperativa para esse resultado.",
+        "Existem resultados relativos à participação dos atos não cooperativos, há informações referentes aos três últimos anos, mas não estão dentro do nível aceitável estabelecido pela cooperativa para o período.",
+        "Existem resultados relativos à participação dos atos não cooperativos, há informações referentes aos três últimos anos e estão dentro do nível aceitável estabelecido pela cooperativa para o período, respeitados os dispositivos legais."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foi evidencido o estabelecimento um nível aceitável.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q40",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à lucratividade dos atos não cooperativos?",
+      "alternatives": [
+        "Não existem resultados relativos à lucratividade dos atos não cooperativos.",
+        "Existem resultados relativos à lucratividade dos atos não cooperativos, mas não há informações referentes aos três últimos anos.",
+        "Existem resultados relativos à lucratividade dos atos não cooperativos, há informações referentes aos três últimos anos, mas não estão melhorando ao longo do período.",
+        "Existem resultados relativos à lucratividade dos atos não cooperativos, há informações referentes aos três últimos anos e estão melhorando ao longo do período."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foram evidenciadas informações referentes aos 3 últimos anos.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q41",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à satisfação dos clientes?",
+      "alternatives": [
+        "Não existem resultados relativos à satisfação dos clientes.",
+        "Existem resultados relativos à satisfação dos clientes, mas não há informações referentes a três ciclos de avaliação anuais ou bienais.",
+        "Existem resultados relativos à satisfação dos clientes, há informações referentes aos três últimos ciclos de avaliação anuais ou bienais, mas não estão melhorando ao longo do período ou em um nível aceitável estabelecido pela cooperativa.",
+        "Existem resultados relativos à satisfação dos clientes, há informações referentes aos três últimos ciclos de avaliação anuais ou bienais e estão melhorando ao longo do período ou em um nível aceitável estabelecido pela cooperativa."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não foram evidenciados  resultados relativos a satisfação de clientes.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Inclua instrumento, universo e período da pesquisa, base de respostas, método de consolidação, análise dos resultados e plano de resposta aos achados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q42",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos às reclamações de clientes?",
+      "alternatives": [
+        "Não existem resultados relativos às reclamações de clientes.",
+        "Existem resultados relativos às reclamações de clientes, mas não há informações referentes aos três últimos anos.",
+        "Existem resultados relativos às reclamações de clientes, há informações referentes aos três últimos anos, mas não estão diminuindo ao longo do período.",
+        "Existem resultados relativos às reclamações de clientes, há informações referentes aos três últimos anos e estão diminuindo ao longo do período."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q43",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à frequência de acidentes com afastamento?",
+      "alternatives": [
+        "Não existem resultados relativos à frequência de acidentes com afastamento.",
+        "Existem resultados relativos à frequência de acidentes com afastamento, mas não há informações referentes aos três últimos anos.",
+        "Existem resultados relativos à frequência de acidentes com afastamento, há informações referentes aos três últimos anos, mas não estão diminuindo ao longo do período.",
+        "Existem resultados relativos à frequência de acidentes com afastamento, há informações referentes aos três últimos anos e estão diminuindo ao longo do período."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q44",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos ao absenteísmo médico?",
+      "alternatives": [
+        "Não existem resultados relativos ao absenteísmo médico.",
+        "Existem resultados relativos ao absenteísmo médico, mas não há informações referentes aos três últimos anos.",
+        "Existem resultados relativos ao absenteísmo médico, há informações referentes aos três últimos anos, mas não estão diminuindo ao longo do período.",
+        "Existem resultados relativos ao absenteísmo médico, há informações referentes aos três últimos anos e estão diminuindo ao longo do período."
+      ],
+      "declared": "D",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q45",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos à satisfação dos colaboradores?",
+      "alternatives": [
+        "Não existem resultados relativos à satisfação dos colaboradores.",
+        "Existem resultados relativos à satisfação dos colaboradores, mas não há informações referentes a três ciclos de avaliação anuais ou bienais.",
+        "Existem resultados relativos à satisfação dos colaboradores, há informações referentes aos três últimos ciclos de avaliação anuais ou bienais, mas não estão melhorando ao longo do período.",
+        "Existem resultados relativos à satisfação dos colaboradores, há informações referentes aos três últimos ciclos de avaliação anuais ou bienais e estão melhorando ao longo do período."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não há colaboradores na cooperativa.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Inclua instrumento, universo e período da pesquisa, base de respostas, método de consolidação, análise dos resultados e plano de resposta aos achados. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    },
+    {
+      "code": "GES-Q46",
+      "axis": "Gestão",
+      "criterion": "Resultados",
+      "question": "Existem resultados relativos aos ingressos (receitas de atos cooperativos) por cooperado?",
+      "alternatives": [
+        "Não existem resultados relativos aos ingressos (receitas de atos cooperativos) por cooperado.",
+        "Existem resultados relativos aos ingressos (receitas de atos cooperativos) por cooperado, mas não há informações referentes aos três últimos anos.",
+        "Existem resultados relativos aos ingressos (receitas de atos cooperativos) por cooperado, há informações referentes aos três últimos anos, mas não estão melhorando ao longo do período.",
+        "Existem resultados relativos aos ingressos (receitas de atos cooperativos) por cooperado, há informações referentes aos três últimos anos e estão melhorando ao longo do período."
+      ],
+      "declared": "B",
+      "weight": 3,
+      "source_ref": "Registro no campo “Evidências Encontras” do DA 2026: Registro no campo “Evidências Encontras” do DA 2026: Não existe evidência de informações referentes aos últimos 3 anos.\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).\nRelatório - Gestão - CNTCoop.pdf, Relatório - Governança - CNTCoop.pdf e CNTCOOP-PDGC-Relatório-Administração-Ciclo-2024.pdf (localizados; são referências de ciclos/períodos anteriores e precisam de atualização e memória de cálculo).",
+      "evidence": "Séries históricas dos indicadores citados na questão; definição, fórmula, fonte, responsável, periodicidade, baseline e meta; memória de cálculo e dashboard; atas/relatórios de análise; decisões, ações e verificação de efeitos. Para o resultado citado, apresente série temporal, fórmula, origem do dado, responsável, baseline/meta, memória de cálculo, análise de desvios e decisão tomada. A suficiência deve ser julgada contra o texto integral da questão e da alternativa considerada.",
+      "source_note": "Resposta transcrita da marcação no relatório original da Autoavaliação CNTCOOP 2026. Mantida separada do Diagnóstico Assistido; a resposta autodeclarada não é nota validada de maturidade."
+    }
+  ],
+  "official_metrics": [
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "overall_index",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 76.2,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 3",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 3,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "overall_index",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 67.17,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 3",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 3,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "criterion",
+      "metric_code": "COOPERADOS",
+      "metric_name": "Cooperados",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 80.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 22.4,
+        "criterion_max_weight_percent": 28.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 1
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "criterion",
+      "metric_code": "ASSEMBLEIA_GERAL",
+      "metric_name": "Assembleia Geral",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 100.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 15.0,
+        "criterion_max_weight_percent": 15.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 2
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "criterion",
+      "metric_code": "CONSELHO_ADMINISTRACAO",
+      "metric_name": "Conselho de Administração e/ou Diretoria Eleitos",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 77.777778,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 23.8,
+        "criterion_max_weight_percent": 30.6,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 3
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "criterion",
+      "metric_code": "CONSELHO_FISCAL",
+      "metric_name": "Conselho Fiscal",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 100.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 6.0,
+        "criterion_max_weight_percent": 6.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 4
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "criterion",
+      "metric_code": "GESTAO_EXECUTIVA",
+      "metric_name": "Gestão Executiva Contratada",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 100.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 6.0,
+        "criterion_max_weight_percent": 6.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 5
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "criterion",
+      "metric_code": "COMITES_AUDITORIAS",
+      "metric_name": "Comitês e Auditorias",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 0.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 0.0,
+        "criterion_max_weight_percent": 4.4,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 6
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "criterion",
+      "metric_code": "RESULTADOS",
+      "metric_name": "Resultados",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 30.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 3.0,
+        "criterion_max_weight_percent": 10.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 7
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "LIDERANCA",
+      "metric_name": "Liderança",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 100.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 16.0,
+        "criterion_max_weight_percent": 16.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 1
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "ESTRATEGIAS_PLANOS",
+      "metric_name": "Estratégias e Planos",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 88.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 7.92,
+        "criterion_max_weight_percent": 9.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 2
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "CLIENTES",
+      "metric_name": "Clientes",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 65.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 5.85,
+        "criterion_max_weight_percent": 9.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 3
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "SOCIEDADE",
+      "metric_name": "Sociedade",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 53.333333,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 2.4,
+        "criterion_max_weight_percent": 4.5,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 4
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "INFORMACOES_CONHECIMENTO",
+      "metric_name": "Informações e Conhecimento",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 53.333333,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 3.2,
+        "criterion_max_weight_percent": 6.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 5
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "PESSOAS",
+      "metric_name": "Pessoas",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 54.285714,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 5.7,
+        "criterion_max_weight_percent": 10.5,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 6
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "PROCESSOS",
+      "metric_name": "Processos",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 100.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 15.0,
+        "criterion_max_weight_percent": 15.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 7
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "criterion",
+      "metric_code": "RESULTADOS",
+      "metric_name": "Resultados",
+      "reference_year": 2026,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 37.0,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 5",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 5,
+        "comparability": "source_reported",
+        "raw_weighted_contribution_percent": 11.1,
+        "criterion_max_weight_percent": 30.0,
+        "normalization": "official weighted contribution / criterion maximum weight",
+        "display_order": 8
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "benchmark",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2026,
+      "comparator_code": "PREMIO",
+      "comparator_label": "Reconhecidas último ciclo do Prêmio",
+      "metric_value": 93.06,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "benchmark",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2026,
+      "comparator_code": "BRASIL",
+      "comparator_label": "Brasil",
+      "metric_value": 62.39,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "benchmark",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2026,
+      "comparator_code": "RAMO_BRASIL",
+      "comparator_label": "Ramo Transporte - Brasil",
+      "metric_value": 50.35,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "benchmark",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2026,
+      "comparator_code": "RAMO_REGIAO",
+      "comparator_label": "Ramo Transporte - Região",
+      "metric_value": 58.76,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "benchmark",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2026,
+      "comparator_code": "RAMO_ESTADO",
+      "comparator_label": "Ramo Transporte - Estado",
+      "metric_value": 76.2,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "benchmark",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2026,
+      "comparator_code": "PREMIO",
+      "comparator_label": "Reconhecidas último ciclo do Prêmio",
+      "metric_value": 92.04,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "benchmark",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2026,
+      "comparator_code": "BRASIL",
+      "comparator_label": "Brasil",
+      "metric_value": 64.29,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "benchmark",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2026,
+      "comparator_code": "RAMO_BRASIL",
+      "comparator_label": "Ramo Transporte - Brasil",
+      "metric_value": 53.01,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "benchmark",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2026,
+      "comparator_code": "RAMO_REGIAO",
+      "comparator_label": "Ramo Transporte - Região",
+      "metric_value": 56.77,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "benchmark",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2026,
+      "comparator_code": "RAMO_ESTADO",
+      "comparator_label": "Ramo Transporte - Estado",
+      "metric_value": 67.17,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported"
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "history",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2021,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 37.9,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "history",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2023,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 47.22,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "history",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2024,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 38.8,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "DA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    },
+    {
+      "block_code": "GOVERNANCA",
+      "metric_kind": "history",
+      "metric_code": "ISGC",
+      "metric_name": "Índice Sescoop de Governança da Cooperativa",
+      "reference_year": 2025,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 62.85,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "history",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2021,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 38.07,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "history",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2023,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 61.28,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "history",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2024,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 58.01,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "DA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    },
+    {
+      "block_code": "GESTAO",
+      "metric_kind": "history",
+      "metric_code": "ISG",
+      "metric_name": "Índice Sescoop de Gestão",
+      "reference_year": 2025,
+      "comparator_code": "COOPERATIVA",
+      "comparator_label": "Cooperativa",
+      "metric_value": 65.99,
+      "unit": "percent",
+      "source_label": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+      "source_reference": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf, página 4",
+      "confidence_level": "very_high",
+      "metadata": {
+        "source_kind": "AA_REPORTED",
+        "validation_status": "official_reported_not_consultant_validated",
+        "source_page": 4,
+        "comparability": "source_reported",
+        "note": "Valor histórico exibido no relatório oficial de AA 2026; origem 2024 preservada como DA_REPORTED conforme reconciliação já aprovada."
+      }
+    }
+  ],
+  "official_metrics_source": {
+    "governance_report": "CNTCOOP - Relatório - Governança - 2026 - CNTCoop.pdf",
+    "management_report": "CNTCOOP - Relatório - Gestão - 2026 - CNTCoop.pdf",
+    "import_policy": "Import official reported metrics together with declared answers; never infer official scores from A-D alternatives."
+  }
+}
