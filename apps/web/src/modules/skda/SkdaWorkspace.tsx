@@ -1250,7 +1250,7 @@ export function SkdaWorkspace(props: Props) {
     return consolidationQuestions[0] ?? null
   },[consolidationQuestions,consolidationQuestionId])
 
-  const suggestedInterviewForQuestion = (question:Question | null) => {
+  const tracedInterviewForQuestion = (question:Question | null) => {
     if (!question) return null
     const existingResponse=responses.find((item)=>item.question_id===question.id)
     const existingInterviewId=typeof existingResponse?.metadata?.last_interview_id==='string'
@@ -1260,18 +1260,14 @@ export function SkdaWorkspace(props: Props) {
       const existing=interviews.find((item)=>item.id===existingInterviewId)
       if (existing) return existing
     }
-    const normalizedInterviews=[...interviews].sort((a,b)=>(a.scheduled_start ?? '').localeCompare(b.scheduled_start ?? ''))
-    if (question.code.startsWith('GOV-')) {
-      return normalizedInterviews.find((item)=>/governan/i.test(item.title+' '+item.code))
-        ?? normalizedInterviews[0]
-        ?? null
+    const fieldRecord=interviewQuestionRecords
+      .filter((item)=>item.question_id===question.id)
+      .sort((a,b)=>(b.completed_at ?? b.started_at ?? '').localeCompare(a.completed_at ?? a.started_at ?? ''))[0]
+    if (fieldRecord) {
+      const traced=interviews.find((item)=>item.id===fieldRecord.interview_id)
+      if (traced) return traced
     }
-    const number=Number(question.code.match(/Q(\d+)/i)?.[1] ?? 0)
-    const target=/gest/i
-    const management=normalizedInterviews.filter((item)=>target.test(item.title+' '+item.code))
-    if (number>=31) return management.find((item)=>/iii|3\b/i.test(item.title+' '+item.code)) ?? management[2] ?? normalizedInterviews.at(-1) ?? null
-    if (number>=16) return management.find((item)=>/ii|2\b/i.test(item.title+' '+item.code)) ?? management[1] ?? management[0] ?? null
-    return management.find((item)=>/\bi\b|1\b/i.test(item.title+' '+item.code)) ?? management[0] ?? normalizedInterviews[1] ?? null
+    return null
   }
 
 
@@ -1286,9 +1282,9 @@ export function SkdaWorkspace(props: Props) {
     if (consolidationQuestionId !== current.id) setConsolidationQuestionId(current.id)
     const response=responses.find((item)=>item.question_id===current.id)
     const existingInterviewId=typeof response?.metadata?.last_interview_id==='string' ? response.metadata.last_interview_id : ''
-    const suggested=suggestedInterviewForQuestion(current)
-    setConsolidationInterviewId(existingInterviewId || suggested?.id || '')
-  },[assessmentConsolidationMode,currentConsolidationQuestion?.id,consolidationQuestionId,responses,interviews])
+    const traced=tracedInterviewForQuestion(current)
+    setConsolidationInterviewId(existingInterviewId || traced?.id || '')
+  },[assessmentConsolidationMode,currentConsolidationQuestion?.id,consolidationQuestionId,responses,interviews,interviewQuestionRecords])
 
   const phaseReadiness = useMemo(() => {
     const recognizedContract = evidenceAssets.some((asset) => {
@@ -2538,7 +2534,7 @@ export function SkdaWorkspace(props: Props) {
     const hadResponse = Boolean(previousResponse)
     const sourceInterview = options?.sourceInterviewId
       ? interviews.find((item)=>item.id===options.sourceInterviewId) ?? null
-      : interviews.find((item) => item.status === 'in_progress') ?? suggestedInterviewForQuestion(question)
+      : interviews.find((item) => item.status === 'in_progress') ?? tracedInterviewForQuestion(question)
     const previousMetadata = previousResponse?.metadata ?? {}
     const previousTrace = Array.isArray(previousMetadata.interview_trace)
       ? previousMetadata.interview_trace.filter((item) => item && typeof item === 'object')
@@ -5485,7 +5481,7 @@ export function SkdaWorkspace(props: Props) {
                 const intelligence=evidenceQuestionIntelligence.filter((item)=>item.question_id===question.id)
                 const fieldRecords=interviewQuestionRecords.filter((item)=>item.question_id===question.id && ['in_progress','completed','skipped'].includes(item.status))
                 const expectations=questionEvidenceExpectations.filter((item)=>item.question_id===question.id)
-                const sourceInterview=interviews.find((item)=>item.id===consolidationInterviewId) ?? suggestedInterviewForQuestion(question)
+                const sourceInterview=interviews.find((item)=>item.id===consolidationInterviewId) ?? tracedInterviewForQuestion(question)
                 const currentIndex=consolidationQuestions.findIndex((item)=>item.id===question.id)
                 return <div className="skda-closeout-question">
                   <div className="skda-closeout-nav">
@@ -5512,7 +5508,7 @@ export function SkdaWorkspace(props: Props) {
                       </div>
                       <div className="skda-closeout-source">
                         <label><span>Entrevista / encontro de origem</span><select value={consolidationInterviewId || sourceInterview?.id || ''} onChange={(e)=>setConsolidationInterviewId(e.target.value)}>
-                          <option value="">Sem encontro específico</option>
+                          <option value="">Sem origem comprovada / não vincular</option>
                           {interviews.map((interview)=><option key={interview.id} value={interview.id}>{interview.code} · {interview.title} · {interview.scheduled_start ? new Date(interview.scheduled_start).toLocaleDateString('pt-BR') : 'sem data'}</option>)}
                         </select></label>
                         {sourceInterview && <small>Planejado: {sourceInterview.scheduled_start ? new Date(sourceInterview.scheduled_start).toLocaleString('pt-BR') : '—'} · Realizado: {sourceInterview.actual_start ? new Date(sourceInterview.actual_start).toLocaleString('pt-BR') : 'a ratificar'}</small>}

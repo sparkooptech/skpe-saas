@@ -86,6 +86,15 @@ test('DA interview cockpit is question-centered and supports guided navigation, 
   assert.match(workspaceCss, /\.skda-interview-practice-card/)
 })
 
+test('post-interview consolidation links only a proven interview source', () => {
+  assert.match(workspace, /const tracedInterviewForQuestion/)
+  assert.match(workspace, /interviewQuestionRecords[\s\S]*?question_id===question\.id/)
+  assert.match(workspace, /Sem origem comprovada \/ não vincular/)
+  assert.match(workspace, /source:assessmentConsolidationMode \? 'post_interview_consolidation' : 'assessment'/)
+  assert.doesNotMatch(workspace, /const suggestedInterviewForQuestion/)
+  assert.doesNotMatch(workspace, /question\.code\.startsWith\('GOV-'\)[\s\S]*?normalizedInterviews/)
+})
+
 test('evidence management and longitudinal history are first-class SK-DA workspaces', () => {
   assert.match(workspace, /label:'Gestão de Evidências'/)
   assert.match(workspace, /label:'Histórico e Evolução'/)
