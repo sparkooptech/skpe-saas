@@ -430,3 +430,9 @@ test('SK-DA overview exposes PDCL and modules return is a sidebar action, not a 
 test('technical runtime tenant is excluded from administrative module counts', () => {
   assert.match(migration, /o\.code <> 'SKPE-V1-RUNTIME'/)
 })
+
+test('SK-DA Journey and contract intake collapse before tablet widths', () => {
+  assert.match(workspaceCss, /@media \(max-width: 1180px\)[\s\S]*?\.skda-megaphase-summary-metrics[\s\S]*?repeat\(3,minmax\(0,1fr\)\)/)
+  assert.match(workspaceCss, /@media \(max-width: 1180px\)[\s\S]*?\.skda-contract-summary-grid[\s\S]*?repeat\(2,minmax\(0,1fr\)\)/)
+  assert.match(workspaceCss, /@media \(max-width: 680px\)[\s\S]*?\.skda-megaphase-summary-metrics,[\s\S]*?\.skda-contract-summary-grid[\s\S]*?grid-template-columns:minmax\(0,1fr\)/)
+})

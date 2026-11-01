@@ -6303,3 +6303,21 @@
     justify-content:flex-start;
   }
 }
+
+/* SK-DA | remaining intermediate-width hardening for Journey and contract intake. */
+@media (max-width: 1180px) {
+  .skda-megaphase-summary-metrics {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+  .skda-contract-summary-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .skda-megaphase-summary-metrics,
+  .skda-contract-summary-grid {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
