@@ -219,12 +219,12 @@
   .sparks-measure-dual-selector__pane .sparks-smart-grid { height:clamp(250px,calc(100dvh - 300px),430px); max-height:clamp(250px,calc(100dvh - 300px),430px); }
   .sparks-measure-dual-selector__footer { display:none; }
 }
-/* UI-CANON-04-V1.1 — balanced dual-grid and centered classifiers */
+/* UI-CANON-04-V1.2 — full-width simple rows instead of compressed dual lists */
 .sparks-measure-dual-selector {
   min-height: 0 !important;
   display: grid !important;
-  grid-template-rows: auto minmax(0, 1fr) auto !important;
-  gap: 0.48rem !important;
+  grid-template-rows: auto auto auto auto !important;
+  gap: 0.55rem !important;
 }
 
 .sparks-measure-dual-selector__intro {
@@ -240,7 +240,7 @@
 
 .sparks-measure-dual-selector__intro p {
   margin: 0 !important;
-  max-width: 108ch !important;
+  max-width: 120ch !important;
   font-size: 0.7rem !important;
   line-height: 1.32 !important;
 }
@@ -248,7 +248,8 @@
 .sparks-measure-dual-selector__layout {
   min-height: 0 !important;
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 4.1rem minmax(0, 1fr) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto !important;
   align-items: stretch !important;
   gap: 0.5rem !important;
 }
@@ -256,7 +257,7 @@
 .sparks-measure-dual-selector__pane {
   min-width: 0 !important;
   min-height: 0 !important;
-  height: 100% !important;
+  height: auto !important;
   display: grid !important;
   grid-template-rows: auto minmax(0, 1fr) !important;
   padding: 0.42rem !important;
@@ -264,24 +265,41 @@
 }
 
 .sparks-measure-dual-selector__pane .sparks-smart-grid {
-  min-height: 0 !important;
-  height: clamp(290px, calc(100dvh - 275px), 600px) !important;
-  max-height: clamp(290px, calc(100dvh - 275px), 600px) !important;
+  min-height: 190px !important;
+  height: clamp(200px, 27dvh, 300px) !important;
+  max-height: 300px !important;
+}
+
+.sparks-measure-dual-selector__pane .wx-row {
+  min-height: 36px !important;
+}
+
+.sparks-measure-dual-selector__pane .wx-cell {
+  padding-top: 0.32rem !important;
+  padding-bottom: 0.32rem !important;
 }
 
 .sparks-measure-dual-selector__actions {
-  width: 4.1rem !important;
-  min-width: 4.1rem !important;
-  max-width: 4.1rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
   align-self: center !important;
-  justify-self: center !important;
-  display: grid !important;
-  gap: 0.4rem !important;
+  justify-self: stretch !important;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
 }
 
 .sparks-measure-dual-selector__action {
-  min-width: 4.1rem !important;
-  min-height: 3.1rem !important;
+  min-width: 150px !important;
+  min-height: 2.5rem !important;
+  padding: 0.45rem 0.9rem !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  border-radius: 9px !important;
 }
 
 /* Center categorical/status columns without touching the shared grid TSX. */

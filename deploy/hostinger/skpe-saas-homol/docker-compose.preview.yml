@@ -9,6 +9,8 @@ services:
         VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
     container_name: sparks-homol-preview
     restart: unless-stopped
+    networks:
+      - sparks-homol-backend-net
     ports:
       - ${PREVIEW_BIND}
     healthcheck:
@@ -17,3 +19,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+networks:
+  sparks-homol-backend-net:
+    name: sparks-homol-backend-net
+    external: true

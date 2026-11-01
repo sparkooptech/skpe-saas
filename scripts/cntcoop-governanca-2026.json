@@ -1,0 +1,217 @@
+{
+  "organization": "CNTCOOP",
+  "cnpj": "36874961000172",
+  "instrument": "governanca",
+  "cycle": 2026,
+  "source": "Relatorio - Governanca - 2026 - CNTCoop(3).pdf",
+  "source_pages": {
+    "identity": 2,
+    "summary": 3,
+    "history": 4,
+    "answer_key": [
+      5,
+      6
+    ],
+    "narratives": [
+      8,
+      28
+    ]
+  },
+  "declared_index_percent": 76.2,
+  "source_kind": "organization_self_assessment",
+  "validation_status": "self_declared_not_consultant_validated",
+  "answers": [
+    {
+      "question_number": 1,
+      "declared_code": "C",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 2,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 3,
+      "declared_code": "C",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 4,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 5,
+      "declared_code": "B",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 6,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 7,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 8,
+      "declared_code": "C",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 9,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 10,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 11,
+      "declared_code": "B",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 12,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 13,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 14,
+      "declared_code": "C",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 15,
+      "declared_code": "B",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 16,
+      "declared_code": "C",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 17,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 18,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 19,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 20,
+      "declared_code": "D",
+      "source_page": 5,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 21,
+      "declared_code": "D",
+      "source_page": 6,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 22,
+      "declared_code": "A",
+      "source_page": 6,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 23,
+      "declared_code": "B",
+      "source_page": 6,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    },
+    {
+      "question_number": 24,
+      "declared_code": "B",
+      "source_page": 6,
+      "original_comment": null,
+      "original_evidence": null,
+      "transcription_status": "alternative_transcribed_narrative_pending"
+    }
+  ]
+}

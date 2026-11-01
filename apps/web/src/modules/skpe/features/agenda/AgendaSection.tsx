@@ -77,6 +77,8 @@ type ActionOption = {
 
 type AgendaSectionProps = {
   organizationId: string
+  moduleCode?: string
+  moduleLabel?: string
   refreshRequestKey?: number
 }
 
@@ -149,6 +151,8 @@ function statusLabel(value: string | null) {
 
 export function AgendaSection({
   organizationId,
+  moduleCode = 'SK-PE',
+  moduleLabel = 'SK-PE',
   refreshRequestKey = 0,
 }: AgendaSectionProps) {
   const [cursor, setCursor] = useState(() => monthStart(new Date()))
@@ -176,7 +180,7 @@ export function AgendaSection({
     const [agendaResult, institutionalResult] = await Promise.all([
       supabase.rpc('get_my_sparks_agenda', {
         target_organization_id: organizationId,
-        target_module_code: 'SK-PE',
+        target_module_code: moduleCode,
         target_date_from: toDateOnly(rangeStart),
         target_date_to: toDateOnly(rangeEnd),
         target_item_kind: null,
@@ -187,14 +191,14 @@ export function AgendaSection({
         target_organization_id: organizationId,
         target_date_from: toDateOnly(rangeStart),
         target_date_to: toDateOnly(rangeEnd),
-        target_module_code: 'SK-PE',
+        target_module_code: moduleCode,
       }),
     ])
 
     if (agendaResult.error && institutionalResult.error) {
       setItems([])
       setErrorMessage(
-        'Não foi possível carregar a agenda do Planejamento Estratégico.',
+        `Não foi possível carregar a agenda do ${moduleLabel}.`,
       )
     } else {
       const merged = new Map<string, AgendaItem>()
@@ -264,6 +268,8 @@ export function AgendaSection({
     void loadAgenda()
   }, [
     organizationId,
+    moduleCode,
+    moduleLabel,
     cursor.getFullYear(),
     cursor.getMonth(),
     refreshRequestKey,
@@ -557,7 +563,7 @@ export function AgendaSection({
           <p className="skpe-agenda-empty">Carregando agenda...</p>
         ) : items.length === 0 ? (
           <p className="skpe-agenda-empty">
-            Nenhum compromisso pessoal do SK-PE neste mês.
+            Nenhum compromisso pessoal do {moduleLabel} neste mês.
           </p>
         ) : (
           <div className="skpe-agenda-list-items">
@@ -594,7 +600,7 @@ export function AgendaSection({
                   {item.description && <p>{item.description}</p>}
                   <div>
                     <span>{statusLabel(item.status)}</span>
-                    <span>{item.is_native ? 'Evento' : 'Projeção SK-PE'}</span>
+                    <span>{item.is_native ? 'Evento' : `Projeção ${moduleLabel}`}</span>
                     {item.participant_function && (
                       <span>{item.participant_function}</span>
                     )}

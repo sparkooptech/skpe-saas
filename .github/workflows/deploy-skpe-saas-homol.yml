@@ -5,6 +5,23 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      database_only:
+        description: Apply SK-DA migrations without frontend deployment
+        type: boolean
+        default: false
+      cntcoop_history_2024_2025:
+        description: Import verified CNTCOOP 2024 and 2025 historical indices
+        type: boolean
+        default: false
+      cntcoop_import_2026:
+        description: Import complete CNTCOOP 2026 AA (declared answers + official metrics) into sparks_homol
+        type: boolean
+        default: false
+      cntcoop_governance_index_2026:
+        description: Import verified 2026 governance AA index from official report
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -55,6 +72,25 @@ jobs:
           release_root="${RUNNER_TEMP}/release"
           mkdir -p "${release_root}/source"
           cp -R deploy/hostinger/skpe-saas-homol/. "${release_root}/"
+          cp supabase/migrations/20261022175806_normalize_skda_self_assessment_intelligence.sql "${release_root}/"
+          cp supabase/migrations/20261022192348_add_skda_evidence_intelligence_engine.sql "${release_root}/"
+          cp supabase/migrations/20261023113000_prepare_skda_pdgc_cycle_import.sql "${release_root}/"
+          cp supabase/migrations/20261026004500_govern_skda_assessment_instrument_and_leadership.sql "${release_root}/"
+          cp supabase/migrations/20261026043000_enable_skda_artifact_text_versions.sql "${release_root}/"
+          cp supabase/migrations/20261026103000_operationalize_skda_organizational_intelligence.sql "${release_root}/"
+          cp supabase/migrations/20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql "${release_root}/"
+          cp supabase/migrations/20261027234500_govern_skda_contractual_journey_prefill.sql "${release_root}/"
+          cp supabase/migrations/20261028010625_enrich_skda_evidence_governance.sql "${release_root}/"
+          cp supabase/migrations/20261028014500_create_module_scoped_user_picker.sql "${release_root}/"
+          cp supabase/migrations/20261028020000_govern_skda_contractual_lb0_and_current_plan.sql "${release_root}/"
+          cp supabase/migrations/20261028113000_govern_skda_question_evidence_expectations.sql "${release_root}/"
+          cp supabase/migrations/20261029130000_operationalize_skda_interview_execution.sql "${release_root}/"
+          cp supabase/migrations/20261029133000_govern_skda_interview_question_prompts.sql "${release_root}/"
+          cp supabase/migrations/20261029150000_decouple_skda_interview_plan_from_question_execution.sql "${release_root}/"
+          cp supabase/migrations/20261029152000_make_skda_interview_agenda_propositional.sql "${release_root}/"
+          cp supabase/migrations/20261029132012_add_skda_folder_evidence_discovery.sql "${release_root}/"
+          cp supabase/migrations/20261029163500_reconcile_cntcoop_contractual_workload.sql "${release_root}/"
+          cp supabase/migrations/20261031004500_scope_skda_evidence_intelligence_to_relevant_questions.sql "${release_root}/"
           git archive \
             --format=tar.gz \
             --output "${release_root}/source/skpe-saas-${{ steps.meta.outputs.short_sha }}.tar.gz" \
@@ -142,6 +178,7 @@ jobs:
             echo "HOSTINGER_USER=${HOSTINGER_USER}"
           } >> "${GITHUB_ENV}"
 
+
       - name: Prepare Remote Release Directory
         shell: bash
         run: |
@@ -177,7 +214,38 @@ jobs:
             "${env_file}" \
             "${HOSTINGER_USER}@${HOSTINGER_HOST}:${{ steps.meta.outputs.release_dir }}/.env"
 
+      - name: Apply SK-DA Intelligence Migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          for migration_file in \
+            20261022175806_normalize_skda_self_assessment_intelligence.sql \
+            20261022192348_add_skda_evidence_intelligence_engine.sql \
+            20261023113000_prepare_skda_pdgc_cycle_import.sql \
+            20261026004500_govern_skda_assessment_instrument_and_leadership.sql \
+            20261026043000_enable_skda_artifact_text_versions.sql \
+            20261026103000_operationalize_skda_organizational_intelligence.sql \
+            20261026111500_reconcile_cntcoop_recent_evidence_to_core.sql \
+            20261027234500_govern_skda_contractual_journey_prefill.sql \
+            20261028010625_enrich_skda_evidence_governance.sql \
+            20261028014500_create_module_scoped_user_picker.sql \
+            20261028020000_govern_skda_contractual_lb0_and_current_plan.sql \
+            20261028113000_govern_skda_question_evidence_expectations.sql \
+            20261029130000_operationalize_skda_interview_execution.sql \
+            20261029133000_govern_skda_interview_question_prompts.sql \
+            20261029150000_decouple_skda_interview_plan_from_question_execution.sql \
+            20261029152000_make_skda_interview_agenda_propositional.sql \
+            20261029132012_add_skda_folder_evidence_discovery.sql \
+            20261029163500_reconcile_cntcoop_contractual_workload.sql \
+            20261031004500_scope_skda_evidence_intelligence_to_relevant_questions.sql
+          do
+            echo "Applying ${migration_file}"
+            ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+              "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol' < '${{ steps.meta.outputs.release_dir }}/${migration_file}'"
+          done
+
       - name: Deploy Remote Release
+        if: ${{ !inputs.database_only }}
         shell: bash
         run: |
           set -euo pipefail
@@ -185,6 +253,7 @@ jobs:
             "cd '${{ steps.meta.outputs.release_dir }}' && chmod +x deploy-remote.sh && GITHUB_SHA='${GITHUB_SHA}' RELEASE_SHORT_SHA='${{ steps.meta.outputs.short_sha }}' ./deploy-remote.sh"
 
       - name: Public Domain Smoke Test
+        if: ${{ !inputs.database_only }}
         shell: bash
         run: |
           set -euo pipefail
@@ -212,3 +281,56 @@ jobs:
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/healthz"
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/login"
           assert_public_url "https://${SPARKS_CANONICAL_HOST}/" 'Plataforma SPARKs|<div id="root">'
+
+      - name: CNTCOOP read-only inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" <<'SQL'
+          begin read only;
+          select 'ORGANIZATION' as kind, to_jsonb(o) as record from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%';
+          select 'JOURNEY' as kind, to_jsonb(d) as record from public.skda_diagnoses d where d.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
+          select 'INITIATIVE' as kind, to_jsonb(i) as record from public.sparks_initiatives i where i.organization_id in (select id from public.organizations o where to_jsonb(o)::text ilike '%CNTCOOP%');
+          select 'CATALOG' as kind,id,code,version_code,status from public.skda_catalog_versions order by code,version_code;
+          select 'QUESTIONS' as kind,cv.code,cv.version_code,count(q.id) as total,count(*) filter(where q.axis_name ilike '%Govern%') as gov,count(*) filter(where q.axis_name ilike '%Gest%') as ges from public.skda_catalog_versions cv left join public.skda_questions q on q.catalog_version_id=cv.id group by cv.code,cv.version_code;
+          select 'SNAPSHOTS' as kind,assessment_cycle_year,source_section,count(*) from public.skda_self_assessment_snapshots where organization_id='bd58a170-b5ef-4150-9b69-026afa138661' group by 2,3;
+          select 'ANSWERS' as kind,count(*) from public.skda_self_assessment_answers a join public.skda_self_assessment_snapshots s on s.id=a.snapshot_id where s.organization_id='bd58a170-b5ef-4150-9b69-026afa138661';
+          select 'CORE_EVIDENCE' as kind,count(*) as assets,count(*) filter(where source_external_key like 'sharepoint:%') as sharepoint_assets from public.sparks_evidence_assets where organization_id='bd58a170-b5ef-4150-9b69-026afa138661' and archived_at is null;
+          select 'DA_EVIDENCE' as kind,count(distinct evidence_asset_id) as distinct_assets,count(*) as correlations from public.skda_evidence_correlations where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724';
+          select 'INTELLIGENCE' as kind,analysis_status,count(*) from public.skda_evidence_question_intelligence where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724' group by analysis_status order by analysis_status;
+          select 'INTELLIGENCE_FINDINGS' as kind,count(*) from public.skda_findings where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724' and metadata->>'origin'='organizational_intelligence';
+          select 'RESPONSES' as kind,count(*) as total,count(*) filter(where evaluated_at is not null) as evaluated,count(*) filter(where response_status='validated' and validated_at is not null) as validated from public.skda_responses where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724';
+          select 'INTERVIEW_RECORDS' as kind,count(*) as total,count(distinct question_id) as questions,count(*) filter(where status='completed') as completed from public.skda_interview_question_records where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724';
+          select 'INTERVIEWS' as kind,status,count(*) from public.skda_interviews where diagnosis_id='79f8b0dc-371e-4483-bfad-542cdbb37724' group by status order by status;
+          select 'RECENT_CORE_ASSET' as kind,title,validation_status,reliability_level,source_external_key from public.sparks_evidence_assets where organization_id='bd58a170-b5ef-4150-9b69-026afa138661' and source_external_key like 'sharepoint:%' and archived_at is null order by title;
+          select 'RICARDO_PROFILE' as kind,p.id,p.email,p.display_name,p.active from public.profiles p where lower(coalesce(p.email,'')) like '%ricardo%rodrigues%' or lower(coalesce(p.display_name,'')) like 'ricardo rodrigues%';
+          select 'CNTCOOP_MEMBERSHIP' as kind,m.user_id,p.email,p.display_name,m.status,m.is_organization_admin,m.valid_from,m.valid_until,m.job_title from public.organization_memberships m join public.profiles p on p.id=m.user_id where m.organization_id='bd58a170-b5ef-4150-9b69-026afa138661' order by p.display_name,p.email;
+          select 'CNTCOOP_EAP' as kind,a.code,a.name,a.baseline_start_date,a.baseline_due_date,a.planned_start_date,a.planned_due_date from public.sparks_initiative_actions a where a.organization_id='bd58a170-b5ef-4150-9b69-026afa138661' and a.parent_action_id is null and a.source_module_code='SK-DA' order by a.code;
+          commit;
+          SQL
+
+      - name: Import complete CNTCOOP 2026 AA (explicit dispatch only)
+        if: ${{ inputs.cntcoop_import_2026 && inputs.database_only }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/build_cntcoop_2026_import.py > /tmp/cntcoop-aa-2026-import.sql
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < /tmp/cntcoop-aa-2026-import.sql
+
+      - name: Import CNTCOOP 2026 Governance AA official index
+        if: ${{ inputs.cntcoop_governance_index_2026 && inputs.database_only }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < scripts/cntcoop-aa-2026-governance-index.sql
+
+      - name: Import CNTCOOP verified 2024-2025 historical indices
+        if: ${{ inputs.cntcoop_history_2024_2025 && inputs.database_only }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT}" "${HOSTINGER_USER}@${HOSTINGER_HOST}" \
+            "docker exec -i postgresql-33th-postgresql-1 sh -lc 'psql -X -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d sparks_homol'" < scripts/cntcoop-history-2024-2025.sql

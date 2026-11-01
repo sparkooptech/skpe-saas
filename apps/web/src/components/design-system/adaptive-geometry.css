@@ -96,7 +96,14 @@
 }
 
 /* ---------- dual panes ---------- */
-.sparks-transversal-workspace--split .sparks-transversal-workspace__body,
+.sparks-transversal-workspace--split .sparks-transversal-workspace__body {
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr) !important;
+  gap: var(--sparks-space-2) !important;
+}
+
+.sparks-transversal-workspace--split.sparks-transversal-workspace--with-actions .sparks-transversal-workspace__body,
 .sparks-measure-dual-selector__layout {
   grid-template-columns:
     minmax(0, 1fr)
@@ -158,7 +165,14 @@ button,
     justify-content: flex-start !important;
   }
 
-  .sparks-transversal-workspace--split .sparks-transversal-workspace__body,
+  .sparks-transversal-workspace--split .sparks-transversal-workspace__body {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows:
+      minmax(0, 1fr)
+      minmax(0, 1fr) !important;
+  }
+
+  .sparks-transversal-workspace--split.sparks-transversal-workspace--with-actions .sparks-transversal-workspace__body,
   .sparks-measure-dual-selector__layout {
     grid-template-columns: minmax(0, 1fr) !important;
     grid-template-rows:
