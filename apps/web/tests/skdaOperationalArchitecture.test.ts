@@ -436,3 +436,18 @@ test('SK-DA Journey and contract intake collapse before tablet widths', () => {
   assert.match(workspaceCss, /@media \(max-width: 1180px\)[\s\S]*?\.skda-contract-summary-grid[\s\S]*?repeat\(2,minmax\(0,1fr\)\)/)
   assert.match(workspaceCss, /@media \(max-width: 680px\)[\s\S]*?\.skda-megaphase-summary-metrics,[\s\S]*?\.skda-contract-summary-grid[\s\S]*?grid-template-columns:minmax\(0,1fr\)/)
 })
+
+
+test('SK-DA Journey does not reintroduce Area de Trabalho as a UI layer', () => {
+  assert.doesNotMatch(workspace, /Acessar \u00e1rea de trabalho/i)
+  assert.match(workspace, /Abrir etapa/)
+})
+
+
+test('SK-DA interview consumes prepared evidence without exposing Evidence Intelligence as an interview layer', () => {
+  assert.doesNotMatch(workspace, /<b>Intelig\u00eancia:<\/b>/)
+  assert.doesNotMatch(workspace, /<b>Intelig\u00eancia din\u00e2mica:<\/b>/)
+  assert.match(workspace, /Aprofundamento sugerido:/)
+  assert.match(workspace, /Nenhuma evid\u00eancia previamente relacionada foi associada a esta quest\u00e3o/)
+  assert.doesNotMatch(workspace, /correla\u00e7\u00e3o\(\u00f5es\) de intelig\u00eancia/)
+})

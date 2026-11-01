@@ -4765,7 +4765,7 @@ export function SkdaWorkspace(props: Props) {
                         <div className="skda-stage-title"><span>{stage.code}</span><strong>{stage.name}</strong><b>{stageStatus}</b></div>
                         <ul>{activities.map((activity) => <li key={activity}>{activity}</li>)}</ul>
                         <div className="skda-input-chips">
-                          <span title="Abra a área de trabalho desta etapa para consultar e correlacionar evidências."><button type="button" onClick={() => setActivePhaseCode(['MF4','MF5','MF6','MF7'].includes(megaphase.code) ? 'DA-01' : 'DA-00')}>Acessar área de trabalho</button></span>
+                          <span title="Abra esta etapa para consultar e correlacionar evidências."><button type="button" onClick={() => setActivePhaseCode(['MF4','MF5','MF6','MF7'].includes(megaphase.code) ? 'DA-01' : 'DA-00')}>Abrir etapa</button></span>
                           <span title="Consulte as evidências transversais da organização."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Consultar evidências</button></span>
                           {canRegisterEvidence && <span title="Registre uma nova evidência relacionada a esta etapa."><button type="button" onClick={() => {setEvidenceFile(null);setShowEvidenceCreate(true)}}>Adicionar evidência</button></span>}
                           {canManage && stage.status === 'planned' && <span><button type="button" className="skda-primary" disabled={saving} onClick={() => void transitionJourneyStage(stage,action,'in_progress')}>Iniciar etapa</button></span>}
@@ -5297,7 +5297,7 @@ export function SkdaWorkspace(props: Props) {
                   <small>Próxima questão · {interviewQuestionFlow.current.block === 'GOVERNANCA' ? 'Governança' : interviewQuestionFlow.current.block === 'GESTAO' ? 'Gestão' : 'Outras'}</small>
                   <strong>{interviewQuestionFlow.current.question.code} · {interviewQuestionFlow.current.question.question_text}</strong>
                   {interviewQuestionFlow.current.question.criterion_name && <span>{interviewQuestionFlow.current.question.criterion_name}</span>}
-                  {intelligentInterviewAgenda.rows.filter((row)=>row.questionIds.has(interviewQuestionFlow.current?.question.id ?? '')).slice(0,3).map((row) => <span key={row.key} className="skda-interview-intelligence-prompt"><b>Inteligência:</b> {row.prompt}</span>)}
+                  {intelligentInterviewAgenda.rows.filter((row)=>row.questionIds.has(interviewQuestionFlow.current?.question.id ?? '')).slice(0,3).map((row) => <span key={row.key} className="skda-interview-intelligence-prompt"><b>Aprofundamento sugerido:</b> {row.prompt}</span>)}
                 </div>
                 <button type="button" className="skda-primary" onClick={() => document.getElementById('skda-question-'+interviewQuestionFlow.current?.question.id)?.scrollIntoView({ behavior:'smooth', block:'start' })}>Retomar nesta questão</button>
               </div> : <div className="skda-interview-current-question is-complete"><div><small>Roteiro concluído</small><strong>Todas as questões da Jornada foram percorridas no DA.</strong><span>A validação final pode prosseguir sem perder a rastreabilidade das entrevistas.</span></div></div>}
@@ -5452,7 +5452,7 @@ export function SkdaWorkspace(props: Props) {
                   <div className="skda-interview-context-card">
                     <strong>Evidências desta questão</strong>
                     {intelligenceRows.length === 0
-                      ? <small>Nenhuma inteligência documental validável foi associada a esta questão.</small>
+                      ? <small>Nenhuma evidência previamente relacionada foi associada a esta questão.</small>
                       : intelligenceRows.slice(0,8).map((item) => {
                         const asset = evidenceAssets.find((row) => row.id === item.evidence_asset_id)
                         return <span key={item.id}><b>{asset?.title || 'Evidência vinculada'}:</b> {item.diagnostic_hypothesis || item.gap_description || item.complement_needed || 'Vínculo existente; aprofundar suficiência durante a entrevista.'}</span>
@@ -5475,7 +5475,7 @@ export function SkdaWorkspace(props: Props) {
                     <strong>Condução da entrevista</strong>
                     {governedPrompts.filter((item) => item.prompt_type === 'central').map((item) => <span key={item.prompt_id}><b>Pergunta central:</b> {item.prompt_text}</span>)}
                     {governedPrompts.filter((item) => item.prompt_type === 'deepening').slice(0,6).map((item) => <span key={item.prompt_id}><b>Aprofundamento:</b> {item.prompt_text}</span>)}
-                    {prompts.length > 0 && prompts.slice(0,5).map((row) => <span key={row.key}><b>Inteligência dinâmica:</b> {row.prompt}</span>)}
+                    {prompts.length > 0 && prompts.slice(0,5).map((row) => <span key={row.key}><b>Aprofundamento sugerido:</b> {row.prompt}</span>)}
                     {governedPrompts.length === 0 && prompts.length === 0 && <small>Investigue apenas as dimensões ainda não comprovadas, solicitando casos recentes, registros, resultados e decisões decorrentes.</small>}
                   </div>
                   <div className="skda-interview-context-card">
@@ -5626,7 +5626,7 @@ export function SkdaWorkspace(props: Props) {
                       </div>
                       <div className="skda-closeout-context">
                         <strong>Contexto já disponível</strong>
-                        <span>{intelligence.length} correlação(ões) de inteligência · {expectations.length} expectativa(s) de evidência · {fieldRecords.length} registro(s) de campo</span>
+                        <span>{intelligence.length} correlação(ões) de evidência · {expectations.length} expectativa(s) de evidência · {fieldRecords.length} registro(s) de campo</span>
                         {fieldRecords.slice(-3).map((record)=><p key={record.id}>{record.observed_practice || record.interview_notes || record.evidence_cited || record.gap_summary || 'Registro de entrevista sem síntese textual.'}</p>)}
                         {intelligence.filter((item)=>item.diagnostic_hypothesis || item.gap_description).slice(0,4).map((item)=><p key={item.id}>{item.diagnostic_hypothesis || item.gap_description}</p>)}
                       </div>
