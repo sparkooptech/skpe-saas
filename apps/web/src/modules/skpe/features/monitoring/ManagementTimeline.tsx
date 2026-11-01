@@ -440,7 +440,7 @@ export function ManagementTimeline({
                   >
                     <small>{journeyItemTypeLabel(row.item_type)}</small>
                     <strong>
-                      {row.item_code} · {row.item_name}
+                      {row.item_name}
                     </strong>
                     <span>
                       {Math.round(row.item_progress)}% ·{' '}

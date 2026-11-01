@@ -1464,7 +1464,6 @@ export function StrategicDiagnosisSection({
         <section className="skpe-strategic-diagnosis-artifact">
           <header>
             <div>
-              <p className="skpe-card-code">{selectedPhase?.item_code}</p>
               <h3>{copyByTab[activeTab].title}</h3>
               <p>{copyByTab[activeTab].purpose}</p>
             </div>

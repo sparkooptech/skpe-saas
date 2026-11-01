@@ -37,6 +37,7 @@ import { StrategicDiagnosisSection } from './features/diagnosis/StrategicDiagnos
 import { StrategicPositioningSection } from './features/strategy/StrategicPositioningSection'
 import { JourneyEventCreateDialog } from './features/journey/JourneyEventCreateDialog'
 import { MyWorkspacePage } from './workspace/MyWorkspacePage'
+import { MyMeetingsPanel } from './workspace/MyMeetingsPanel'
 import { PortabilityAdmin } from '../portability/PortabilityAdmin'
 import { AdminUserAvatarEditor } from '../platform-admin/AdminUserAvatarEditor'
 import { OrganizationUsersSmartGrid } from './components/OrganizationUsersSmartGrid'
@@ -104,6 +105,7 @@ export type CockpitSection =
   | 'initiatives'
     | 'indicators'
 | 'monitoring'
+  | 'meetings'
   | 'agenda'
   | 'artifacts'
   | 'governance'
@@ -8675,6 +8677,7 @@ const [startingProject, setStartingProject] = useState(false)
       initiatives: canViewInitiatives,
       indicators: canViewMonitoring,
       monitoring: canViewMonitoring,
+      meetings: canViewMonitoring || canViewAgenda,
       agenda: canViewAgenda,
       artifacts: canViewArtifacts,
       governance: canViewGovernance,
@@ -8706,11 +8709,13 @@ const [startingProject, setStartingProject] = useState(false)
       case 'evolution-cycles':
         return 'Ciclos de Evolução'
       case 'initiatives':
-        return 'Acompanhamento e Evolução Contínua'
+        return 'Execução Estratégica'
             case 'indicators':
         return 'Medidas e Desempenho'
-case 'monitoring':
-        return 'Monitoramento'
+      case 'monitoring':
+        return 'Monitoramento Estratégico'
+      case 'meetings':
+        return 'Reuniões e Agenda'
       case 'agenda':
         return 'Agenda'
       case 'artifacts':
@@ -8904,20 +8909,54 @@ case 'monitoring':
                     ) : null}
                   </div>
                 </details>
-              ) : null}              <button
-                type="button"
-                className={
-                  activeSection === 'initiatives'
-                    ? 'skpe-nav-active'
-                    : ''
-                }
-                onClick={() => navigateToSection('initiatives')}
-                title="Monitoramento"
-                hidden={!canViewInitiatives}
-              >
-                <InitiativesIcon />
-                Monitoramento
-              </button>
+              ) : null}
+              {(canViewInitiatives || canViewMonitoring || canViewEvolution || canViewAgenda) ? (
+                <details
+                  className="skpe-nav-journey-disclosure"
+                  open={
+                    sidebarCollapsed ||
+                    ['initiatives', 'monitoring', 'meetings', 'evolution-cycles'].includes(activeSection)
+                  }
+                >
+                  <summary
+                    className={
+                      ['initiatives', 'monitoring', 'meetings', 'evolution-cycles'].includes(activeSection)
+                        ? 'skpe-nav-active'
+                        : ''
+                    }
+                    title="Expandir ou recolher Acompanhamento e Evolução Contínua"
+                  >
+                    <MonitoringIcon />
+                    <span>Acompanhamento e Evolução Contínua</span>
+                  </summary>
+                  <div className="skpe-nav-submenu" aria-label="Submenu de Acompanhamento e Evolução Contínua">
+                    {canViewInitiatives ? (
+                      <button type="button" className={activeSection === 'initiatives' ? 'skpe-nav-submenu-active' : ''} onClick={() => navigateToSection('initiatives')}>
+                        <InitiativesIcon />
+                        <span>Execução Estratégica</span>
+                      </button>
+                    ) : null}
+                    {canViewMonitoring ? (
+                      <button type="button" className={activeSection === 'monitoring' ? 'skpe-nav-submenu-active' : ''} onClick={() => navigateToSection('monitoring')}>
+                        <MonitoringIcon />
+                        <span>Monitoramento Estratégico</span>
+                      </button>
+                    ) : null}
+                    {(canViewMonitoring || canViewAgenda) ? (
+                      <button type="button" className={activeSection === 'meetings' ? 'skpe-nav-submenu-active' : ''} onClick={() => navigateToSection('meetings')}>
+                        <CalendarIcon />
+                        <span>Reuniões e Agenda</span>
+                      </button>
+                    ) : null}
+                    {canViewEvolution ? (
+                      <button type="button" className={activeSection === 'evolution-cycles' ? 'skpe-nav-submenu-active' : ''} onClick={() => navigateToSection('evolution-cycles')}>
+                        <JourneyIcon />
+                        <span>Ciclos de Evolução</span>
+                      </button>
+                    ) : null}
+                  </div>
+                </details>
+              ) : null}
             </>
           ) : (
             <>
@@ -9651,6 +9690,22 @@ case 'monitoring':
             }}
           />
         )}
+
+        {activeSection === 'meetings' && (canViewMonitoring || canViewAgenda) && (
+          <section className="skpe-continuous-evolution-meetings" aria-label="Reuniões e Agenda">
+            <MyMeetingsPanel
+              organizationId={organizationId}
+              projectId={projectContext?.project_id ?? null}
+            />
+            {canViewAgenda ? (
+              <AgendaSection
+                organizationId={organizationId}
+                refreshRequestKey={agendaRefreshRequestKey}
+              />
+            ) : null}
+          </section>
+        )}
+
 
         {activeSection === 'agenda' && canViewAgenda && (
           <AgendaSection

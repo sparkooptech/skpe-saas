@@ -377,7 +377,7 @@ export function MyNotificationsPanel({
                 .join(' ')}
               role="button"
               tabIndex={0}
-              aria-label={`Abrir notificação ${item.source_code ?? ''} ${item.title}`}
+              aria-label={`Abrir notificação ${item.title}`}
               onClick={() => openNotification(item)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
@@ -388,7 +388,6 @@ export function MyNotificationsPanel({
             >
               <div className="skpe-notifications-item-main">
                 <div className="skpe-notifications-item-labels">
-                  {item.source_code && <span>{item.source_code}</span>}
                   <span>
                     {sourceTypeLabels[item.source_type] ??
                       item.source_type}

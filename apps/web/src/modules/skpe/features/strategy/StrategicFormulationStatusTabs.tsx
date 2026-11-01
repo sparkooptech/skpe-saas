@@ -303,7 +303,7 @@ export function StrategicFormulationStatusTabs({
       },
       {
         id: 'initiatives' as const,
-        label: currentStageCode === 'PEM-04.01' ? 'Ativação e Iniciativas' : 'Plano de Iniciativas',
+        label: 'Plano de Iniciativas',
         status: initiativeStatus,
         statusLabel: labelFor(initiativeStatus),
       },
@@ -315,22 +315,7 @@ export function StrategicFormulationStatusTabs({
         statusLabel: labelFor(planStatus),
       },
     ]
-
-    const maxTabIndex = !currentStageCode
-      ? allTabs.length - 1
-      : currentStageCode.startsWith('PEM-05') || currentStageCode.startsWith('PEM-04')
-        ? allTabs.length - 1
-        : currentStageCode === 'PEM-03.04' || currentStageCode === 'PEM-03.GATE'
-          ? allTabs.findIndex((tab) => tab.id === 'plan')
-          : currentStageCode === 'PEM-03.03'
-            ? allTabs.findIndex((tab) => tab.id === 'initiatives')
-            : currentStageCode === 'PEM-03.02'
-              ? allTabs.findIndex((tab) => tab.id === 'indicators')
-              : currentStageCode === 'PEM-03.01'
-                ? allTabs.findIndex((tab) => tab.id === 'performance')
-                : allTabs.findIndex((tab) => tab.id === 'architecture')
-
-    return allTabs.slice(0, Math.max(maxTabIndex, 0) + 1)
+    return allTabs
   }, [snapshot, currentStageCode])
 
   return (

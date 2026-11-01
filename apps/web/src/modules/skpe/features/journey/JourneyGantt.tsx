@@ -1093,12 +1093,12 @@ export function JourneyGantt({
                     if (hasChildren) toggleJourneyExpansion(row.item_id)
                   }}
                   aria-expanded={hasChildren ? isExpanded : undefined}
-                  title={`${getItemTypeLabel(row.item_type)} · ${row.item_code} · ${row.item_name}`}
+                  title={`${getItemTypeLabel(row.item_type)} · ${row.item_name}`}
                 >
                   <span style={{ paddingLeft: `${Math.min(depth, 5) * 14}px` }}>
                     <small>
                       {hasChildren ? `${isExpanded ? '▾' : '▸'} ` : ''}
-                      {getItemTypeLabel(row.item_type)} · {row.item_code}
+                      {getItemTypeLabel(row.item_type)}
                     </small>
                     <strong>{row.item_name}</strong>
                   </span>

@@ -918,7 +918,7 @@ export function JourneySection({
                       })
                     }
                     disabled={statusDialogRequest !== null || methodologyLocked}
-                    title={methodologyLocked && firstUnmetDependency ? `${firstUnmetDependency.prerequisite.item_code} deve estar em ${statusLabelPtBr(firstUnmetDependency.requiredStatus)} antes de iniciar.` : undefined}
+                    title={methodologyLocked && firstUnmetDependency ? `${firstUnmetDependency.prerequisite.item_name} deve estar em ${statusLabelPtBr(firstUnmetDependency.requiredStatus)} antes de iniciar.` : undefined}
                   >
                     Iniciar
                   </button>
@@ -935,7 +935,7 @@ export function JourneySection({
                       })
                     }
                     disabled={statusDialogRequest !== null || methodologyLocked}
-                    title={methodologyLocked && firstUnmetDependency ? `${firstUnmetDependency.prerequisite.item_code} deve estar em ${statusLabelPtBr(firstUnmetDependency.requiredStatus)} antes de concluir esta etapa.` : undefined}
+                    title={methodologyLocked && firstUnmetDependency ? `${firstUnmetDependency.prerequisite.item_name} deve estar em ${statusLabelPtBr(firstUnmetDependency.requiredStatus)} antes de concluir esta etapa.` : undefined}
                   >
                     Concluir
                   </button>
@@ -1298,7 +1298,7 @@ export function JourneySection({
                   {selectedBreadcrumb.map((breadcrumbItem, index) => (
                     <span key={breadcrumbItem.item_id}>
                       {index > 0 && <b>›</b>}
-                      {breadcrumbItem.item_code}
+                      {methodologyTextPtBr(breadcrumbItem.item_name)}
                     </span>
                   ))}
                 </div>

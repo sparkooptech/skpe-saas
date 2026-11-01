@@ -97,6 +97,15 @@ function formatDate(value: string | null) {
   )
 }
 
+function publicBlockingReason(value: string | null) {
+  if (!value) return null
+  if (/\bPEM-\d{2}(?:\.[A-Z0-9]+)?\b/i.test(value) || /dependência metodológica/i.test(value)) {
+    return 'Há uma etapa anterior que precisa ser concluída antes deste item.'
+  }
+  return value
+}
+
+
 function priorityLabel(value: string) {
   const labels: Record<string, string> = {
     low: 'Baixa',
@@ -277,14 +286,13 @@ export function MyPendingItemsPanel({
                 {item.description && <p>{item.description}</p>}
 
                 <div className="skpe-pending-item-meta">
-                  {item.source_code && <span>{item.source_code}</span>}
                   <span>Prazo: {formatDate(item.due_date)}</span>
                   <span>Prioridade: {priorityLabel(item.priority)}</span>
                 </div>
 
-                {item.blocking_reason && (
+                {publicBlockingReason(item.blocking_reason) && (
                   <div className="skpe-pending-blocking-reason">
-                    {item.blocking_reason}
+                    {publicBlockingReason(item.blocking_reason)}
                   </div>
                 )}
               </div>

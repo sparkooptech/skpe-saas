@@ -471,7 +471,7 @@ export function JourneySchedulePlanner({
           p_change_reason: 'Sugestão inicial gerada pela metodologia SPARKs PE para validação humana.',
         })
         if (suggestionResult.error) {
-          setErrorMessage(`${row.item_code}: ${translateBackendMessage(suggestionResult.error.message)}`)
+          setErrorMessage(translateBackendMessage(suggestionResult.error.message))
           setSaving(false)
           return
         }
@@ -867,10 +867,10 @@ export function JourneySchedulePlanner({
                   const draft = draftDates[selectedScheduleLeaf.item_id] ?? { start: '', end: '', note: '' }
                   const endOnly = selectedScheduleLeaf.item_type === 'gate' || selectedScheduleLeaf.item_type === 'deliverable'
                   return (
-                    <section className="skpe-schedule-item-editor" aria-label={`Editar ${selectedScheduleLeaf.item_code}`}>
+                    <section className="skpe-schedule-item-editor" aria-label={`Editar ${selectedScheduleLeaf.item_name}`}>
                       <div className="skpe-schedule-item-editor-heading">
                         <div>
-                          <small>{itemTypeLabel(selectedScheduleLeaf.item_type)} · {selectedScheduleLeaf.item_code}</small>
+                          <small>{itemTypeLabel(selectedScheduleLeaf.item_type)}</small>
                           <strong>{selectedScheduleLeaf.item_name}</strong>
                         </div>
                         <span>{selectedScheduleLeaf.is_mandatory ? 'Obrigatório' : 'Condicional'}</span>

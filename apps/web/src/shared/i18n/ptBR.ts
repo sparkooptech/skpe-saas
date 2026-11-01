@@ -127,6 +127,10 @@ function appearsEnglish(value: string) {
   return /\b(access|denied|permission|failed|failure|invalid|not found|system role|administrator|viewer|manager|unexpected|network|request|duplicate|violates|constraint)\b/i.test(value)
 }
 
+function containsInternalMethodologyCode(value: string) {
+  return /\b(?:PEM-\d{2}(?:\.[A-Z0-9]+)?|FE-\d{2})\b/i.test(value)
+}
+
 export function statusLabelPtBr(value: string | null | undefined, fallback?: string) {
   const code = normalizeCode(value)
   if (!code) return fallback ?? 'Não informado'
@@ -166,6 +170,7 @@ export function translateBackendMessage(value: string | null | undefined) {
   if (normalized.includes('invalid') || normalized.includes('violates check constraint')) return 'Os dados informados não atendem às regras de validação.'
   if (normalized.includes('failed to fetch') || normalized.includes('network request failed')) return 'Não foi possível comunicar com o serviço. Verifique a conexão e tente novamente.'
   if (normalized.includes('function') && normalized.includes('schema cache')) return 'A atualização do banco ainda não está disponível para a aplicação. Atualize o esquema e tente novamente.'
+  if (containsInternalMethodologyCode(text)) return 'Não foi possível concluir a operação porque existe uma dependência anterior ou uma regra de validação ainda não atendida.'
   if (appearsEnglish(text)) return 'Não foi possível concluir a operação. O detalhe técnico foi preservado no console e na auditoria.'
   return text
 }

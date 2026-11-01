@@ -419,7 +419,7 @@ export function JourneyProjectPlan({
             {metrics.topLevel.map((row) => (
               <article key={row.item_id}>
                 <div>
-                  <small>{itemTypeLabel(row.item_type)} · {row.item_code}</small>
+                  <small>{itemTypeLabel(row.item_type)}</small>
                   <strong>{row.item_name}</strong>
                 </div>
                 <span>{row.is_mandatory ? 'Obrigatória' : 'Condicional'}</span>
