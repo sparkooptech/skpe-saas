@@ -4747,10 +4747,10 @@ export function SkdaWorkspace(props: Props) {
                       {megaphaseIndex === 0 && <>
                         <span title="Acesse a abertura da Jornada para registrar a OS autorizadora e validar a linha de base."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>OS autorizadora / LB0</button></span>
                         <span title="Cadastre ou consulte as Autoavaliações e respectivas evidências."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Autoavaliações disponíveis</button></span>
-                        <span title="Acesse o inventário de evidências e documentos da organização."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Fontes e contexto inicial</button></span>
+                        <span title="Acesse a Gestão de Evidências para consultar o inventário documental da organização."><button type="button" onClick={() => setActivePhaseCode('EVIDENCE')}>Fontes e contexto inicial</button></span>
                       </>}
                       {inheritedArtifacts.map((artifact) => <span key={artifact.id} title="Entregável herdado da MegaFase anterior."><button type="button" onClick={() => void openJourneyArtifact(artifact)}>{artifact.title}</button></span>)}
-                      <span title="Acesse o repositório transversal para cadastrar, consultar e correlacionar evidências desta Jornada."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Consultar evidências</button></span>
+                      <span title="Acesse o repositório transversal para cadastrar, consultar e correlacionar evidências desta Jornada."><button type="button" onClick={() => setActivePhaseCode('EVIDENCE')}>Consultar evidências</button></span>
                       {canRegisterEvidence && <span title="Abra o cadastro de evidências da organização; disponível em todas as MegaFases."><button type="button" onClick={() => {setEvidenceFile(null);setShowEvidenceCreate(true)}}>Adicionar evidência</button></span>}
                     </div>
                   </section>
@@ -4766,7 +4766,7 @@ export function SkdaWorkspace(props: Props) {
                         <ul>{activities.map((activity) => <li key={activity}>{activity}</li>)}</ul>
                         <div className="skda-input-chips">
                           <span title="Abra esta etapa para consultar e correlacionar evidências."><button type="button" onClick={() => setActivePhaseCode(['MF4','MF5','MF6','MF7'].includes(megaphase.code) ? 'DA-01' : 'DA-00')}>Abrir etapa</button></span>
-                          <span title="Consulte as evidências transversais da organização."><button type="button" onClick={() => setActivePhaseCode('DA-00')}>Consultar evidências</button></span>
+                          <span title="Consulte as evidências transversais da organização."><button type="button" onClick={() => setActivePhaseCode('EVIDENCE')}>Consultar evidências</button></span>
                           {canRegisterEvidence && <span title="Registre uma nova evidência relacionada a esta etapa."><button type="button" onClick={() => {setEvidenceFile(null);setShowEvidenceCreate(true)}}>Adicionar evidência</button></span>}
                           {canManage && stage.status === 'planned' && <span><button type="button" className="skda-primary" disabled={saving} onClick={() => void transitionJourneyStage(stage,action,'in_progress')}>Iniciar etapa</button></span>}
                           {canManage && stage.status === 'in_progress' && <span><button type="button" className="skda-primary" disabled={saving} onClick={() => void transitionJourneyStage(stage,action,'completed')}>Concluir etapa</button></span>}

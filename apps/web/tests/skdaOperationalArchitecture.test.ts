@@ -451,3 +451,10 @@ test('SK-DA interview consumes prepared evidence without exposing Evidence Intel
   assert.match(workspace, /Nenhuma evid\u00eancia previamente relacionada foi associada a esta quest\u00e3o/)
   assert.doesNotMatch(workspace, /correla\u00e7\u00e3o\(\u00f5es\) de intelig\u00eancia/)
 })
+
+
+test('SK-DA Journey evidence actions route to the dedicated Evidence Management area', () => {
+  assert.match(workspace, /setActivePhaseCode\('EVIDENCE'\)[\s\S]*?Consultar evid\u00eancias/)
+  assert.match(workspace, /setActivePhaseCode\('EVIDENCE'\)[\s\S]*?Fontes e contexto inicial/)
+  assert.doesNotMatch(workspace, /setActivePhaseCode\('DA-00'\)[^\n]*?Consultar evid\u00eancias/)
+})
