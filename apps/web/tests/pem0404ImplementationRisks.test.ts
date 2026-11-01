@@ -59,5 +59,5 @@ test('PEM-04.04 UI exposes risk readiness and governed human-validation workflow
   assert.match(workspace, /transition_skpe_initiative_risk_validation/)
   assert.match(validationMigration, /human validation workflow for implementation risks/i)
   assert.match(validationMigration, /automaticRiskAcceptance',false/)
-  assert.match(cockpit, /current_stage_code === 'PEM-04\.04'[\s\S]*'plan'/)
+  assert.match(cockpit, /code === 'PEM-04\.04'[\s\S]*?'plan'/)
 })

@@ -239,6 +239,7 @@ export function StrategicOkrDecompositionSection({
 }: Props) {
   const [data, setData] = useState<LoadState>(emptyState)
   const [readiness, setReadiness] = useState<OkrDeploymentReadiness | null>(null)
+  const showReadinessPanel = false
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -354,8 +355,8 @@ export function StrategicOkrDecompositionSection({
         initiativesResponse,
         initiativeObjectivesResponse,
         initiativeKeyResultsResponse,
-        readinessResponse,
       ]
+      // Readiness is a governance diagnostic; its failure must not erase the operational chain.
       const firstError = responses.find((response) => response.error)?.error
 
       if (!active) return
@@ -450,7 +451,7 @@ export function StrategicOkrDecompositionSection({
     <section className="skpe-okr-decomposition">
       <header className="skpe-okr-decomposition-header">
         <div>
-          <small>Fase 5 · Desdobramento mensurável</small>
+
           <h3>Objetivos Estratégicos, OKRs e evidências de execução</h3>
         </div>
         <p>
@@ -459,8 +460,8 @@ export function StrategicOkrDecompositionSection({
         </p>
       </header>
 
-      <div className="skpe-okr-methodology-guide" role="note" aria-label="Disciplina metodológica de OKRs">
-        <strong>Como ler o desdobramento</strong>
+      <details className="skpe-okr-methodology-guide">
+        <summary>Como ler o desdobramento</summary>
         <div>
           <span><b>Perspectiva</b> organiza a lógica causal do BSC.</span>
           <span><b>OE</b> expressa a transformação estratégica de horizonte mais longo.</span>
@@ -468,9 +469,9 @@ export function StrategicOkrDecompositionSection({
           <span><b>KR</b> comprova a mudança com linha de base, meta, unidade, prazo e fonte.</span>
           <span><b>Iniciativa</b> é o que fazemos para mover os KRs; não substitui resultado.</span>
         </div>
-      </div>
+      </details>
 
-      {readiness ? (
+      {showReadinessPanel && readiness ? (
         <section className="skpe-okr-readiness">
           <div>
             <small>Prontidão de OKRs e Resultados-Chave</small>

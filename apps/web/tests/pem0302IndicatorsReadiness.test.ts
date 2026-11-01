@@ -46,11 +46,12 @@ test('Indicators and Targets are a dedicated formulation stage with full proposa
   assert.match(indicatorWorkspace, /humanValidationRequired:true/)
 })
 
-test('current PEM-03 stage opens the correct formulation tab', () => {
-  assert.match(cockpit, /current_stage_code === 'PEM-03\.01'[\s\S]*'performance'/)
-  assert.match(cockpit, /current_stage_code === 'PEM-03\.02'[\s\S]*'indicators'/)
-  assert.match(cockpit, /current_stage_code === 'PEM-03\.03'[\s\S]*'initiatives'/)
-  assert.match(cockpit, /current_stage_code === 'PEM-03\.04'[\s\S]*'plan'/)
+test('Journey routes PEM-03 stages to the correct operational work area while direct formulation opens on the map', () => {
+  assert.match(cockpit, /initialTab="architecture"/)
+  assert.match(cockpit, /code === 'PEM-03\.01'[\s\S]*?\? 'performance'/)
+  assert.match(cockpit, /code === 'PEM-03\.02'[\s\S]*?\? 'indicators'/)
+  assert.match(cockpit, /if \(code === 'PEM-03\.03'\)[\s\S]*?navigateToSection\('initiatives'\)/)
+  assert.match(cockpit, /code === 'PEM-03\.04'[\s\S]*?\? 'plan'/)
 })
 
 test('indicator UI preserves benchmark as recommendation rather than own evidence', () => {

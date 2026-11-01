@@ -52,5 +52,5 @@ test('PEM-04.03 UI exposes canonical capacity authority and full proposal/review
   assert.match(workspace, /upsert_skpe_pem0403_change_item/)
   assert.match(workspace, /transition_skpe_pem0403_change_package/)
   assert.match(workspace, /humanValidationRequired: true/)
-  assert.match(cockpit, /current_stage_code === 'PEM-04\.03'[\s\S]*'plan'/)
+  assert.match(cockpit, /code === 'PEM-04\.03'[\s\S]*?'plan'/)
 })

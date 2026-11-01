@@ -83,7 +83,7 @@ export function StrategicExecutionGovernanceWorkspace({organizationId,formulatio
 
   if(!formulationId)return null
   return <section>
-    <header className="skpe-strategic-readiness-header"><div><p className="skpe-eyebrow">Área de trabalho</p><h3>Governança da Execução</h3><p>Defina cadência, critérios, responsáveis e regras do monitoramento antes de iniciar a operação da estratégia.</p></div></header>
+    <header className="skpe-strategic-readiness-header"><div><h3>Governança da Execução</h3><p>Defina cadência, critérios, responsáveis e regras do monitoramento antes de iniciar a operação da estratégia.</p></div></header>
     {canManage?<MonitoringPackageConfigurationPanel draft={draft} owners={owners} saving={saving} message={saveMessage} onChange={(patch)=>setDraft((current)=>({...current,...patch}))} onSave={()=>void save()}/>:<p>Você pode consultar a governança, mas não alterá-la.</p>}
     <MonitoringPackageWorkflowPanel status={readiness?.packageStatus??null} readyForValidation={Boolean(readiness?.readyForValidation)} canSubmit={canManage} canValidate={canValidate} transitioning={transitioning} message={workflowMessage} onTransition={(action,reason,notes)=>void transition(action,reason,notes)}/>
   </section>

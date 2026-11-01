@@ -309,9 +309,8 @@ export function StrategicFormulationStatusTabs({
       },
       {
         id: 'plan' as const,
-        label: currentStageCode?.startsWith('PEM-04')
-          ? 'Implementação e Mobilização'
-          : 'Governança da Execução',
+        label: 'Governança da Execução',
+
         status: planStatus,
         statusLabel: labelFor(planStatus),
       },

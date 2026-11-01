@@ -78,15 +78,19 @@ test('PEM-04.04 uses existing initiative-risk authority and explicit human valid
   assert.match(risks, /Nenhuma aceitação ou decisão institucional foi criada automaticamente/)
 })
 
-test('future workspaces are wired into the formulation area', () => {
+test('canonical operational workspaces remain wired without hijacking Governança da Execução', () => {
   for (const component of [
     'StrategicOkrWorkspace',
     'StrategicIndicatorWorkspace',
     'StrategicExecutionGovernanceWorkspace',
+  ]) {
+    assert.match(formulation, new RegExp(component))
+  }
+  for (const futureStageComponent of [
     'StrategicCommunicationMobilizationWorkspace',
     'StrategicCapabilitiesChangeWorkspace',
     'StrategicImplementationRiskWorkspace',
   ]) {
-    assert.match(formulation, new RegExp(component))
+    assert.doesNotMatch(formulation, new RegExp(futureStageComponent))
   }
 })

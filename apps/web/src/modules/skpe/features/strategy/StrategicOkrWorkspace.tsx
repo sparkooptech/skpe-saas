@@ -176,7 +176,7 @@ export function StrategicOkrWorkspace({organizationId,formulationId,onChanged}:P
   if(!formulationId)return null
 
   return <section className="skpe-okr-workspace">
-    <header><div><span>Área de trabalho</span><h3>OKRs e Resultados-Chave</h3><p>Construa propostas mensuráveis sem copiar mecanicamente os Objetivos Estratégicos e sem impor quantidade fixa de KRs.</p></div><strong>{label(packageRow?.status)}</strong></header>
+
     {message?<div className="skpe-admin-message" role="status">{message}</div>:null}
     {!packageRow&&canManage?<button type="button" onClick={()=>void configurePackage()} disabled={busy}>Preparar pacote de OKRs em elaboração</button>:null}
 

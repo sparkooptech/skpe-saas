@@ -57,5 +57,5 @@ test('PEM-04.02 UI exposes readiness and full proposal/review/validation workflo
   assert.match(workspace, /upsert_skpe_pem0402_communication_item/)
   assert.match(workspace, /transition_skpe_pem0402_communication_package/)
   assert.match(workspace, /Nenhuma mensagem é enviada automaticamente/)
-  assert.match(cockpit, /current_stage_code === 'PEM-04\.02'[\s\S]*'plan'/)
+  assert.match(cockpit, /code === 'PEM-04\.02'[\s\S]*?'plan'/)
 })

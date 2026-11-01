@@ -12,7 +12,6 @@ type TargetRow={id:string;indicator_id:string;target_type:string;period_start:st
 const emptyIndicator={id:'',objectiveId:'',code:'',name:'',description:'',formulaText:'',calculationMethod:'',unit:'%',polarity:'higher_is_better',measurementFrequency:'monthly',dataSource:'',baselineValue:'',baselineDate:'',indicatorCategory:'strategic',collectionMethod:'manual',collectionAutomatable:false}
 const emptyTarget={id:'',indicatorId:'',targetType:'annual',periodStart:'',periodEnd:'',targetValue:'',minimumValue:'',challengeValue:'',toleranceLower:'',toleranceUpper:''}
 
-function label(value:string|null|undefined){const map:Record<string,string>={draft:'Em elaboração',in_elaboration:'Em elaboração',pending_validation:'Aguardando validação',validated:'Validado',returned_for_adjustment:'Devolvido para ajustes',active:'Ativo',superseded:'Substituída'};return map[value??'']??value??'Não iniciado'}
 
 export function StrategicIndicatorWorkspace({organizationId,formulationId,onChanged}:Props){
   const [packageRow,setPackageRow]=useState<PackageRow|null>(null)
@@ -106,7 +105,7 @@ export function StrategicIndicatorWorkspace({organizationId,formulationId,onChan
 
   if(!formulationId)return null
   return <section className="skpe-indicator-workspace">
-    <header><div><span>Área de trabalho</span><h3>Indicadores e Metas</h3><p>Defina medição, linha de base e metas sem transformar ausência de dados em números fictícios.</p></div><strong>{label(packageRow?.status)}</strong></header>
+
     {message?<div className="skpe-admin-message" role="status">{message}</div>:null}
     {!packageRow&&canManage?<button type="button" onClick={()=>void configure()} disabled={busy}>Preparar pacote em elaboração</button>:null}
     {packageRow?<>

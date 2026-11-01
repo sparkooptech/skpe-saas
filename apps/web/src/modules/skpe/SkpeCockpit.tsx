@@ -9440,23 +9440,7 @@ case 'monitoring':
                 projectContext.current_stage_code === 'PEM-02.05'
               }
               currentStageCode={projectContext.current_stage_code}
-              initialTab={
-                projectContext.current_stage_code === 'PEM-02.03'
-                  ? 'positioning'
-                  : projectContext.current_stage_code === 'PEM-03.01'
-                    ? 'performance'
-                    : projectContext.current_stage_code === 'PEM-03.02'
-                      ? 'indicators'
-                      : projectContext.current_stage_code === 'PEM-03.03' ||
-                          projectContext.current_stage_code === 'PEM-04.01'
-                        ? 'initiatives'
-                        : projectContext.current_stage_code === 'PEM-03.04' ||
-                          projectContext.current_stage_code === 'PEM-04.02' ||
-                          projectContext.current_stage_code === 'PEM-04.03' ||
-                          projectContext.current_stage_code === 'PEM-04.04'
-                          ? 'plan'
-                          : 'overview'
-              }
+              initialTab="architecture"
             />
           )}
         {activeSection === 'strategic-identity' && canViewJourney && (

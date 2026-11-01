@@ -13,7 +13,7 @@ test('opened future Journey phases expose their work area without unlocking bloc
   assert.match(journey, /\['in_progress', 'completed'\]/)
 })
 
-test('future Journey stages preserve the canonical work area and stage-specific context', () => {
+test('future Journey stages route to canonical operational tabs without injecting readiness UI', () => {
   assert.match(cockpit, /code === 'PEM-03\.01'[\s\S]*?'performance'/)
   assert.match(cockpit, /code === 'PEM-03\.02'[\s\S]*?'indicators'/)
   assert.match(cockpit, /if \(code === 'PEM-03\.03'\)[\s\S]*?navigateToSection\('initiatives'\)/)
@@ -21,8 +21,8 @@ test('future Journey stages preserve the canonical work area and stage-specific 
   assert.match(cockpit, /code === 'PEM-03\.03' \|\| code === 'PEM-04\.01'[\s\S]*?'initiatives'/)
   assert.match(cockpit, /skpe:formulation:target-tab/)
   assert.match(formulation, /sessionStorage\.getItem\('skpe:formulation:target-tab'\)/)
-  assert.match(formulation, /focusedStageCode === 'PEM-04\.01'/)
-  assert.match(formulation, /StrategicImplementationActivationReadinessSection/)
+  assert.doesNotMatch(formulation, /StrategicImplementationActivationReadinessSection/)
+  assert.doesNotMatch(formulation, /focusedStageCode/)
 })
 test('PEM-05 stages route to Monitoring and focus the requested readiness section', () => {
   assert.match(cockpit, /code\.startsWith\('PEM-05'\)/)

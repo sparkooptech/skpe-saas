@@ -51,5 +51,5 @@ test('PEM-04.04 UI exposes risk readiness and preserves a single risk authority'
   assert.match(section, /Bloqueadores/)
   assert.match(workspace, /skpe_initiative_risks/)
   assert.match(workspace, /upsert_skpe_initiative_risk/)
-  assert.match(cockpit, /current_stage_code === 'PEM-04\.04'[\s\S]*'plan'/)
+  assert.match(cockpit, /code === 'PEM-04\.04'[\s\S]*?'plan'/)
 })

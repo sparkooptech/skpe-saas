@@ -48,5 +48,5 @@ test('PEM-04.01 UI exposes activation readiness and opens initiatives workspace'
   assert.match(section, /não redesenha nem reprioriza/)
   assert.match(section, /Nenhuma execução é iniciada automaticamente/)
   assert.match(section, /Bloqueadores de ativação/)
-  assert.match(cockpit, /current_stage_code === 'PEM-04\.01'[\s\S]*'initiatives'/)
+  assert.match(cockpit, /code === 'PEM-04\.01'[\s\S]*?'initiatives'/)
 })

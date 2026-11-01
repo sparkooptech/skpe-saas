@@ -105,6 +105,7 @@ export function StrategicInitiativePlanSection({
   const [sparksStrategicLinks, setSparksStrategicLinks] = useState<SparksStrategicLinkRow[]>([])
   const [projectBindings, setProjectBindings] = useState<ProjectBindingRow[]>([])
   const [readiness, setReadiness] = useState<InitiativeReadiness | null>(null)
+  const showReadinessPanel = false
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -184,7 +185,7 @@ export function StrategicInitiativePlanSection({
         projectBindingsResponse,
         readinessResponse,
       ]
-      const firstError = responses.find((response) => response.error)?.error
+      const firstError = responses.slice(0, -1).find((response) => response.error)?.error
 
       if (firstError) {
         setErrorMessage(
@@ -325,7 +326,7 @@ export function StrategicInitiativePlanSection({
         </div>
       ) : null}
 
-      {readiness ? (
+      {showReadinessPanel && readiness ? (
         <section className="skpe-strategic-initiative-plan__readiness">
           <div>
             <p className="skpe-eyebrow">Prontidão do portfólio estratégico</p>

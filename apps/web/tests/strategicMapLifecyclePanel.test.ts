@@ -26,10 +26,10 @@ test('map validation remains blocked when readiness or PEM-02.05 stage is not re
   assert.match(panel, /disabled=\{busy \|\| !stageUnlocked \|\| !readiness\?\.readyForValidation\}/)
 })
 
-test('official strategic map version is exposed after validation', () => {
+test('official strategic map version remains governed without mounting lifecycle controls over the map', () => {
   assert.match(panel, /officialMapVersionId/)
   assert.match(panel, /officialMapVersionNumber/)
   assert.match(panel, /Versão oficial preservada/)
   assert.match(panel, /skpe_strategic_map_versions/)
-  assert.match(formulation, /<StrategicMapLifecyclePanel/)
+  assert.doesNotMatch(formulation, /<StrategicMapLifecyclePanel/)
 })

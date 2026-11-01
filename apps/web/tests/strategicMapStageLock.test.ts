@@ -11,9 +11,9 @@ const cockpit = readFileSync(
   'utf8',
 )
 
-test('strategic map stays read-only before PEM-02.05', () => {
+test('strategic map stays read-only before PEM-02.05 without adding a preview overlay', () => {
   assert.match(formulation, /strategicMapStageUnlocked: boolean/)
-  assert.match(formulation, /Prévia do Modelo Estratégico Futuro/)
+  assert.doesNotMatch(formulation, /Prévia do Modelo Estratégico Futuro/)
   assert.match(formulation, /canAdjustLayout=\{canAdjustStrategicMap && strategicMapStageUnlocked\}/)
   assert.match(cockpit, /current_stage_code === 'PEM-02\.05'/)
 })

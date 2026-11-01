@@ -25,13 +25,13 @@ test('positioning remains in progress when draft themes or perspectives exist', 
   assert.match(tabs, /\? 'in_progress'/)
 })
 
-test('current PEM-02.03 opens formulation on positioning', () => {
+test('direct formulation opens on the strategic map while positioning remains reachable as its own tab', () => {
   const cockpit = readFileSync(
     new URL('../src/modules/skpe/SkpeCockpit.tsx', import.meta.url),
     'utf8',
   )
-  assert.match(cockpit, /current_stage_code === 'PEM-02\.03'/)
-  assert.match(cockpit, /\? 'positioning'/)
+  assert.match(cockpit, /initialTab="architecture"/)
   assert.match(section, /initialTab = 'overview'/)
   assert.match(section, /setActiveTab\(initialTab\)/)
+  assert.match(section, /activeTab === 'positioning'/)
 })
