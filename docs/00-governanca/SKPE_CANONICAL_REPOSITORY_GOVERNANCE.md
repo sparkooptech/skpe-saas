@@ -46,6 +46,10 @@ Before substantive writes, agents and scripts must validate that `origin` is `ht
 
 Historical documentation is not the current source of truth when it conflicts with this decision.
 
+## Canonical runtime architecture — 2026-11-01
+
+The canonical runtime target for all new SPARKs development is Hostinger. Supabase is classified as a legacy transitional dependency and must not be expanded when a viable Hostinger alternative exists. Silent fallback to Supabase is prohibited. The controlling architectural decision is `ADR-002-hostinger-como-ambiente-canonico-e-eliminacao-progressiva-supabase.md`.
+
 ## Branch Protection Readiness
 
 For `feature/formulacao-estrategica-operacional`, the initial governance target is:

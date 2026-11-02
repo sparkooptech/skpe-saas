@@ -2,7 +2,7 @@
 
 ## Status
 
-Aprovado.
+SUPERADO pelo ADR-002 a partir de 2026-11-01. Mantido apenas como registro histórico.
 
 ## Contexto
 
