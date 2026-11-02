@@ -310,6 +310,61 @@ build_preview_release() {
   log "PREVIEW PASS"
 }
 
+apply_platform_workspace_branch_migration() {
+  local migration_file="${RELEASE_DIR}/source/app/supabase/migrations/20261102124000_normalize_cooperative_branch_short_names.sql"
+  local db_container="${SPARKS_POSTGRES_CONTAINER:-}"
+  local db_user
+  local db_name
+  local short_name
+  local unsynchronized_count
+
+  [ -f "${migration_file}" ] || {
+    log "DB MIGRATION FAIL: migration file not found"
+    return 1
+  }
+
+  if [ -z "${db_container}" ]; then
+    if docker ps --format '{{.Names}}' | grep -qx 'postgresql-33th-postgresql-1'; then
+      db_container='postgresql-33th-postgresql-1'
+    else
+      db_container="$(docker ps --format '{{.Names}}' | grep -E 'postgres.*postgresql|postgresql.*postgres' | head -n 1 || true)"
+    fi
+  fi
+
+  [ -n "${db_container}" ] || {
+    log "DB MIGRATION FAIL: PostgreSQL container not found"
+    return 1
+  }
+
+  db_user="$(docker exec "${db_container}" sh -lc 'printf "%s" "${POSTGRES_USER:-${POSTGRESQL_USERNAME:-postgres}}"')"
+  db_name="$(docker exec "${db_container}" sh -lc 'printf "%s" "${POSTGRES_DB:-${POSTGRESQL_DATABASE:-postgres}}"')"
+
+  if ! docker exec -i "${db_container}" \
+    psql --no-psqlrc --set ON_ERROR_STOP=1 -U "${db_user}" -d "${db_name}" \
+    < "${migration_file}" > /dev/null; then
+    log "DB MIGRATION FAIL: TPBS normalization was rejected"
+    return 1
+  fi
+
+  short_name="$(docker exec "${db_container}" psql --no-psqlrc -U "${db_user}" -d "${db_name}" -Atc \
+    "select short_name from public.cooperative_branches where upper(code) = 'TRABALHO_PRODUCAO_BENS_SERVICOS' limit 1")"
+
+  [ "${short_name}" = 'TPBS' ] || {
+    log "DB MIGRATION FAIL: TPBS catalog verification failed"
+    return 1
+  }
+
+  unsynchronized_count="$(docker exec "${db_container}" psql --no-psqlrc -U "${db_user}" -d "${db_name}" -Atc \
+    "select count(*) from public.organizations o join public.cooperative_branches b on b.id = o.cooperative_branch_id where upper(b.code) = 'TRABALHO_PRODUCAO_BENS_SERVICOS' and o.cooperative_branch is distinct from 'TPBS'")"
+
+  [ "${unsynchronized_count}" = '0' ] || {
+    log "DB MIGRATION FAIL: TPBS organization synchronization verification failed"
+    return 1
+  }
+
+  log "DB MIGRATION PASS: TPBS persisted and synchronized"
+  return 0
+}
 cutover_release() {
   BACKUP_CONTAINER="${PUBLIC_CONTAINER}-old-${DEPLOY_TIMESTAMP}"
   write_cleanup_metadata
@@ -393,4 +448,8 @@ validate_release_dir
 load_env
 run_preflight
 build_preview_release
+if ! apply_platform_workspace_branch_migration; then
+  cleanup_failed_release
+  exit 1
+fi
 cutover_release
