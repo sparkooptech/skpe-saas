@@ -4,6 +4,7 @@ import { SparksSmartGrid, type SparksSmartGridColumn } from '../../components/de
 import { MetricCard } from '../../components/design-system'
 import { supabase } from '../../lib/supabase'
 import { EvidenceFilePreview } from './EvidenceFilePreview'
+import { EvidenceIntakePanel } from './EvidenceIntakePanel'
 
 import './EvidenceManagementWorkspace.css'
 
@@ -1422,6 +1423,14 @@ export function EvidenceManagementWorkspace({
         </div>
       </header>
 
+      <EvidenceIntakePanel
+        organizationId={organizationId}
+        projectId={projectId}
+        onEvidenceChanged={() => {
+          setEvidenceRefreshKey((value) => value + 1)
+          setChecklistRefreshKey((value) => value + 1)
+        }}
+      />
       {showCreateEvidence ? (
         <section className="skpe-evidence-create-card" aria-label="Registrar evidência">
           <header>

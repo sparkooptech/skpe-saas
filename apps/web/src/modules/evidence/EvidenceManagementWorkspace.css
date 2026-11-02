@@ -1133,3 +1133,42 @@
 .skpe-evidence-metrics .sparks-metric-card { min-width: 0; min-height: 132px; }
 @media (max-width: 1080px) { .skpe-evidence-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .skpe-evidence-metrics { grid-template-columns: 1fr; } }
+
+/* Evidence intake: governed SK-DOC -> SK-PE discovery and human validation */
+.skpe-evidence-intake{display:grid;gap:.8rem;padding:1rem 1.1rem;border:1px solid var(--skpe-border-color,#d7e1dc);border-radius:14px;background:#fff}
+.skpe-evidence-intake__header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.skpe-evidence-intake__header h3,.skpe-evidence-intake-candidates h4,.skpe-evidence-intake-sources h4{margin:.15rem 0 0}
+.skpe-evidence-intake__header p,.skpe-evidence-intake-candidates header p{margin:.35rem 0 0;color:var(--text-muted,#6d7b76);font-size:.78rem;line-height:1.45;max-width:80ch}
+.skpe-evidence-intake__rule,.skpe-evidence-intake__message{padding:.7rem .8rem;border:1px solid #d8e6df;border-radius:10px;background:#f6faf8;font-size:.76rem;line-height:1.45}
+.skpe-evidence-intake__message{background:#fffaf0}
+.skpe-evidence-intake__body,.skpe-evidence-intake-source-form,.skpe-evidence-intake-sources,.skpe-evidence-intake-candidates{display:grid;gap:.8rem}
+.skpe-evidence-intake-source-form{padding:.9rem;border:1px solid var(--skpe-border-color,#d7e1dc);border-radius:12px;background:#f8fbf9}
+.skpe-evidence-intake-source-grid,.skpe-evidence-intake-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+.skpe-evidence-intake-source-grid label,.skpe-evidence-intake-review-grid label{display:grid;gap:.3rem;font-size:.72rem;font-weight:750}
+.skpe-evidence-intake-source-grid label.wide,.skpe-evidence-intake-review-grid label.wide{grid-column:1/-1}
+.skpe-evidence-intake-source-grid label.check{display:flex;align-items:center;gap:.45rem;align-self:end;min-height:40px}
+.skpe-evidence-intake-source-grid input:not([type=checkbox]),.skpe-evidence-intake-source-grid select,.skpe-evidence-intake-source-grid textarea,.skpe-evidence-intake-review-grid select,.skpe-evidence-intake-review-grid textarea{width:100%;box-sizing:border-box;border:1px solid #cfdcd6;border-radius:8px;background:#fff;padding:.55rem .65rem;font:inherit;font-weight:400}
+.skpe-evidence-intake-source-grid textarea,.skpe-evidence-intake-review-grid textarea{min-height:68px;resize:vertical}
+.skpe-evidence-intake button.primary{justify-self:start;border:1px solid var(--organization-primary,#176b55);border-radius:9px;background:var(--organization-primary,#176b55);color:#fff;padding:.6rem .85rem;font-weight:800;cursor:pointer}
+.skpe-evidence-intake-source-list,.skpe-evidence-intake-candidate-list{display:grid;gap:.65rem}
+.skpe-evidence-intake-source-list article,.skpe-evidence-intake-candidate-list>article{border:1px solid var(--skpe-border-color,#d7e1dc);border-radius:12px;background:#fff;padding:.8rem}
+.skpe-evidence-intake-source-list article{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.skpe-evidence-intake-source-list article>div{display:grid;gap:.15rem;min-width:0}
+.skpe-evidence-intake-source-list span,.skpe-evidence-intake-source-list small,.skpe-evidence-intake-suggestions span{color:var(--text-muted,#6d7b76);font-size:.7rem;overflow-wrap:anywhere}
+.skpe-evidence-intake-source-list button,.skpe-evidence-intake-review-actions button{border:1px solid #cfdcd6;border-radius:8px;background:#fff;padding:.5rem .7rem;font-weight:750;cursor:pointer;white-space:nowrap}
+.skpe-evidence-intake-candidates>header{display:flex;justify-content:space-between;gap:1rem;align-items:end}
+.skpe-evidence-intake-candidate-list>article{display:grid;gap:.7rem}
+.skpe-evidence-intake-candidate-main{display:grid;grid-template-columns:minmax(0,1fr) 145px 175px;gap:.65rem;align-items:center}
+.skpe-evidence-intake-candidate-main>div:first-child{display:grid;gap:.15rem;min-width:0}
+.skpe-evidence-intake-candidate-main small{color:var(--text-muted,#6d7b76);font-size:.7rem;overflow-wrap:anywhere}
+.skpe-evidence-intake-score{display:grid;gap:.1rem;padding:.55rem;border-radius:9px;background:#f4f8f6;text-align:center}
+.skpe-evidence-intake-score span{font-size:.65rem;color:var(--text-muted,#6d7b76)}
+.skpe-evidence-intake-score strong{font-size:1rem}
+.skpe-evidence-intake-suggestions{display:flex;flex-wrap:wrap;gap:.45rem 1rem;padding:.6rem .7rem;border-radius:9px;background:#f8faf9}
+.skpe-evidence-intake-suggestions a{margin-left:auto;font-size:.72rem;color:var(--organization-primary,#176b55);font-weight:750}
+.skpe-evidence-intake-review-actions{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.skpe-evidence-intake-review-actions span{color:var(--text-muted,#6d7b76);font-size:.7rem}
+.skpe-evidence-intake-empty{padding:.8rem;border:1px dashed #cfdcd6;border-radius:10px;color:var(--text-muted,#6d7b76);font-size:.76rem}
+@media(max-width:900px){.skpe-evidence-intake-candidate-main{grid-template-columns:1fr 1fr}.skpe-evidence-intake-candidate-main>div:first-child{grid-column:1/-1}}
+@media(max-width:680px){.skpe-evidence-intake__header,.skpe-evidence-intake-candidates>header,.skpe-evidence-intake-source-list article,.skpe-evidence-intake-review-actions{display:grid}.skpe-evidence-intake-source-grid,.skpe-evidence-intake-review-grid,.skpe-evidence-intake-candidate-main{grid-template-columns:1fr}.skpe-evidence-intake-source-grid label.wide,.skpe-evidence-intake-review-grid label.wide,.skpe-evidence-intake-candidate-main>div:first-child{grid-column:auto}.skpe-evidence-intake-suggestions{display:grid}.skpe-evidence-intake-suggestions a{margin-left:0}}
+/* Evidence intake end */
