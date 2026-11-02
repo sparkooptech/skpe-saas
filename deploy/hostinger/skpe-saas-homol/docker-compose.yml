@@ -1,10 +1,11 @@
-services:
+﻿services:
   sparks-homol:
     image: ${IMAGE_NAME}
     container_name: sparks-homol
     restart: unless-stopped
     networks:
       - sparks-homol-net
+      - sparks-homol-backend-net
     labels:
       - traefik.enable=true
       - traefik.http.routers.sparks-homol.rule=${SPARKS_ROUTER_RULE}
@@ -23,3 +24,6 @@ networks:
   sparks-homol-net:
     name: sparks-homol-net
     driver: bridge
+  sparks-homol-backend-net:
+    name: sparks-homol-backend-net
+    external: true

@@ -162,6 +162,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.SKPE_SAAS_HOMOL_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SKPE_SAAS_HOMOL_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SPARKS_BACKEND_TARGET: hostinger-compatible
         run: |
           set -euo pipefail
           env_file="${RUNNER_TEMP}/release/.env"
@@ -172,6 +173,7 @@ jobs:
             printf "SPARKS_ROUTER_RULE='%s'\n" "${SPARKS_ROUTER_RULE}"
             printf 'VITE_SUPABASE_URL=%s\n' "${VITE_SUPABASE_URL}"
             printf 'VITE_SUPABASE_PUBLISHABLE_KEY=%s\n' "${VITE_SUPABASE_PUBLISHABLE_KEY}"
+            printf 'VITE_SPARKS_BACKEND_TARGET=%s\n' "${VITE_SPARKS_BACKEND_TARGET}"
           } > "${env_file}"
           scp -P "${SSH_PORT}" \
             "${env_file}" \

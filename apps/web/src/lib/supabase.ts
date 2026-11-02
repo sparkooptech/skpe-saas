@@ -21,7 +21,42 @@ const backend = resolveSparksBackendConfig({
   VITE_SUPABASE_PUBLISHABLE_KEY: supabasePublishableKey,
 })
 
+const normalizedApiUrl = backend.apiUrl.replace(/\/+$/, '')
+const businessRestPrefix = `${normalizedApiUrl}/rest/v1`
+
+const routedFetch: typeof fetch = (input, init) => {
+  const originalUrl =
+    input instanceof Request
+      ? input.url
+      : input instanceof URL
+        ? input.toString()
+        : input
+
+  if (
+    backend.target !== 'hostinger-compatible' ||
+    typeof window === 'undefined' ||
+    !originalUrl.startsWith(businessRestPrefix)
+  ) {
+    return fetch(input, init)
+  }
+
+  const routedUrl =
+    `${window.location.origin}/rest/v1` +
+    originalUrl.slice(businessRestPrefix.length)
+
+  if (input instanceof Request) {
+    return fetch(new Request(routedUrl, input), init)
+  }
+
+  return fetch(routedUrl, init)
+}
+
 export const supabase = createClient(
   backend.apiUrl,
   backend.publishableKey,
+  {
+    global: {
+      fetch: routedFetch,
+    },
+  },
 )

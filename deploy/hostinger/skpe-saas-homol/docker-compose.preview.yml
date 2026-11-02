@@ -1,4 +1,4 @@
-services:
+﻿services:
   sparks-homol-preview:
     image: ${IMAGE_NAME}
     build:
@@ -7,8 +7,11 @@ services:
       args:
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
         VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
+        VITE_SPARKS_BACKEND_TARGET: ${VITE_SPARKS_BACKEND_TARGET}
     container_name: sparks-homol-preview
     restart: unless-stopped
+    networks:
+      - sparks-homol-backend-net
     ports:
       - ${PREVIEW_BIND}
     healthcheck:
@@ -17,3 +20,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+networks:
+  sparks-homol-backend-net:
+    name: sparks-homol-backend-net
+    external: true
