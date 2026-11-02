@@ -7,6 +7,7 @@ import { useSkpeWorkspace } from '../../context/SkpeWorkspaceContext'
 import { JourneyEventCreateDialog } from './JourneyEventCreateDialog'
 import { JourneyItemStatusDialog } from './JourneyItemStatusDialog'
 import { JourneyGantt } from './JourneyGantt'
+import { JourneyKanban } from './JourneyKanban'
 import { JourneyProjectPlan } from './JourneyProjectPlan'
 import { Pem02GatePanel } from './Pem02GatePanel'
 import { Pem03GatePanel } from './Pem03GatePanel'
@@ -38,7 +39,7 @@ type ProjectGovernance = {
   implementationTargetDate: string | null
 }
 
-type JourneyView = 'structure' | 'project-plan' | 'gantt' | 'svar'
+type JourneyView = 'structure' | 'project-plan' | 'kanban' | 'gantt' | 'svar'
 
 const journeyViewTabs: Array<{ id: JourneyView; label: string }> = [
   { id: 'structure', label: 'Estrutura' },
@@ -1015,7 +1016,6 @@ export function JourneySection({
     <>
       <section className="skpe-page-heading skpe-administration-heading skpe-journey-page-heading">
         <div>
-          <p className="skpe-eyebrow">Metodologia de Planejamento Estratégico</p>
           <h2>Jornada Estratégica</h2>
           <p className="skpe-journey-page-subtitle">
             Acompanhe a evolução da metodologia, o planejamento temporal e os marcos de execução da estratégia em uma visão única.
@@ -1184,11 +1184,14 @@ export function JourneySection({
             >
               Projeto
             </button>
-            {canViewInitiatives ? (
-              <button type="button" aria-pressed="false" onClick={onOpenInitiatives}>
-                KANBAN
-              </button>
-            ) : null}
+            <button
+              type="button"
+              className={journeyView === 'kanban' ? 'active' : ''}
+              aria-pressed={journeyView === 'kanban'}
+              onClick={() => setJourneyView('kanban')}
+            >
+              KANBAN
+            </button>
             <button
               type="button"
               className={journeyView === 'gantt' ? 'active' : ''}
@@ -1249,6 +1252,11 @@ export function JourneySection({
           sparkoopLeadName={projectGovernance.sparkoopLeadName}
           sparkoopLeadEmail={projectGovernance.sparkoopLeadEmail}
           initialStage={projectPlanInitialStage}
+        />
+      ) : journeyView === 'kanban' ? (
+        <JourneyKanban
+          organizationId={organizationId}
+          projectId={project.project_id}
         />
       ) : journeyView === 'gantt' ? (
         <JourneyGantt

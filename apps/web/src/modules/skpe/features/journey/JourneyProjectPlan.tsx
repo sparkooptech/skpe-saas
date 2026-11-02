@@ -13,6 +13,8 @@ import {
   type InitiativeKanbanFilteredCardModel,
 } from '../../../initiatives/kanban/initiativeKanbanFilteredBoardData'
 import { JourneySchedulePlanner } from './JourneySchedulePlanner'
+import { PersonCapacityManagementDialog } from '../monitoring/PersonCapacityManagementDialog'
+import { loadPersonCapacityCandidates, type PersonCapacityCandidate } from '../monitoring/personCapacity'
 
 import './JourneyProjectPlan.css'
 
@@ -39,6 +41,13 @@ type StrategicProjectInitiative = {
   target_end_date: string | null
   baseline_start_date: string | null
   baseline_target_end_date: string | null
+  what_text: string | null
+  why_text: string | null
+  where_text: string | null
+  when_text: string | null
+  who_text: string | null
+  how_text: string | null
+  how_much_text: string | null
 }
 
 type OperationalProjectState = {
@@ -48,6 +57,32 @@ type OperationalProjectState = {
   loading: boolean
   error: string
 }
+
+type ProjectResponsibility = {
+  assignment_id: string
+  organization_person_id: string
+  person_name: string
+  responsibility_type: string
+  allocation_percentage: number | string | null
+  authority_level: string | null
+  valid_from: string | null
+  valid_until: string | null
+  assignment_reason: string | null
+}
+
+const responsibilityLabels: Record<string, string> = {
+  owner: 'Responsável',
+  accountable: 'Responsável final',
+  approver: 'Aprovador',
+  validator: 'Validador',
+  executor: 'Executor',
+  reviewer: 'Revisor',
+  sponsor: 'Patrocinador',
+  facilitator: 'Facilitador',
+  consulted: 'Consultado',
+  informed: 'Informado',
+}
+
 type JourneyProjectPlanProps = {
   organizationId: string
   projectId: string
@@ -149,7 +184,27 @@ export function JourneyProjectPlan({
   }>>([])
   const [baselineLoadError, setBaselineLoadError] = useState('')
   const [baselineLoading, setBaselineLoading] = useState(true)
-
+  const [teamCandidates, setTeamCandidates] = useState<PersonCapacityCandidate[]>([])
+  const [projectResponsibilities, setProjectResponsibilities] = useState<ProjectResponsibility[]>([])
+  const [teamLoading, setTeamLoading] = useState(false)
+  const [teamSaving, setTeamSaving] = useState(false)
+  const [teamMessage, setTeamMessage] = useState('')
+  const [canManageTeam, setCanManageTeam] = useState(false)
+  const [canManageCapacity, setCanManageCapacity] = useState(false)
+  const [canManageProjectExecution, setCanManageProjectExecution] = useState(false)
+  const [scopeSaving, setScopeSaving] = useState(false)
+  const [scopeMessage, setScopeMessage] = useState('')
+  const [scopeForm, setScopeForm] = useState({ what: '', why: '', where: '', when: '', who: '', how: '', howMuch: '' })
+  const [showCapacityManager, setShowCapacityManager] = useState(false)
+  const [teamForm, setTeamForm] = useState({
+    personId: '',
+    responsibilityType: 'owner',
+    allocation: '100',
+    validFrom: '',
+    validUntil: '',
+    assignmentReason: '',
+    reason: '',
+  })
   useEffect(() => {
     let mounted = true
     setBaselineLoading(true)
@@ -168,7 +223,52 @@ export function JourneyProjectPlan({
 
   const project = rows[0] ?? null
 
+  async function loadProjectTeam() {
+    setTeamLoading(true)
+    setTeamMessage('')
+    const [candidatesResult, responsibilitiesResult, teamPermission, capacityPermission, executionPermission] = await Promise.all([
+      loadPersonCapacityCandidates(organizationId),
+      supabase.rpc('get_skpe_responsibility_assignments', {
+        target_organization_id: organizationId,
+        target_object_type: 'strategic_project',
+        target_object_id: projectId,
+        include_inactive: false,
+      }),
+      supabase.rpc('can_manage_skpe_governance', { target_organization_id: organizationId }),
+      supabase.rpc('can_manage_sparks_people', { target_organization_id: organizationId }),
+      supabase.rpc('can_manage_sparks_initiatives', { target_organization_id: organizationId, target_source_module_code: 'SK-PE' }),
+    ])
+    setTeamCandidates(candidatesResult)
+    setProjectResponsibilities((responsibilitiesResult.data ?? []) as ProjectResponsibility[])
+    setCanManageTeam(!teamPermission.error && teamPermission.data === true)
+    setCanManageCapacity(!capacityPermission.error && capacityPermission.data === true)
+    setCanManageProjectExecution(!executionPermission.error && executionPermission.data === true)
+    if (responsibilitiesResult.error) setTeamMessage(responsibilitiesResult.error.message)
+    setTeamLoading(false)
+  }
+
+  useEffect(() => {
+    void loadProjectTeam().catch((error) => {
+      setTeamLoading(false)
+      setTeamMessage(error instanceof Error ? error.message : 'Não foi possível carregar a equipe do Projeto.')
+    })
+  }, [organizationId, projectId])
+
   useEffect(() => { setActiveStage(initialStage) }, [initialStage])
+
+  useEffect(() => {
+    const initiative = operational.initiative
+    if (!initiative) return
+    setScopeForm({
+      what: initiative.what_text ?? '',
+      why: initiative.why_text ?? '',
+      where: initiative.where_text ?? '',
+      when: initiative.when_text ?? '',
+      who: initiative.who_text ?? '',
+      how: initiative.how_text ?? '',
+      howMuch: initiative.how_much_text ?? '',
+    })
+  }, [operational.initiative])
 
   useEffect(() => {
     let mounted = true
@@ -222,7 +322,7 @@ export function JourneyProjectPlan({
       const initiativeResponse = await supabase
         .from('sparks_initiatives')
         .select(
-          'id, code, name, initiative_class, status, progress, start_date, target_end_date, baseline_start_date, baseline_target_end_date',
+          'id, code, name, initiative_class, status, progress, start_date, target_end_date, baseline_start_date, baseline_target_end_date, what_text, why_text, where_text, when_text, who_text, how_text, how_much_text',
         )
         .eq('organization_id', organizationId)
         .eq('id', binding.initiative_id)
@@ -283,6 +383,94 @@ export function JourneyProjectPlan({
     }
   }, [organizationId, projectId])
 
+  async function saveProjectScope() {
+    if (!operational.initiative) {
+      setScopeMessage('O Projeto Estratégico vinculado ainda não foi localizado.')
+      return
+    }
+    setScopeSaving(true)
+    setScopeMessage('')
+    const { error } = await supabase.rpc('update_sparks_initiative_5w2h', {
+      target_initiative_id: operational.initiative.id,
+      target_what_text: scopeForm.what || null,
+      target_why_text: scopeForm.why || null,
+      target_where_text: scopeForm.where || null,
+      target_when_text: scopeForm.when || null,
+      target_who_text: scopeForm.who || null,
+      target_how_text: scopeForm.how || null,
+      target_how_much_text: scopeForm.howMuch || null,
+      target_start_date: operational.initiative.start_date,
+      target_end_date: operational.initiative.target_end_date,
+      change_reason: 'Atualização do escopo do Projeto pela Jornada Estratégica',
+    })
+    if (error) {
+      setScopeMessage(error.message)
+    } else {
+      setScopeMessage('Escopo do Projeto atualizado com sucesso.')
+      setOperational((current) => current.initiative ? ({
+        ...current,
+        initiative: {
+          ...current.initiative,
+          what_text: scopeForm.what || null,
+          why_text: scopeForm.why || null,
+          where_text: scopeForm.where || null,
+          when_text: scopeForm.when || null,
+          who_text: scopeForm.who || null,
+          how_text: scopeForm.how || null,
+          how_much_text: scopeForm.howMuch || null,
+        },
+      }) : current)
+    }
+    setScopeSaving(false)
+  }
+  async function assignProjectResponsibility() {
+    if (!teamForm.personId) {
+      setTeamMessage('Selecione uma pessoa para compor a equipe do Projeto.')
+      return
+    }
+    if (teamForm.reason.trim().length < 10) {
+      setTeamMessage('Informe uma justificativa para auditoria com pelo menos 10 caracteres.')
+      return
+    }
+    setTeamSaving(true)
+    setTeamMessage('')
+    const { error } = await supabase.rpc('assign_skpe_responsibility', {
+      target_organization_id: organizationId,
+      target_object_type: 'strategic_project',
+      target_object_id: projectId,
+      target_organization_person_id: teamForm.personId,
+      target_responsibility_type: teamForm.responsibilityType,
+      target_allocation_percentage: teamForm.allocation ? Number(teamForm.allocation) : null,
+      target_authority_level: 'operational',
+      target_valid_from: teamForm.validFrom || null,
+      target_valid_until: teamForm.validUntil || null,
+      target_assignment_reason: teamForm.assignmentReason || null,
+      change_reason: teamForm.reason.trim(),
+    })
+    if (error) {
+      setTeamMessage(error.message)
+    } else {
+      setTeamForm({ personId: '', responsibilityType: 'owner', allocation: '100', validFrom: '', validUntil: '', assignmentReason: '', reason: '' })
+      setTeamMessage('Pessoa adicionada à equipe do Projeto com sucesso.')
+      await loadProjectTeam()
+    }
+    setTeamSaving(false)
+  }
+
+  async function endProjectResponsibility(assignment: ProjectResponsibility) {
+    const reason = window.prompt(`Informe a justificativa para encerrar a participação de ${assignment.person_name}.`)
+    if (!reason || reason.trim().length < 10) return
+    const { error } = await supabase.rpc('end_skpe_responsibility', {
+      target_assignment_id: assignment.assignment_id,
+      target_end_date: new Date().toISOString().slice(0, 10),
+      change_reason: reason.trim(),
+    })
+    if (error) setTeamMessage(error.message)
+    else {
+      setTeamMessage('Participação encerrada com sucesso.')
+      await loadProjectTeam()
+    }
+  }
   function openStrategicProject() {
     if (!operational.initiative || !workspace.route.formulationId) return
 
@@ -427,10 +615,56 @@ export function JourneyProjectPlan({
             ))}
           </div>
 
+          <section className="skpe-project-entry-block" aria-label="Escopo operacional do Projeto">
+            <header>
+              <div>
+                <strong>Registrar escopo operacional do Projeto</strong>
+                <span>A estrutura da Jornada permanece protegida. Aqui você registra o conteúdo do Projeto que será executado, sem duplicar a metodologia.</span>
+              </div>
+            </header>
+            <div className="skpe-project-entry-grid">
+              <label className="is-wide">
+                <span>O que será realizado / entregue</span>
+                <textarea value={scopeForm.what} onChange={(event) => setScopeForm((current) => ({ ...current, what: event.target.value }))} disabled={!canManageProjectExecution || scopeSaving} />
+              </label>
+              <label className="is-wide">
+                <span>Por que este Projeto é necessário</span>
+                <textarea value={scopeForm.why} onChange={(event) => setScopeForm((current) => ({ ...current, why: event.target.value }))} disabled={!canManageProjectExecution || scopeSaving} />
+              </label>
+              <label>
+                <span>Onde se aplica</span>
+                <input value={scopeForm.where} onChange={(event) => setScopeForm((current) => ({ ...current, where: event.target.value }))} disabled={!canManageProjectExecution || scopeSaving} />
+              </label>
+              <label>
+                <span>Quem participa / público envolvido</span>
+                <input value={scopeForm.who} onChange={(event) => setScopeForm((current) => ({ ...current, who: event.target.value }))} disabled={!canManageProjectExecution || scopeSaving} />
+              </label>
+              <label>
+                <span>Quando / condições temporais</span>
+                <input value={scopeForm.when} onChange={(event) => setScopeForm((current) => ({ ...current, when: event.target.value }))} disabled={!canManageProjectExecution || scopeSaving} />
+              </label>
+              <label className="is-wide">
+                <span>Como será executado</span>
+                <textarea value={scopeForm.how} onChange={(event) => setScopeForm((current) => ({ ...current, how: event.target.value }))} disabled={!canManageProjectExecution || scopeSaving} />
+              </label>
+              <label className="is-wide">
+                <span>Recursos / investimento estimado</span>
+                <input value={scopeForm.howMuch} onChange={(event) => setScopeForm((current) => ({ ...current, howMuch: event.target.value }))} disabled={!canManageProjectExecution || scopeSaving} />
+              </label>
+            </div>
+            <div className="skpe-project-entry-actions">
+              <button type="button" className="is-primary" onClick={() => void saveProjectScope()} disabled={!canManageProjectExecution || scopeSaving || !operational.initiative}>
+                {scopeSaving ? 'Salvando...' : 'Salvar escopo do Projeto'}
+              </button>
+            </div>
+            {!canManageProjectExecution ? <p className="skpe-project-entry-note">Seu perfil pode consultar o escopo, mas não possui permissão para alterar a execução do Projeto.</p> : null}
+            {scopeMessage ? <p className="skpe-project-entry-note" role="status">{scopeMessage}</p> : null}
+          </section>
+
           <div className="skpe-project-plan-navigation">
             <span />
             <button type="button" onClick={() => setActiveStage('team')}>
-              Confirmar escopo e avançar
+              Avançar para equipe e responsabilidades
             </button>
           </div>
         </section>
@@ -508,7 +742,83 @@ export function JourneyProjectPlan({
             as duas visões antes da Linha de Base.
           </div>
 
+          <section className="skpe-project-entry-block" aria-label="Cadastro da equipe do Projeto">
+            <header>
+              <div>
+                <strong>Compor equipe e atribuir responsabilidades</strong>
+                <span>Registre aqui quem participa do Projeto, a responsabilidade, a alocação e a vigência. O registro utiliza a governança canônica do SK-PE.</span>
+              </div>
+            </header>
 
+            {teamLoading ? <p>Carregando equipe...</p> : (
+              <>
+                <div className="skpe-project-entry-grid">
+                  <label>
+                    <span>Pessoa *</span>
+                    <select value={teamForm.personId} onChange={(event) => setTeamForm((current) => ({ ...current, personId: event.target.value }))} disabled={!canManageTeam || teamSaving}>
+                      <option value="">Selecione</option>
+                      {teamCandidates.map((person) => (
+                        <option key={person.organizationPersonId} value={person.organizationPersonId}>{person.displayName}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Responsabilidade</span>
+                    <select value={teamForm.responsibilityType} onChange={(event) => setTeamForm((current) => ({ ...current, responsibilityType: event.target.value }))} disabled={!canManageTeam || teamSaving}>
+                      {Object.entries(responsibilityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Alocação (%)</span>
+                    <input type="number" min="0" max="100" value={teamForm.allocation} onChange={(event) => setTeamForm((current) => ({ ...current, allocation: event.target.value }))} disabled={!canManageTeam || teamSaving} />
+                  </label>
+                  <label>
+                    <span>Vigência inicial</span>
+                    <input type="date" value={teamForm.validFrom} onChange={(event) => setTeamForm((current) => ({ ...current, validFrom: event.target.value }))} disabled={!canManageTeam || teamSaving} />
+                  </label>
+                  <label>
+                    <span>Vigência final</span>
+                    <input type="date" value={teamForm.validUntil} onChange={(event) => setTeamForm((current) => ({ ...current, validUntil: event.target.value }))} disabled={!canManageTeam || teamSaving} />
+                  </label>
+                  <label className="is-wide">
+                    <span>Motivo / papel no Projeto</span>
+                    <input value={teamForm.assignmentReason} onChange={(event) => setTeamForm((current) => ({ ...current, assignmentReason: event.target.value }))} placeholder="Ex.: coordenação do desdobramento estratégico" disabled={!canManageTeam || teamSaving} />
+                  </label>
+                  <label className="is-wide">
+                    <span>Justificativa para auditoria *</span>
+                    <textarea value={teamForm.reason} onChange={(event) => setTeamForm((current) => ({ ...current, reason: event.target.value }))} placeholder="Registre a razão desta atribuição." disabled={!canManageTeam || teamSaving} />
+                  </label>
+                </div>
+                <div className="skpe-project-entry-actions">
+                  <button type="button" className="is-primary" onClick={() => void assignProjectResponsibility()} disabled={!canManageTeam || teamSaving || !teamForm.personId}>
+                    {teamSaving ? 'Salvando...' : 'Adicionar à equipe'}
+                  </button>
+                </div>
+                {!canManageTeam ? <p className="skpe-project-entry-note">Seu perfil pode consultar a equipe, mas não possui permissão para alterar responsabilidades.</p> : null}
+                {teamMessage ? <p className="skpe-project-entry-note" role="status">{teamMessage}</p> : null}
+              </>
+            )}
+
+            <div className="skpe-project-team-assignments">
+              {projectResponsibilities.length === 0 ? (
+                <p className="skpe-project-entry-note">Nenhuma responsabilidade formal registrada diretamente para este Projeto.</p>
+              ) : projectResponsibilities.map((assignment) => (
+                <article key={assignment.assignment_id}>
+                  <div>
+                    <strong>{assignment.person_name}</strong>
+                    <span>{responsibilityLabels[assignment.responsibility_type] ?? assignment.responsibility_type}</span>
+                    <small>{assignment.allocation_percentage === null ? 'Alocação não informada' : `${assignment.allocation_percentage}% de alocação`}{assignment.valid_from ? ` · desde ${formatDate(assignment.valid_from)}` : ''}{assignment.valid_until ? ` · até ${formatDate(assignment.valid_until)}` : ''}</small>
+                  </div>
+                  {canManageTeam ? <button type="button" onClick={() => void endProjectResponsibility(assignment)}>Encerrar</button> : null}
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <div className="skpe-project-plan-navigation">
+            <button type="button" onClick={() => setActiveStage('scope')}>Voltar ao escopo</button>
+            <button type="button" onClick={() => setActiveStage('schedule')}>Avançar para cronograma</button>
+          </div>
         </section>
       )}
 
@@ -551,14 +861,20 @@ export function JourneyProjectPlan({
           </div>
 
           <div className="skpe-project-plan-callout is-guidance">
-            <strong>O que fazer aqui:</strong> revise quem está alocado, a capacidade disponível e os recursos necessários para executar o cronograma. A edição operacional permanece na iniciativa vinculada para não duplicar dados.
+            <strong>O que fazer aqui:</strong> registre e revise a capacidade disponível das pessoas por período. A Jornada grava no contrato transversal de capacidade do SPARKs, sem criar fonte paralela.
           </div>
 
           <div className="skpe-project-resource-actions">
-            <button type="button" className="is-primary" onClick={openStrategicProject} disabled={!operational.initiative || !workspace.route.formulationId}>
-              Gerenciar equipe, capacidade e alocações
+            <button type="button" className="is-primary" onClick={() => setShowCapacityManager(true)} disabled={!canManageCapacity}>
+              Registrar ou editar capacidade
             </button>
+            {operational.initiative ? (
+              <button type="button" onClick={openStrategicProject} disabled={!workspace.route.formulationId}>
+                Abrir execução vinculada
+              </button>
+            ) : null}
           </div>
+          {!canManageCapacity ? <p className="skpe-project-entry-note">Seu perfil pode consultar recursos, mas não possui permissão para alterar a capacidade das pessoas.</p> : null}
 
           <div className="skpe-project-resource-grid">
             <article>
@@ -590,6 +906,16 @@ export function JourneyProjectPlan({
         </section>
       )}
 
+      {showCapacityManager ? (
+        <PersonCapacityManagementDialog
+          organizationId={organizationId}
+          onClose={() => setShowCapacityManager(false)}
+          onSaved={() => {
+            setShowCapacityManager(false)
+            void loadProjectTeam()
+          }}
+        />
+      ) : null}
       {activeStage === 'review' && (
         <section className="skpe-project-plan-panel">
           <div className="skpe-project-plan-panel-heading">

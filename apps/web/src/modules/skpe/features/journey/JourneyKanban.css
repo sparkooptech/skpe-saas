@@ -1,0 +1,47 @@
+.skpe-journey-kanban {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.skpe-journey-kanban-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  background: var(--sparks-surface, #fff);
+  border: 1px solid var(--sparks-border, #dfe6e2);
+  border-radius: 14px;
+}
+
+.skpe-journey-kanban-heading h2 {
+  margin: 0 0 .35rem;
+}
+
+.skpe-journey-kanban-heading p {
+  margin: 0;
+  color: var(--sparks-text-muted, #62736b);
+  line-height: 1.5;
+}
+
+.skpe-journey-kanban-heading > span {
+  flex: 0 0 auto;
+  padding: .35rem .55rem;
+  border: 1px solid var(--sparks-border, #dfe6e2);
+  border-radius: 999px;
+  color: var(--sparks-text-muted, #62736b);
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.skpe-journey-kanban--operational .initiative-kanban-board,
+.skpe-journey-kanban--operational [class*="initiative-kanban"] {
+  min-width: 0;
+}
+
+@media (max-width: 680px) {
+  .skpe-journey-kanban-heading {
+    display: grid;
+  }
+}

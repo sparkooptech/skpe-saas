@@ -588,3 +588,45 @@
 }
 
 .skpe-project-baseline-history{overflow-x:auto;width:100%}.skpe-project-baseline-history table{border-collapse:collapse;width:100%;min-width:880px;font-size:.85rem}.skpe-project-baseline-history th,.skpe-project-baseline-history td{padding:.8rem .65rem;border-bottom:1px solid #dce5e1;text-align:left;vertical-align:top}.skpe-project-baseline-history th{background:#f1f7f4;font-weight:800;color:#244b3f}.skpe-project-baseline-history tbody tr:hover{background:#f3f9f6}
+
+/* JOURNEY PROJECT OPERATIONAL ENTRY */
+.skpe-project-entry-block {
+  display: grid;
+  gap: .85rem;
+  padding: 1rem;
+  border: 1px solid var(--sparks-border, #dbe6e1);
+  border-radius: 12px;
+  background: var(--sparks-surface-subtle, #f6f9f8);
+}
+.skpe-project-entry-block > header { display:flex;justify-content:space-between;gap:1rem; }
+.skpe-project-entry-block > header div { display:grid;gap:.2rem; }
+.skpe-project-entry-block > header span,
+.skpe-project-entry-note { color:var(--sparks-text-muted,#6b7b74);font-size:.82rem;line-height:1.45; }
+.skpe-project-entry-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem; }
+.skpe-project-entry-grid label { display:grid;gap:.3rem;font-size:.78rem;font-weight:700;color:var(--sparks-text,#18251f); }
+.skpe-project-entry-grid label.is-wide { grid-column:1 / -1; }
+.skpe-project-entry-grid input,
+.skpe-project-entry-grid select,
+.skpe-project-entry-grid textarea {
+  width:100%;min-height:40px;padding:.55rem .65rem;border:1px solid var(--sparks-border,#dbe6e1);border-radius:9px;background:#fff;color:var(--sparks-text,#18251f);font:inherit;font-weight:400;box-sizing:border-box;
+}
+.skpe-project-entry-grid textarea { min-height:76px;resize:vertical; }
+.skpe-project-entry-actions { display:flex;gap:.6rem;flex-wrap:wrap; }
+.skpe-project-entry-actions button,
+.skpe-project-team-assignments button,
+.skpe-project-resource-actions button {
+  min-height:38px;padding:.5rem .8rem;border:1px solid #bfd2ca;border-radius:9px;background:#fff;color:#195c49;font-weight:800;cursor:pointer;
+}
+.skpe-project-entry-actions button.is-primary,
+.skpe-project-resource-actions button.is-primary { border-color:var(--organization-primary,#176b53);background:var(--organization-primary,#176b53);color:#fff; }
+.skpe-project-entry-actions button:disabled,
+.skpe-project-resource-actions button:disabled { opacity:.5;cursor:not-allowed; }
+.skpe-project-team-assignments { display:grid;gap:.5rem; }
+.skpe-project-team-assignments article { display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem .8rem;border:1px solid var(--sparks-border,#dbe6e1);border-radius:10px;background:#fff; }
+.skpe-project-team-assignments article div { display:grid;gap:.12rem; }
+.skpe-project-team-assignments article span,
+.skpe-project-team-assignments article small { color:var(--sparks-text-muted,#6b7b74); }
+.skpe-project-resource-actions { gap:.6rem;flex-wrap:wrap; }
+@media(max-width:980px){.skpe-project-entry-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:680px){.skpe-project-entry-grid{grid-template-columns:1fr}.skpe-project-entry-grid label.is-wide{grid-column:auto}.skpe-project-team-assignments article{align-items:stretch;flex-direction:column}}
+/* JOURNEY PROJECT OPERATIONAL ENTRY END */

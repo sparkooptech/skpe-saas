@@ -68,7 +68,7 @@ test('Plano do Projeto separa planejamento de execucao e torna Recursos acionave
   const projectPlan = readFileSync(join(testDir, '../src/modules/skpe/features/journey/JourneyProjectPlan.tsx'), 'utf8')
   assert.match(projectPlan, /Abrir execução do Projeto/)
   assert.match(projectPlan, /Planejamento continua nesta Jornada/)
-  assert.match(projectPlan, /Gerenciar equipe, capacidade e alocações/)
+  assert.match(projectPlan, /Registrar ou editar capacidade/)
   assert.match(projectPlan, /O que fazer aqui:/)
   assert.match(projectPlan, /Linha de Base vigente: aprovada/)
   assert.match(projectPlan, /registro histórico da reunião de abertura/)
