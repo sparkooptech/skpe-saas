@@ -52,6 +52,9 @@ where organization.cooperative_branch_id = branch.id
   and organization.cooperative_branch is distinct from
       coalesce(nullif(trim(branch.short_name), ''), branch.name);
 
+revoke all on function public.sync_organization_cooperative_branch_short_name()
+  from public, anon, authenticated;
+
 comment on function public.sync_organization_cooperative_branch_short_name() is
   'Mantem organizations.cooperative_branch como rotulo curto governado pelo catalogo mestre. TPBS e persistido como abreviacao; demais ramos preservam o nome oficial.';
 

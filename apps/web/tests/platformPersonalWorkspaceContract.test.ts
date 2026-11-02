@@ -30,4 +30,5 @@ test('TPBS is both a presentation rule and a persisted cooperative branch short 
   assert.match(migration, /sync_organization_cooperative_branch_short_name/)
   assert.match(migration, /new\.cooperative_branch := branch_short_name/)
   assert.match(migration, /else name/)
+  assert.match(migration, /revoke all on function public\.sync_organization_cooperative_branch_short_name\(\)[\s\S]*?from public, anon, authenticated/)
 })
