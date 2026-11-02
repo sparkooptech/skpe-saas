@@ -157,6 +157,7 @@ type SkpeCockpitProps = {
   userAvatarUrl: string | null
   onOpenPlatformAdmin?: () => void
   onOpenUserProfile?: () => void
+  onOpenPlatformWorkspace?: () => void
   onLogout?: () => void | Promise<void>
 }
 
@@ -8307,6 +8308,7 @@ export function SkpeCockpit({
   userAvatarUrl,
   onOpenPlatformAdmin,
   onOpenUserProfile,
+  onOpenPlatformWorkspace,
   onLogout,
 }: SkpeCockpitProps) {
   const [showPersonalWorkspace, setShowPersonalWorkspace] = useState(true)
@@ -9291,6 +9293,10 @@ const [startingProject, setStartingProject] = useState(false)
                           role="menuitem"
                           onClick={() => {
                             setUserMenuOpen(false)
+                            if (onOpenPlatformWorkspace) {
+                              onOpenPlatformWorkspace()
+                              return
+                            }
                             setPersonalWorkspaceOverlay(null)
                             navigateToSection('overview')
                           }}
@@ -9400,7 +9406,7 @@ const [startingProject, setStartingProject] = useState(false)
         {activeSection === 'overview' && (
           <section aria-label="Escolha do painel inicial">
             <button type="button" className="skpe-primary-button" onClick={() => setShowPersonalWorkspace((current) => !current)}>
-              {showPersonalWorkspace ? 'Abrir Visão Geral Executiva' : 'Abrir Meu Espaço de Trabalho'}
+              {showPersonalWorkspace ? 'Abrir Visão Geral Executiva' : 'Abrir minhas responsabilidades no PE'}
             </button>
           </section>
         )}

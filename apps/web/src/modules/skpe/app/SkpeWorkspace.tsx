@@ -166,6 +166,7 @@ export function SkpeWorkspace(props: SkpeWorkspaceProps) {
           props.initialSection
         }
         onNavigateSection={handleNavigateSection}
+        onOpenPlatformWorkspace={() => navigate(platformRoutes.workspace())}
       />
     </SkpeWorkspaceProvider>
   )

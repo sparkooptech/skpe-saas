@@ -16,12 +16,14 @@ import {
 import { PlatformAdmin } from './modules/platform-admin/PlatformAdmin'
 import { OrganizationBrandingLogo } from './components/organization-branding/OrganizationBrandingLogo'
 import { UserProfileDialog } from './components/user-profile/UserProfileDialog'
+import { PlatformPersonalWorkspace } from './modules/platform-workspace/PlatformPersonalWorkspace'
 import {
   SparksSmartGrid,
   type SparksSmartGridColumn,
   type SparksSmartGridRow,
 } from './components/design-system/SparksSmartGrid'
 import { sortOrganizationsHierarchically } from './lib/organizationHierarchy'
+import { cooperativeBranchCardLabel } from './lib/cooperativeBranchDisplay'
 
 import './App.css'
 
@@ -1667,10 +1669,7 @@ function App() {
       return
     }
 
-    if (
-      currentRoute.kind === 'home' ||
-      currentRoute.kind === 'workspace'
-    ) {
+    if (currentRoute.kind === 'home') {
       if (
         platformAdminOpen ||
         organizationAdminOpen ||
@@ -1683,6 +1682,15 @@ function App() {
         setOpenedModule(null)
         setModules([])
         setOrganizationNetwork([])
+      }
+      return
+    }
+
+    if (currentRoute.kind === 'workspace') {
+      if (platformAdminOpen || organizationAdminOpen || openedModule) {
+        setPlatformAdminOpen(false)
+        setOrganizationAdminOpen(false)
+        setOpenedModule(null)
       }
       return
     }
@@ -2444,6 +2452,16 @@ function App() {
           />
         </div>
         <div className="user-area">
+          <button
+            type="button"
+            className="platform-workspace-topbar-button"
+            onClick={() => navigate(platformRoutes.workspace())}
+            aria-label="Abrir Meu Espaço de Trabalho"
+            title="Meu Espaço de Trabalho"
+          >
+            <span aria-hidden="true">◫</span>
+            <strong>Meu Espaço</strong>
+          </button>
           {(
             (selectedOrganization &&
               (selectedOrganization.is_organization_admin ||
@@ -2629,6 +2647,39 @@ function App() {
               ← Voltar para organizações
             </button>
 
+            {currentRoute.kind === 'workspace' ? (
+              <PlatformPersonalWorkspace
+                organizationId={selectedOrganization.organization_id}
+                organizationName={selectedOrganization.trade_name ?? selectedOrganization.legal_name}
+                organizationCode={selectedOrganization.organization_code}
+                cooperativeBranch={selectedOrganization.cooperative_branch}
+                modules={modules.map((module) => ({
+                  code: module.module_code,
+                  name: module.module_name,
+                  shortName: module.module_short_name,
+                  description: module.module_description,
+                  roleName: module.role_name,
+                }))}
+                organizations={organizations.map((organization) => ({
+                  id: organization.organization_id,
+                  code: organization.organization_code,
+                  name: organization.trade_name ?? organization.legal_name,
+                }))}
+                userDisplayName={userDisplayName || session.user.email || 'Usuário'}
+                onSwitchOrganization={(organizationId) => {
+                  const organization = organizations.find(
+                    (candidate) => candidate.organization_id === organizationId,
+                  )
+                  if (organization) void handleSelectOrganization(organization, true)
+                }}
+                onOpenModule={(moduleCode) => {
+                  const module = modules.find((candidate) => candidate.module_code === moduleCode)
+                  if (module) handleOpenModule(module)
+                }}
+                onReturnToOrganizations={handleReturnToOrganizations}
+              />
+            ) : (
+              <>
             <section className="page-heading">
               <div>
                 {selectedOrganization.organization_code.trim().toLocaleLowerCase('pt-BR') !==
@@ -2834,6 +2885,8 @@ function App() {
                 ))}
               </section>
             )}
+              </>
+            )}
           </>
         ) : (
           <>
@@ -2927,7 +2980,7 @@ function App() {
                         )
 
                         if (organization) {
-                          void handleSelectOrganization(organization)
+                          void handleSelectOrganization(organization, currentRoute.kind === 'workspace')
                         }
                       }}
                       onContextAction={(actionId, rowId) => {
@@ -2939,7 +2992,7 @@ function App() {
                         )
 
                         if (organization) {
-                          void handleSelectOrganization(organization)
+                          void handleSelectOrganization(organization, currentRoute.kind === 'workspace')
                         }
                       }}
                     />
@@ -2956,17 +3009,17 @@ function App() {
                       role="button"
                       tabIndex={0}
                       aria-label={`Abrir ${organization.trade_name ?? organization.legal_name}`}
-                      onClick={() => void handleSelectOrganization(organization)}
+                      onClick={() => void handleSelectOrganization(organization, currentRoute.kind === 'workspace')}
                       onKeyDown={(event) =>
                         activateWithKeyboard(event, () =>
-                          void handleSelectOrganization(organization),
+                          void handleSelectOrganization(organization, currentRoute.kind === 'workspace'),
                         )
                       }
                     >
                       <div className="organization-card-header">
                         <div>
                           <p className="organization-code">
-                            {organization.cooperative_branch ?? 'Ramo não informado'}
+                            {cooperativeBranchCardLabel(organization.cooperative_branch)}
                           </p>
 
                           <h2>
