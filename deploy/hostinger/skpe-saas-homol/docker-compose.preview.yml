@@ -1,4 +1,4 @@
-﻿services:
+services:
   sparks-homol-preview:
     image: ${IMAGE_NAME}
     build:

@@ -1,4 +1,4 @@
-﻿services:
+services:
   sparks-homol:
     image: ${IMAGE_NAME}
     container_name: sparks-homol
