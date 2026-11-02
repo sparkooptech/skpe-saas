@@ -312,9 +312,17 @@ build_preview_release() {
 
 apply_platform_workspace_branch_migration() {
   local migration_file="${RELEASE_DIR}/source/app/supabase/migrations/20261102124000_normalize_cooperative_branch_short_names.sql"
-  local db_container="${SPARKS_POSTGRES_CONTAINER:-}"
-  local db_user
-  local db_name
+  local requested_container="${SPARKS_POSTGRES_CONTAINER:-}"
+  local container_candidates
+  local candidate_container
+  local candidate_user
+  local candidate_db
+  local candidate_databases
+  local table_match
+  local db_container=''
+  local db_user=''
+  local db_name=''
+  local match_count=0
   local short_name
   local unsynchronized_count
 
@@ -323,21 +331,43 @@ apply_platform_workspace_branch_migration() {
     return 1
   }
 
-  if [ -z "${db_container}" ]; then
-    if docker ps --format '{{.Names}}' | grep -qx 'postgresql-33th-postgresql-1'; then
-      db_container='postgresql-33th-postgresql-1'
-    else
-      db_container="$(docker ps --format '{{.Names}}' | grep -E 'postgres.*postgresql|postgresql.*postgres' | head -n 1 || true)"
-    fi
+  if [ -n "${requested_container}" ]; then
+    container_candidates="${requested_container}"
+  else
+    container_candidates="$(docker ps --format '{{.Names}}' | grep -Ei 'postgres|postgresql' || true)"
   fi
 
-  [ -n "${db_container}" ] || {
-    log "DB MIGRATION FAIL: PostgreSQL container not found"
+  [ -n "${container_candidates}" ] || {
+    log "DB MIGRATION FAIL: no PostgreSQL containers available"
     return 1
   }
 
-  db_user="$(docker exec "${db_container}" sh -lc 'printf "%s" "${POSTGRES_USER:-${POSTGRESQL_USERNAME:-postgres}}"')"
-  db_name="$(docker exec "${db_container}" sh -lc 'printf "%s" "${POSTGRES_DB:-${POSTGRESQL_DATABASE:-postgres}}"')"
+  for candidate_container in ${container_candidates}; do
+    candidate_user="$(docker exec "${candidate_container}" sh -lc 'printf "%s" "${POSTGRES_USER:-${POSTGRESQL_USERNAME:-postgres}}"' 2>/dev/null || true)"
+    [ -n "${candidate_user}" ] || continue
+
+    candidate_databases="$(docker exec "${candidate_container}" psql --no-psqlrc -U "${candidate_user}" -d postgres -Atc \
+      "select datname from pg_database where datallowconn and not datistemplate order by datname" 2>/dev/null || true)"
+
+    for candidate_db in ${candidate_databases}; do
+      table_match="$(docker exec "${candidate_container}" psql --no-psqlrc -U "${candidate_user}" -d "${candidate_db}" -Atc \
+        "select case when to_regclass('public.organizations') is not null and to_regclass('public.cooperative_branches') is not null then 'yes' else 'no' end" 2>/dev/null || true)"
+
+      if [ "${table_match}" = 'yes' ]; then
+        match_count=$((match_count + 1))
+        db_container="${candidate_container}"
+        db_user="${candidate_user}"
+        db_name="${candidate_db}"
+      fi
+    done
+  done
+
+  if [ "${match_count}" -ne 1 ]; then
+    log "DB MIGRATION FAIL: expected exactly one SPARKs business database, found ${match_count}"
+    return 1
+  fi
+
+  log "DB MIGRATION TARGET: container=${db_container} database=${db_name}"
 
   if ! docker exec -i "${db_container}" \
     psql --no-psqlrc --set ON_ERROR_STOP=1 -U "${db_user}" -d "${db_name}" \
